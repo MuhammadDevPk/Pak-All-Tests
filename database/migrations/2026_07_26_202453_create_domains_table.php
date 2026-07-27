@@ -26,6 +26,9 @@ return new class extends Migration
 
         // Optional: An index for faster hierarchical queries
         DB::statement('CREATE INDEX domains_path_gist_idx ON domains USING GIST (path)');
+        // GiST stands for Generalized Search Tree. It is a highly advanced indexing algorithm. Instead of sorting alphabetically, GiST is smart enough to understand "Parent/Child" shapes and relationships.
+        // By using GiST on the path column, PostgreSQL can instantly grab all 50 sub-domains inside "Armed Forces" in milliseconds, without having to read the rest of the database.
+        // like ArmedForces.Army.Verbal
     }
 
     /**
