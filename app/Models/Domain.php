@@ -35,5 +35,16 @@ class Domain extends Model
         return $this->hasMany(ContentModule::class);
     }
 
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(UserSubscription::class);
+    }
+
+    public function subscribers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_subscriptions', 'domain_id', 'user_id')
+            ->withPivot(['status', 'receipt_url'])
+            ->withTimestamps();
+    }
 
 }
