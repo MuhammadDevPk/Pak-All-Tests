@@ -48,4 +48,20 @@ class Domain extends Model
             ->withTimestamps();
     }
 
+    protected static function booted() {
+
+        // 1. Triggered right AFTER a new domain is inserted into the DB
+        static::created(function ($domain) {
+            if ($domain->parent_id) {
+                $parent = Domain::find($domain->parent_id);
+                $domain->path = $parent->path . '.' . $domain->id;
+            } else {
+                $domain->path = (string) $domain->id;
+            }
+            $domain->saveQuietly();
+        });
+
+
+    }
+
 }
