@@ -19,6 +19,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             // generic grouping type, e.g., 'preparation', 'mock_test', 'pdf_repo'
             $table->string('module_type')->comment('Categorizes the logical grouping, e.g., preparation, test, pdf.');
+            $table->integer('sort_order')->default(0);
 
             // configurations (like passing score or test duration)
             $table->jsonb('content_meta')->nullable();
