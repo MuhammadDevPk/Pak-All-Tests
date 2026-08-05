@@ -16,13 +16,15 @@ return new class extends Migration
 
             // Defines the UI and logic: 'mcq', 'short_answer', 'descriptive', 'essay'
             $table->string('question_type')->index()->comment('Dictates how the Vue frontend renders this question.');
-
+            $table->string('code')->nullable()->unique()->comment('Import/Export identifier e.g. Q-VERB-001');
             // The prompt (e.g., "What is the capital?", or "Write an essay on the economy.")
             $table->text('question_text');
 
             // The magic column: Stores whatever specific data this type of question needs
             $table->jsonb('payload')->nullable()->comment('Stores varying data like MCQ options, essay word limits, or model answers.');
-
+            $table->string('difficulty_level')->default('medium')->index(); // easy, medium, hard
+            $table->text('explanation')->nullable()->comment('Detailed solution/explanation for post-test review');
+            $table->boolean('is_active')->default(true)->index();
             $table->timestamps();
         });
     }
