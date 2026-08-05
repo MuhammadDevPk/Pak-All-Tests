@@ -9,6 +9,11 @@ class UserSubscription extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        'starts_at'  => 'datetime',
+        'expires_at' => 'datetime',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

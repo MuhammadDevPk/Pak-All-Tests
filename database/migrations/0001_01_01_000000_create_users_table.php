@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->string('whatsapp_number')->nullable()->unique()->index();
+            $table->string('whatsapp_number')->nullable()->unique(); // unique() already creates a B-tree index — ->index() would be redundant
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

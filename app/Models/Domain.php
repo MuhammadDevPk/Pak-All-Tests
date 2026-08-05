@@ -87,13 +87,16 @@ class Domain extends Model
                 $domain->saveQuietly();
 
                 if ($oldPath) {
-                    // Update all descendants' paths using native PostgreSQL ltree functions.
-                    // The <@ operator represents "is a descendant of" and is fully indexed by GiST.
-                    Domain::whereRaw('path <@ ?', [$oldPath])
-                        ->where('id', '!=', $domain->id)
-                        ->update([
-                            'path' => DB::raw("'$newPath'::ltree || subpath(path, nlevel('$oldPath'::ltree))")
-                        ]);
+                    // SAFE: Uses positional ? bindings throughout — zero string interpolation.
+                    // The <@ operator ("is descendant of") is backed by the GiST index for speed.
+                    // subpath(path, nlevel(old)) trims the old prefix; prepending $newPath rebuilds the correct path.
+                    DB::statement("
+                        UPDATE domains
+                        SET    path       = ?::ltree || subpath(path, nlevel(?::ltree)),
+                               updated_at = NOW()
+                        WHERE  path <@ ?::ltree
+                        AND    id != ?
+                    ", [$newPath, $oldPath, $oldPath, $domain->id]);
                 }
             }
         });
