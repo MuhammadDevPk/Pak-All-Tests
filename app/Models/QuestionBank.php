@@ -16,6 +16,7 @@ class QuestionBank extends Model
 
     public function modules(): BelongsToMany
     {
-        return $this->belongsToMany(ContentModule::class, 'module_questions', 'question_id', 'module_id');
+        return $this->belongsToMany(ContentModule::class, 'module_questions', 'question_id', 'module_id')
+            ->withPivot(['sort_order', 'marks']);
     }
 }
