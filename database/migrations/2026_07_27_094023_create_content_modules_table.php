@@ -14,13 +14,16 @@ return new class extends Migration
         Schema::create('content_modules', function (Blueprint $table) {
             $table->id();
             $table->foreignId('domain_id')->constrained('domains')->cascadeOnDelete();
-
+            $table->string('title')->comment('Human readable title, e.g. Verbal Intelligence Test 1');
+            $table->string('slug')->nullable();
+            $table->boolean('is_active')->default(true);
             // generic grouping type, e.g., 'preparation', 'mock_test', 'pdf_repo'
             $table->string('module_type')->comment('Categorizes the logical grouping, e.g., preparation, test, pdf.');
 
             // configurations (like passing score or test duration)
             $table->jsonb('content_meta')->nullable();
 
+            $table->index(['domain_id', 'module_type', 'sort_order']);
             $table->timestamps();
         });
     }
