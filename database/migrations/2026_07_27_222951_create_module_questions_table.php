@@ -17,6 +17,8 @@ return new class extends Migration
 
             // Ensure a question is not duplicated in the same module
             $table->primary(['module_id', 'question_id']);
+            $table->integer('sort_order')->default(0);
+            $table->decimal('marks', 5, 2)->default(1.00)->comment('Question weightage in this module');
         });
     }
 
