@@ -63,7 +63,15 @@ class User extends Authenticatable implements PasskeyUser
     public function subscribedDomains(): BelongsToMany
     {
         return $this->belongsToMany(Domain::class, 'user_subscriptions', 'user_id', 'domain_id')
-            ->withPivot(['status', 'receipt_url'])
+            ->withPivot([
+                'status',
+                'receipt_url',
+                'payment_method',
+                'transaction_id',
+                'rejection_reason',
+                'starts_at',
+                'expires_at'
+            ])
             ->withTimestamps();
     }
 }
