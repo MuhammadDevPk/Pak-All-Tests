@@ -17,6 +17,9 @@ return new class extends Migration
             $table->foreignId('parent_id')->nullable()->constrained('domains')->nullOnDelete();
             // e.g., "Armed Forces", "CSS", "Navy Initial Verbal"
             $table->string('name');
+            $table->string('slug')->unique()->comment('Clean URL routing, e.g. armed-forces-navy');
+            $table->string('code')->nullable()->unique()->comment('Developer reference code, e.g. PMA_INITIAL');
+            $table->boolean('is_active')->default(true)->index();
             $table->timestamps();
         });
 
