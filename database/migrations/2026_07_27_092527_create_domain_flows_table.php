@@ -13,14 +13,15 @@ return new class extends Migration
     {
         Schema::create('domain_flows', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('domain_id')->constrained('domains')->cascadeOnDelete();
+            $table->foreignId('domain_id')->unique()->constrained('domains')->cascadeOnDelete();
 
             // stores JSON for dynamic Vue.js layout
             $table->jsonb('ui_schema')->comment('Stores JSON definitions for component mapping in Vue.');
 
             // stores logic/rules (like time limits or gating)
             $table->jsonb('learning_schema')->nullable()->comment('Defines test logic and content gating rules.');
-
+            $table->integer('version')->default(1)->comment('Increments when SDUI layout structure changes');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
