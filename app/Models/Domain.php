@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -44,7 +45,15 @@ class Domain extends Model
     public function subscribers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_subscriptions', 'domain_id', 'user_id')
-            ->withPivot(['status', 'receipt_url'])
+            ->withPivot([
+                'status',
+                'receipt_url',
+                'payment_method',
+                'transaction_id',
+                'rejection_reason',
+                'starts_at',
+                'expires_at'
+            ])
             ->withTimestamps();
     }
 
@@ -61,6 +70,33 @@ class Domain extends Model
             $domain->saveQuietly();
         });
 
+        static::updated(function ($domain) {
+            // Only execute if the Admin actually moved the category to a new parent
+            if ($domain->wasChanged('parent_id')) {
+                // A. Capture the exact path BEFORE the update happened
+                $oldPath = $domain->getOriginal('path');
+
+                if ($domain->parent_id) {
+                    $parent = Domain::find($domain->parent_id);
+                    $newPath = $parent->path . '.' . $domain->id;
+                } else {
+                    $newPath = (string) $domain->id;
+                }
+
+                $domain->path = $newPath;
+                $domain->saveQuietly();
+
+                if ($oldPath) {
+                    // Update all descendants' paths using native PostgreSQL ltree functions.
+                    // The <@ operator represents "is a descendant of" and is fully indexed by GiST.
+                    Domain::whereRaw('path <@ ?', [$oldPath])
+                        ->where('id', '!=', $domain->id)
+                        ->update([
+                            'path' => DB::raw("'$newPath'::ltree || subpath(path, nlevel('$oldPath'::ltree))")
+                        ]);
+                }
+            }
+        });
 
     }
 
