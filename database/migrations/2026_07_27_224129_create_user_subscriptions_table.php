@@ -22,6 +22,7 @@ return new class extends Migration
 
             // Payment state machine: e.g., 'pending', 'active', 'expired', 'rejected'
             $table->string('status')->default('pending');
+            $table->string('receipt_url')->nullable();
 
             // Stores the storage URL for the EasyPaisa/JazzCash screenshot
             $table->string('payment_method')->nullable(); // easypaisa, jazzcash, bank_transfer
