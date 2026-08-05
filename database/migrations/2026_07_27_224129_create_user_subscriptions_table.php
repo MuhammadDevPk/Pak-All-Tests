@@ -24,8 +24,15 @@ return new class extends Migration
             $table->string('status')->default('pending');
 
             // Stores the storage URL for the EasyPaisa/JazzCash screenshot
-            $table->string('receipt_url')->nullable();
+            $table->string('payment_method')->nullable(); // easypaisa, jazzcash, bank_transfer
+            $table->string('transaction_id')->nullable()->index(); // TRX ID from bank SMS
+            $table->text('rejection_reason')->nullable();
+            $table->timestamp('starts_at')->nullable();
+            $table->timestamp('expires_at')->nullable()->index();
 
+            // Indexes for optimized lookups
+            $table->index(['user_id', 'status']);
+            $table->index(['user_id', 'domain_id', 'status']);
             $table->timestamps();
         });
     }
