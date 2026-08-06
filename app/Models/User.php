@@ -5,6 +5,8 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Concerns\HasTeams;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Collection;
@@ -37,10 +39,16 @@ use Laravel\Fortify\PasskeyAuthenticatable;
  */
 #[Fillable(['name', 'email', 'password', 'current_team_id'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements PasskeyUser
+class User extends Authenticatable implements FilamentUser, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasTeams, Notifiable, PasskeyAuthenticatable;
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // For Development allow authenticated users
+        return true;
+    }
 
     /**
      * Get the attributes that should be cast.
