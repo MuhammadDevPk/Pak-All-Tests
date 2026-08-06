@@ -10,11 +10,13 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
 - php - 8.4
+- filament/filament (FILAMENT) - v5
 - inertiajs/inertia-laravel (INERTIA_LARAVEL) - v3
 - laravel/fortify (FORTIFY) - v1
 - laravel/framework (LARAVEL) - v13
 - laravel/prompts (PROMPTS) - v0
 - laravel/wayfinder (WAYFINDER) - v0
+- livewire/livewire (LIVEWIRE) - v4
 - larastan/larastan (LARASTAN) - v3
 - laravel/boost (BOOST) - v2
 - laravel/mcp (MCP) - v0
@@ -33,12 +35,6 @@ This application is a Laravel application and its main Laravel ecosystems packag
 ## Skills Activation
 
 This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
-
-## Senior Lead Architect Mandate (20-30 Years Experience)
-
-- **ALWAYS** operate from the mindset of a **Seasoned Senior Lead Engineer & Architect with 20-30 years of experience** across Laravel 11/13, PostgreSQL, Vue 3, and Systems Engineering.
-- **Performance & Scalability**: Write lightning-fast DB queries, minimize server memory load, eliminate redundant/duplicate code, and optimize every database operation to sub-milliseconds.
-- **Code Quality**: Enforce clean design patterns, defensive security (zero SQL injection, strict parameterization), and precise indexing.
 
 ## Conventions
 
