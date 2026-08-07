@@ -19,7 +19,7 @@ class ContentModule extends Model
         return $this->belongsTo(Domain::class);
     }
 
-// Connects to the reusable question bank
+    // Connects to the reusable question bank
     public function questions(): BelongsToMany
     {
         return $this->belongsToMany(QuestionBank::class, 'module_questions', 'module_id', 'question_id')

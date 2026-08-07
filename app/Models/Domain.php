@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
 
 class Domain extends Model
 {
@@ -52,18 +52,19 @@ class Domain extends Model
                 'transaction_id',
                 'rejection_reason',
                 'starts_at',
-                'expires_at'
+                'expires_at',
             ])
             ->withTimestamps();
     }
 
-    protected static function booted() {
+    protected static function booted()
+    {
 
         // 1. Triggered right AFTER a new domain is inserted into the DB
         static::created(function ($domain) {
             if ($domain->parent_id) {
                 $parent = Domain::find($domain->parent_id);
-                $domain->path = $parent->path . '.' . $domain->id;
+                $domain->path = $parent->path.'.'.$domain->id;
             } else {
                 $domain->path = (string) $domain->id;
             }
@@ -78,7 +79,7 @@ class Domain extends Model
 
                 if ($domain->parent_id) {
                     $parent = Domain::find($domain->parent_id);
-                    $newPath = $parent->path . '.' . $domain->id;
+                    $newPath = $parent->path.'.'.$domain->id;
                 } else {
                     $newPath = (string) $domain->id;
                 }
@@ -90,17 +91,16 @@ class Domain extends Model
                     // SAFE: Uses positional ? bindings throughout — zero string interpolation.
                     // The <@ operator ("is descendant of") is backed by the GiST index for speed.
                     // subpath(path, nlevel(old)) trims the old prefix; prepending $newPath rebuilds the correct path.
-                    DB::statement("
+                    DB::statement('
                         UPDATE domains
                         SET    path       = ?::ltree || subpath(path, nlevel(?::ltree)),
                                updated_at = NOW()
                         WHERE  path <@ ?::ltree
                         AND    id != ?
-                    ", [$newPath, $oldPath, $oldPath, $domain->id]);
+                    ', [$newPath, $oldPath, $oldPath, $domain->id]);
                 }
             }
         });
 
     }
-
 }

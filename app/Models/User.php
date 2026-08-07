@@ -78,7 +78,7 @@ class User extends Authenticatable implements FilamentUser, PasskeyUser
                 'transaction_id',
                 'rejection_reason',
                 'starts_at',
-                'expires_at'
+                'expires_at',
             ])
             ->withTimestamps();
     }

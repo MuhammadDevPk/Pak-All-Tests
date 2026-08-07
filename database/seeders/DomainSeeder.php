@@ -18,20 +18,20 @@ class DomainSeeder extends Seeder
                     [
                         'key' => 'preparation',
                         'label' => 'Preparation',
-                        'modules' => ['verbal_intel', 'non_verbal_intel', 'academic']
+                        'modules' => ['verbal_intel', 'non_verbal_intel', 'academic'],
                     ],
                     [
                         'key' => 'testing',
                         'label' => 'Mock Tests',
-                        'modules' => ['full_mock_test']
-                    ]
-                ]
+                        'modules' => ['full_mock_test'],
+                    ],
+                ],
             ],
             'learning_schema' => [
                 'time_limit_minutes' => 30,
                 'passing_percentage' => 60,
                 'negative_marking' => false,
-            ]
+            ],
         ]);
 
         $civilServices = Domain::create([
@@ -54,13 +54,13 @@ class DomainSeeder extends Seeder
                 'subjects' => [
                     ['name' => 'English Precis & Composition', 'type' => 'essay_uploader'],
                     ['name' => 'General Knowledge', 'type' => 'mcq_grid'],
-                    ['name' => 'Islamic Studies', 'type' => 'descriptive']
-                ]
+                    ['name' => 'Islamic Studies', 'type' => 'descriptive'],
+                ],
             ],
             'learning_schema' => [
                 'passing_percentage' => 40,
                 'essay_word_limit' => 2500,
-            ]
+            ],
         ]);
     }
 }

@@ -10,7 +10,7 @@ class UserSubscription extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'starts_at'  => 'datetime',
+        'starts_at' => 'datetime',
         'expires_at' => 'datetime',
     ];
 
