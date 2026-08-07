@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 /*
@@ -15,7 +15,12 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
-    ->use(RefreshDatabase::class)
+    // DatabaseTransactions wraps each test in a transaction that is rolled back after the test.
+    // This is the correct strategy for a persistent remote PostgreSQL DB (Supabase):
+    // - Zero DDL (no DROP/CREATE TABLE per test) → tests run in seconds, not 15 minutes
+    // - Zero schema conflicts between parallel tests (no "duplicate table" / "migrations missing")
+    // - The DB schema stays exactly as deployed by migrate:fresh (run once manually before tests)
+    ->use(DatabaseTransactions::class)
     ->in('Feature');
 
 /*
