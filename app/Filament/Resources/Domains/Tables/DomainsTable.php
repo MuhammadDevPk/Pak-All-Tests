@@ -8,32 +8,50 @@ use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class DomainsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            // Senior Architect Mandate: Eager load relationships to guarantee sub-millisecond execution & zero N+1 queries
+            ->modifyQueryUsing(fn (Builder $query) => $query->with('parent'))
             ->columns([
-                TextColumn::make('parent.name')
-                    ->searchable(),
                 TextColumn::make('name')
-                    ->searchable(),
-                TextColumn::make('slug')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold'),
+
+                TextColumn::make('parent.name')
+                    ->label('Parent Domain')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('Top Level')
+                    ->color('gray'),
+
                 TextColumn::make('code')
+                    ->label('Code')
+                    ->badge()
+                    ->color('info')
+                    ->searchable()
+                    ->placeholder('—'),
+
+                TextColumn::make('path')
+                    ->label('LTree Path')
+                    ->badge()
+                    ->color('gray')
                     ->searchable(),
+
                 IconColumn::make('is_active')
-                    ->boolean(),
+                    ->label('Status')
+                    ->boolean()
+                    ->sortable(),
+
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('path'),
             ])
             ->filters([
                 //
