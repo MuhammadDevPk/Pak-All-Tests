@@ -15,19 +15,41 @@ class QuestionBanksTable
     {
         return $table
             ->columns([
-                TextColumn::make('question_type')
-                    ->searchable(),
                 TextColumn::make('code')
+                    ->label('Code')
+                    ->badge()
+                    ->color('info')
+                    ->searchable()
+                    ->placeholder('—'),
+
+                TextColumn::make('question_type')
+                    ->label('Type')
+                    ->badge()
+                    ->color('primary')
                     ->searchable(),
+
+                TextColumn::make('question_text')
+                    ->label('Question Prompt')
+                    ->html()
+                    ->limit(60)
+                    ->searchable(),
+
                 TextColumn::make('difficulty_level')
-                    ->searchable(),
+                    ->label('Difficulty')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'easy' => 'success',
+                        'medium' => 'warning',
+                        'hard' => 'danger',
+                        default => 'gray',
+                    })
+                    ->sortable(),
+
                 IconColumn::make('is_active')
+                    ->label('Status')
                     ->boolean(),
+
                 TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
