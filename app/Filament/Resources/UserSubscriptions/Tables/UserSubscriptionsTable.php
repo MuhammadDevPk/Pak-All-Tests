@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\UserSubscriptions\Tables;
 
+use App\Models\UserSubscription;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class UserSubscriptionsTable
 {
@@ -16,7 +16,18 @@ class UserSubscriptionsTable
     {
         return $table
             ->deferLoading()
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['user', 'domain']))
+            ->records(fn (
+                ?string $search,
+                ?string $sortColumn,
+                ?string $sortDirection,
+            ): \Illuminate\Support\Collection => UserSubscription::getCachedTableRecords(
+                fn () => UserSubscription::query()->with(['user', 'domain'])->orderBy('id', 'asc')->get(),
+                ['user', 'domain'],
+                $search,
+                ['user.name', 'domain.name', 'status', 'transaction_id', 'payment_method'],
+                $sortColumn,
+                $sortDirection ?? 'asc',
+            ))
             ->columns([
                 TextColumn::make('user.name')
                     ->label('Subscriber')

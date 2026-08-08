@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\Domains\Tables;
 
+use App\Models\Domain;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class DomainsTable
 {
@@ -16,8 +16,18 @@ class DomainsTable
     {
         return $table
             ->deferLoading()
-            // Senior Architect Mandate: Eager load relationships to guarantee sub-millisecond execution & zero N+1 queries
-            ->modifyQueryUsing(fn (Builder $query) => $query->with('parent'))
+            ->records(fn (
+                ?string $search,
+                ?string $sortColumn,
+                ?string $sortDirection,
+            ): \Illuminate\Support\Collection => Domain::getCachedTableRecords(
+                fn () => Domain::query()->with('parent')->orderBy('id', 'asc')->get(),
+                ['parent'],
+                $search,
+                ['name', 'code', 'path', 'parent.name'],
+                $sortColumn,
+                $sortDirection ?? 'asc',
+            ))
             ->columns([
                 TextColumn::make('name')
                     ->searchable()

@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\ContentModules\Tables;
 
+use App\Models\ContentModule;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class ContentModulesTable
 {
@@ -16,7 +16,18 @@ class ContentModulesTable
     {
         return $table
             ->deferLoading()
-            ->modifyQueryUsing(fn (Builder $query) => $query->with('domain'))
+            ->records(fn (
+                ?string $search,
+                ?string $sortColumn,
+                ?string $sortDirection,
+            ): \Illuminate\Support\Collection => ContentModule::getCachedTableRecords(
+                fn () => ContentModule::query()->with('domain')->orderBy('id', 'asc')->get(),
+                ['domain'],
+                $search,
+                ['title', 'slug', 'module_type', 'domain.name'],
+                $sortColumn,
+                $sortDirection ?? 'asc',
+            ))
             ->columns([
                 TextColumn::make('title')
                     ->searchable()

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\QuestionBanks\Tables;
 
+use App\Models\QuestionBank;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -15,6 +16,18 @@ class QuestionBanksTable
     {
         return $table
             ->deferLoading()
+            ->records(fn (
+                ?string $search,
+                ?string $sortColumn,
+                ?string $sortDirection,
+            ): \Illuminate\Support\Collection => QuestionBank::getCachedTableRecords(
+                fn () => QuestionBank::query()->orderBy('id', 'asc')->get(),
+                [],
+                $search,
+                ['code', 'question_type', 'question_text', 'difficulty_level'],
+                $sortColumn,
+                $sortDirection ?? 'asc',
+            ))
             ->columns([
                 TextColumn::make('code')
                     ->label('Code')

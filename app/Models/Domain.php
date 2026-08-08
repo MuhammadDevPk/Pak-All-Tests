@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\CachesTableData;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -20,6 +21,8 @@ use Illuminate\Support\Facades\DB;
  */
 class Domain extends Model
 {
+    use CachesTableData;
+
     protected $guarded = [];
 
     /**

@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\DomainFlows\Tables;
 
+use App\Models\DomainFlow;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class DomainFlowsTable
 {
@@ -16,7 +16,18 @@ class DomainFlowsTable
     {
         return $table
             ->deferLoading()
-            ->modifyQueryUsing(fn (Builder $query) => $query->with('domain'))
+            ->records(fn (
+                ?string $search,
+                ?string $sortColumn,
+                ?string $sortDirection,
+            ): \Illuminate\Support\Collection => DomainFlow::getCachedTableRecords(
+                fn () => DomainFlow::query()->with('domain')->orderBy('id', 'asc')->get(),
+                ['domain'],
+                $search,
+                ['domain.name', 'version'],
+                $sortColumn,
+                $sortDirection ?? 'asc',
+            ))
             ->columns([
                 TextColumn::make('domain.name')
                     ->label('Domain')

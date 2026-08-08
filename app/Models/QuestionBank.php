@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Concerns\CachesTableData;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class QuestionBank extends Model
 {
+    use CachesTableData;
+
     protected $table = 'question_bank';
 
     protected $guarded = [];

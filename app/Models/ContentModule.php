@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Concerns\CachesTableData;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ContentModule extends Model
 {
+    use CachesTableData;
+
     protected $guarded = [];
 
     protected $casts = [
