@@ -63,11 +63,17 @@ class User extends Authenticatable implements FilamentUser, PasskeyUser
         ];
     }
 
+    /**
+     * @return HasMany<UserSubscription, $this>
+     */
     public function subscriptions(): HasMany
     {
         return $this->hasMany(UserSubscription::class);
     }
 
+    /**
+     * @return BelongsToMany<Domain, $this>
+     */
     public function subscribedDomains(): BelongsToMany
     {
         return $this->belongsToMany(Domain::class, 'user_subscriptions', 'user_id', 'domain_id')

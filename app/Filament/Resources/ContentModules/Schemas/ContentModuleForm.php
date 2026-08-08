@@ -6,8 +6,10 @@ use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Str;
 
 class ContentModuleForm
@@ -16,56 +18,73 @@ class ContentModuleForm
     {
         return $schema
             ->components([
-                Section::make('Content Module Details')
-                    ->description('Categorize and configure content preparation or mock test modules.')
+                Section::make('Module Core Settings')
+                    ->description('Categorize and define basic module properties and domain linking.')
+                    ->icon(Heroicon::OutlinedFolder)
                     ->schema([
-                        Select::make('domain_id')
-                            ->label('Domain')
-                            ->relationship('domain', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->required(),
+                        Grid::make(2)->schema([
+                            Select::make('domain_id')
+                                ->label('Domain')
+                                ->relationship('domain', 'name')
+                                ->searchable()
+                                ->preload()
+                                ->required()
+                                ->placeholder('Select Domain'),
 
-                        TextInput::make('title')
-                            ->required()
-                            ->maxLength(255)
-                            ->live(onBlur: true)
-                            ->afterStateUpdated(function (string $operation, $state, callable $set) {
-                                if ($operation === 'create') {
-                                    $set('slug', Str::slug($state));
-                                }
-                            }),
+                            Select::make('module_type')
+                                ->label('Module Type')
+                                ->options([
+                                    'preparation' => 'Preparation Module',
+                                    'mock_test' => 'Mock Test',
+                                    'pdf_repo' => 'PDF Repository',
+                                ])
+                                ->required()
+                                ->native(false),
 
-                        TextInput::make('slug')
-                            ->required()
-                            ->maxLength(255),
+                            TextInput::make('title')
+                                ->required()
+                                ->maxLength(255)
+                                ->placeholder('e.g. Verbal Intelligence Test 1')
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(function (string $operation, $state, callable $set) {
+                                    if ($operation === 'create') {
+                                        $set('slug', Str::slug($state));
+                                    }
+                                }),
 
-                        Select::make('module_type')
-                            ->label('Module Type')
-                            ->options([
-                                'preparation' => 'Preparation Module',
-                                'mock_test' => 'Mock Test',
-                                'pdf_repo' => 'PDF Repository',
-                            ])
-                            ->required(),
+                            TextInput::make('slug')
+                                ->required()
+                                ->maxLength(255)
+                                ->placeholder('e.g. verbal-intelligence-test-1'),
 
-                        TextInput::make('sort_order')
-                            ->numeric()
-                            ->default(0)
-                            ->required(),
+                            TextInput::make('sort_order')
+                                ->label('Sort Order Index')
+                                ->numeric()
+                                ->default(0)
+                                ->required(),
 
-                        Toggle::make('is_active')
-                            ->label('Active Module')
-                            ->default(true)
-                            ->required(),
+                            Toggle::make('is_active')
+                                ->label('Module Active Status')
+                                ->helperText('Control whether this module is visible to students.')
+                                ->default(true)
+                                ->required(),
+                        ]),
+                    ]),
 
+                Section::make('Content Metadata & Configuration')
+                    ->description('Specify test parameters like duration, passing score, or PDF resource links.')
+                    ->icon(Heroicon::OutlinedCog6Tooth)
+                    ->schema([
                         KeyValue::make('content_meta')
-                            ->label('Content Metadata (JSON Configuration)')
-                            ->keyLabel('Setting')
-                            ->valueLabel('Value')
-                            ->helperText('Configure duration_minutes, passing_score, instructions, or PDF links.')
+                            ->label('Metadata Parameters (JSON Key-Value Pairs)')
+                            ->keyLabel('Setting Name')
+                            ->valueLabel('Setting Value')
+                            ->keyPlaceholder('e.g. duration_minutes')
+                            ->valuePlaceholder('e.g. 45')
+                            ->addActionLabel('Add Setting Parameter')
+                            ->reorderable()
                             ->columnSpanFull(),
-                    ])->columns(2),
+                    ]),
             ]);
     }
 }

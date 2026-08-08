@@ -14,12 +14,17 @@ class ContentModule extends Model
         'content_meta' => 'array',
     ];
 
+    /**
+     * @return BelongsTo<Domain, $this>
+     */
     public function domain(): BelongsTo
     {
         return $this->belongsTo(Domain::class);
     }
 
-    // Connects to the reusable question bank
+    /**
+     * @return BelongsToMany<QuestionBank, $this>
+     */
     public function questions(): BelongsToMany
     {
         return $this->belongsToMany(QuestionBank::class, 'module_questions', 'module_id', 'question_id')

@@ -14,6 +14,9 @@ class DomainFlow extends Model
         'learning_schema' => 'array',
     ];
 
+    /**
+     * @return BelongsTo<Domain, $this>
+     */
     public function domain(): BelongsTo
     {
         return $this->belongsTo(Domain::class);

@@ -9,39 +9,62 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @property int $id
+ * @property int|null $parent_id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $code
+ * @property string|null $path
+ * @property bool $is_active
+ */
 class Domain extends Model
 {
     protected $guarded = [];
 
-    // Gets the parent domain (e.g., gets "Army" if this is "PMA")
+    /**
+     * @return BelongsTo<Domain, $this>
+     */
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Domain::class, 'parent_id');
     }
 
-    // Gets the subdomains (e.g., gets "PMA", "Navy" if this is "Armed Forces")
+    /**
+     * @return HasMany<Domain, $this>
+     */
     public function children(): HasMany
     {
         return $this->hasMany(Domain::class, 'parent_id');
     }
 
-    // Links to the dynamic UI schema for this specific test
+    /**
+     * @return HasOne<DomainFlow, $this>
+     */
     public function flow(): HasOne
     {
         return $this->hasOne(DomainFlow::class);
     }
 
-    // Links to all PDFs, Tests, and Content for this domain
+    /**
+     * @return HasMany<ContentModule, $this>
+     */
     public function contentModules(): HasMany
     {
         return $this->hasMany(ContentModule::class);
     }
 
+    /**
+     * @return HasMany<UserSubscription, $this>
+     */
     public function subscriptions(): HasMany
     {
         return $this->hasMany(UserSubscription::class);
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function subscribers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_subscriptions', 'domain_id', 'user_id')
@@ -57,29 +80,27 @@ class Domain extends Model
             ->withTimestamps();
     }
 
+
     protected static function booted()
     {
 
-        // 1. Triggered right AFTER a new domain is inserted into the DB
-        static::created(function ($domain) {
-            if ($domain->parent_id) {
-                $parent = Domain::find($domain->parent_id);
-                $domain->path = $parent->path.'.'.$domain->id;
+        static::created(function (Domain $domain) {
+            if ($domain->parent_id && $domain->parent) {
+                $domain->path = $domain->parent->path.'.'.$domain->id;
             } else {
                 $domain->path = (string) $domain->id;
             }
             $domain->saveQuietly();
         });
 
-        static::updated(function ($domain) {
+        static::updated(function (Domain $domain) {
             // Only execute if the Admin actually moved the category to a new parent
             if ($domain->wasChanged('parent_id')) {
                 // A. Capture the exact path BEFORE the update happened
                 $oldPath = $domain->getOriginal('path');
 
-                if ($domain->parent_id) {
-                    $parent = Domain::find($domain->parent_id);
-                    $newPath = $parent->path.'.'.$domain->id;
+                if ($domain->parent_id && $domain->parent) {
+                    $newPath = $domain->parent->path.'.'.$domain->id;
                 } else {
                     $newPath = (string) $domain->id;
                 }

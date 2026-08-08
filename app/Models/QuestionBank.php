@@ -15,6 +15,9 @@ class QuestionBank extends Model
         'payload' => 'array',
     ];
 
+    /**
+     * @return BelongsToMany<ContentModule, $this>
+     */
     public function modules(): BelongsToMany
     {
         return $this->belongsToMany(ContentModule::class, 'module_questions', 'question_id', 'module_id')
