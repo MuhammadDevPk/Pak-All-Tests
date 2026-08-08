@@ -31,9 +31,12 @@ return new class extends Migration
             $table->timestamp('starts_at')->nullable();
             $table->timestamp('expires_at')->nullable()->index();
 
-            // Indexes for optimized lookups
+            // Indexes for optimized user lookups
             $table->index(['user_id', 'status']);
             $table->index(['user_id', 'domain_id', 'status']);
+
+            // Admin table sorting/filtering index
+            $table->index(['status', 'created_at']);
             $table->timestamps();
         });
     }
