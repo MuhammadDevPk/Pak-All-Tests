@@ -15,6 +15,7 @@ class UserSubscriptionsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->deferLoading()
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['user', 'domain']))
             ->columns([
                 TextColumn::make('user.name')

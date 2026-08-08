@@ -15,6 +15,7 @@ class DomainFlowsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->deferLoading()
             ->modifyQueryUsing(fn (Builder $query) => $query->with('domain'))
             ->columns([
                 TextColumn::make('domain.name')

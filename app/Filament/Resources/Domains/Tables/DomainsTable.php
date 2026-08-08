@@ -15,6 +15,7 @@ class DomainsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->deferLoading()
             // Senior Architect Mandate: Eager load relationships to guarantee sub-millisecond execution & zero N+1 queries
             ->modifyQueryUsing(fn (Builder $query) => $query->with('parent'))
             ->columns([
