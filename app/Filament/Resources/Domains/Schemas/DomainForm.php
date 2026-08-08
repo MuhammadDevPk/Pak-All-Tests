@@ -9,6 +9,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class DomainForm
@@ -24,9 +25,16 @@ class DomainForm
                         Grid::make(2)->schema([
                             Select::make('parent_id')
                                 ->label('Parent Domain')
-                                ->relationship('parent', 'name')
+                                ->options(fn (): array => Cache::remember(
+                                    'domains_select_options',
+                                    3600,
+                                    fn () => \App\Models\Domain::query()
+                                        ->orderBy('name')
+                                        ->limit(200)
+                                        ->pluck('name', 'id')
+                                        ->all(),
+                                ))
                                 ->searchable()
-                                ->preload()
                                 ->nullable()
                                 ->placeholder('Select Parent (Leave empty for Top-Level Domain)'),
 

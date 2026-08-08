@@ -11,6 +11,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Cache;
 
 class UserSubscriptionForm
 {
@@ -27,15 +28,21 @@ class UserSubscriptionForm
                                 ->label('Subscriber User')
                                 ->relationship('user', 'name')
                                 ->searchable()
-                                ->preload()
                                 ->required()
                                 ->placeholder('Search user by name or email'),
 
                             Select::make('domain_id')
                                 ->label('Target Exam Domain')
-                                ->relationship('domain', 'name')
+                                ->options(fn (): array => Cache::remember(
+                                    'domains_select_options',
+                                    3600,
+                                    fn () => \App\Models\Domain::query()
+                                        ->orderBy('name')
+                                        ->limit(200)
+                                        ->pluck('name', 'id')
+                                        ->all(),
+                                ))
                                 ->searchable()
-                                ->preload()
                                 ->required()
                                 ->placeholder('Select Exam Domain'),
                         ]),
