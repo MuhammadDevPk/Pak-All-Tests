@@ -8,6 +8,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 
 class UserSubscriptionsTable
@@ -16,18 +17,9 @@ class UserSubscriptionsTable
     {
         return $table
             ->deferLoading()
-            ->records(fn (
-                ?string $search,
-                ?string $sortColumn,
-                ?string $sortDirection,
-            ): \Illuminate\Support\Collection => UserSubscription::getCachedTableRecords(
-                fn () => UserSubscription::query()->with(['user', 'domain'])->orderBy('id', 'asc')->get(),
-                ['user', 'domain'],
-                $search,
-                ['user.name', 'domain.name', 'status', 'transaction_id', 'payment_method'],
-                $sortColumn,
-                $sortDirection ?? 'asc',
-            ))
+            ->query(UserSubscription::query()->with(['user', 'domain']))
+            ->paginationMode(PaginationMode::Simple)
+            ->defaultSort('id', 'desc')
             ->columns([
                 TextColumn::make('user.name')
                     ->label('Subscriber')

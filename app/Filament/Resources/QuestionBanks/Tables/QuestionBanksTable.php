@@ -8,6 +8,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 
 class QuestionBanksTable
@@ -16,18 +17,9 @@ class QuestionBanksTable
     {
         return $table
             ->deferLoading()
-            ->records(fn (
-                ?string $search,
-                ?string $sortColumn,
-                ?string $sortDirection,
-            ): \Illuminate\Support\Collection => QuestionBank::getCachedTableRecords(
-                fn () => QuestionBank::query()->orderBy('id', 'asc')->get(),
-                [],
-                $search,
-                ['code', 'question_type', 'question_text', 'difficulty_level'],
-                $sortColumn,
-                $sortDirection ?? 'asc',
-            ))
+            ->query(QuestionBank::query())
+            ->paginationMode(PaginationMode::Simple)
+            ->defaultSort('id', 'desc')
             ->columns([
                 TextColumn::make('code')
                     ->label('Code')
