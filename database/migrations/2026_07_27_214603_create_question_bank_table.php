@@ -24,7 +24,9 @@ return new class extends Migration
             $table->jsonb('payload')->nullable()->comment('Stores varying data like MCQ options, essay word limits, or model answers.');
             $table->string('difficulty_level')->default('medium')->index(); // easy, medium, hard
             $table->text('explanation')->nullable()->comment('Detailed solution/explanation for post-test review');
-            $table->boolean('is_active')->default(true)->index();
+            $table->boolean('is_active')->default(true);
+
+            $table->index(['is_active', 'created_at']);
             $table->timestamps();
         });
     }
