@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Domain;
+use App\Services\SduiPayloadTransformer;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Inertia\Response;
 
 class DomainDashboardController extends Controller
@@ -26,23 +28,26 @@ class DomainDashboardController extends Controller
             ->firstOrFail();
 
         $subscription = $user->subscriptions()
-            ->where('doman_id', $domain->id)
+            ->where('domain_id', $domain->id)
             ->where('status', 'active')
             ->first();
 
         if (! $subscription) {
             return Inertia::render('Subscription/PendingOrInactive',
-                [
+                [[
                     'domain' => $domain->id,
                     'name' => $domain->name,
                     'slug' => $domain->slug,
                 ],
                 [
                     'subscriptionStatus' => $subscription?->status ?? 'none',
-                ]);
+                ]]);
         }
 
-        // $sduiPayload = $this->transformer->transform($domain, $user);
+        $sduiPayload = $this->transformer->transform($domain, $user);
 
+        return Inertia::render('Domain/Dashboard', [
+            'sdui' => $sduiPayload,
+        ]);
     }
 }

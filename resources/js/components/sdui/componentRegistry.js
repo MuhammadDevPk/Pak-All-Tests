@@ -1,0 +1,22 @@
+import { defineAsyncComponent } from 'vue';
+import EmptyStateLayout from './EmptyStateLayout.vue';
+
+/**
+ * Registry mapping SDUI type strings from backend JSON schema
+ * to Vue component definitions.
+ */
+export const componentRegistry = {
+    // Structural Layouts
+    EmptyStateLayout,
+
+    // Future Sub-Phase 3.3 Components (Async loaded as they are created)
+    // TabbedLayout: defineAsyncComponent(() => import('./TabbedLayout.vue')),
+    // SubjectGrid: defineAsyncComponent(() => import('./SubjectGrid.vue')),
+    // PhaseStepperLayout: defineAsyncComponent(() => import('./PhaseStepperLayout.vue')),
+    // ResourceList: defineAsyncComponent(() => import('./ResourceList.vue')),
+
+    // // Future Sub-Phase 3.4 Interactive Components
+    // McqPlayer: defineAsyncComponent(() => import('./McqPlayer.vue')),
+    // PdfViewer: defineAsyncComponent(() => import('./PdfViewer.vue')),
+    // SubjectiveUpload: defineAsyncComponent(() => import('./SubjectiveUpload.vue')),
+};
