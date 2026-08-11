@@ -9,13 +9,13 @@ export const componentRegistry = {
     // Structural Layouts
     EmptyStateLayout,
 
-    // Future Sub-Phase 3.3 Components (Async loaded as they are created)
-    // TabbedLayout: defineAsyncComponent(() => import('./TabbedLayout.vue')),
-    // SubjectGrid: defineAsyncComponent(() => import('./SubjectGrid.vue')),
-    // PhaseStepperLayout: defineAsyncComponent(() => import('./PhaseStepperLayout.vue')),
-    // ResourceList: defineAsyncComponent(() => import('./ResourceList.vue')),
+    // Sub-Phase 3.3 Structural Layouts
+    TabbedLayout: defineAsyncComponent(() => import('./TabbedLayout.vue')),
+    SubjectGrid: defineAsyncComponent(() => import('./SubjectGrid.vue')),
+    PhaseStepperLayout: defineAsyncComponent(() => import('./PhaseStepperLayout.vue')),
+    ResourceList: defineAsyncComponent(() => import('./ResourceList.vue')),
 
-    // // Future Sub-Phase 3.4 Interactive Components
+    // Future Sub-Phase 3.4 Interactive Components
     // McqPlayer: defineAsyncComponent(() => import('./McqPlayer.vue')),
     // PdfViewer: defineAsyncComponent(() => import('./PdfViewer.vue')),
     // SubjectiveUpload: defineAsyncComponent(() => import('./SubjectiveUpload.vue')),
