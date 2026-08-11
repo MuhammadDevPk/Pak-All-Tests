@@ -64,36 +64,6 @@ class PlatformSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        // SDUI Schema for PMA Initial
-        DomainFlow::create([
-            'domain_id' => $pma->id,
-            'version' => 1,
-            'is_active' => true,
-            'ui_schema' => [
-                'layout' => 'two_tiered_tabs',
-                'tabs' => [
-                    [
-                        'key' => 'preparation',
-                        'label' => 'Preparation Phase',
-                        'modules' => ['verbal_intelligence', 'non_verbal_intelligence', 'academic_general'],
-                    ],
-                    [
-                        'key' => 'mock_tests',
-                        'label' => 'Mock Examination',
-                        'modules' => ['pma_full_mock'],
-                    ],
-                ],
-            ],
-            'learning_schema' => [
-                'time_limit_minutes' => 45,
-                'passing_percentage' => 60,
-                'negative_marking' => false,
-                'gating' => [
-                    'verbal_must_pass' => true,
-                ],
-            ],
-        ]);
-
         // Content Modules for PMA Initial
         $pmaPrepModule = ContentModule::create([
             'domain_id' => $pma->id,
@@ -105,6 +75,7 @@ class PlatformSeeder extends Seeder
             'content_meta' => [
                 'duration_minutes' => 20,
                 'total_questions' => 10,
+                'description' => 'Master verbal analogy, coding-decoding, and logical series questions.',
                 'instructions' => 'Complete all verbal analogy questions within the given time.',
             ],
         ]);
@@ -119,6 +90,119 @@ class PlatformSeeder extends Seeder
             'content_meta' => [
                 'duration_minutes' => 45,
                 'passing_score' => 60,
+                'description' => 'Complete timed initial test simulation covering Verbal, Non-Verbal & Academic.',
+            ],
+        ]);
+
+        // Dynamic SDUI Schema for PMA Initial (Multi-Phase Stepper + Nested Tabs)
+        DomainFlow::create([
+            'domain_id' => $pma->id,
+            'version' => 1,
+            'is_active' => true,
+            'ui_schema' => [
+                'type' => 'PhaseStepperLayout',
+                'props' => [
+                    'currentPhase' => 1,
+                    'phases' => [
+                        [
+                            'number' => 1,
+                            'title' => 'Initial Intelligence Test',
+                            'subtitle' => 'Verbal & Non-Verbal MCQs',
+                            'content' => [
+                                'type' => 'TabbedLayout',
+                                'props' => [
+                                    'defaultTab' => 'verbal',
+                                    'tabs' => [
+                                        [
+                                            'id' => 'verbal',
+                                            'label' => 'Verbal Intelligence',
+                                            'badge' => '1 Active Test',
+                                            'content' => [
+                                                'type' => 'SubjectGrid',
+                                                'props' => [
+                                                    'columns' => 2,
+                                                    'items' => [
+                                                        [
+                                                            'moduleId' => $pmaPrepModule->id,
+                                                            'title' => 'Verbal Intelligence Test 1',
+                                                            'description' => '84 Analogy & Reasoning MCQs',
+                                                            'actionLabel' => 'Start Practice',
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                        [
+                                            'id' => 'non_verbal',
+                                            'label' => 'Non-Verbal Intelligence',
+                                            'badge' => '1 Active Test',
+                                            'content' => [
+                                                'type' => 'SubjectGrid',
+                                                'props' => [
+                                                    'columns' => 2,
+                                                    'items' => [
+                                                        [
+                                                            'title' => 'Pattern Matching & Matrix Reasoning',
+                                                            'description' => '64 Pattern Identification Questions',
+                                                            'actionLabel' => 'Start Practice',
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        [
+                            'number' => 2,
+                            'title' => 'Academic Test Phase',
+                            'subtitle' => 'Math, English & General Knowledge',
+                            'content' => [
+                                'type' => 'SubjectGrid',
+                                'props' => [
+                                    'columns' => 2,
+                                    'items' => [
+                                        [
+                                            'title' => 'General Knowledge & Current Affairs',
+                                            'description' => '50 Questions on Pakistan Studies & World History',
+                                            'actionLabel' => 'Attempt Exam',
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        [
+                            'number' => 3,
+                            'title' => 'Official Handouts & Notes',
+                            'subtitle' => 'PDF Reference Guides',
+                            'content' => [
+                                'type' => 'ResourceList',
+                                'props' => [
+                                    'title' => 'Preparation Handouts',
+                                    'items' => [
+                                        [
+                                            'title' => 'PMA Initial Verbal & Non-Verbal Formula Book',
+                                            'fileType' => 'PDF Document',
+                                            'fileSize' => '3.4 MB',
+                                            'actionLabel' => 'Download Notes',
+                                        ],
+                                        [
+                                            'title' => 'ISSB Psychological & Medical Guidelines',
+                                            'fileType' => 'PDF Document',
+                                            'fileSize' => '4.8 MB',
+                                            'actionLabel' => 'Download Notes',
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            'learning_schema' => [
+                'time_limit_minutes' => 45,
+                'passing_percentage' => 60,
             ],
         ]);
 
@@ -140,25 +224,6 @@ class PlatformSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        DomainFlow::create([
-            'domain_id' => $css->id,
-            'version' => 1,
-            'is_active' => true,
-            'ui_schema' => [
-                'layout' => 'subject_grid',
-                'subjects' => [
-                    ['name' => 'English Precis & Composition', 'type' => 'essay_uploader'],
-                    ['name' => 'General Knowledge & Current Affairs', 'type' => 'mcq_grid'],
-                    ['name' => 'Islamic Studies', 'type' => 'descriptive'],
-                ],
-            ],
-            'learning_schema' => [
-                'passing_percentage' => 40,
-                'essay_word_limit' => 2500,
-                'allow_rebooking' => true,
-            ],
-        ]);
-
         $cssEssayModule = ContentModule::create([
             'domain_id' => $css->id,
             'title' => 'English Essay Evaluation Module',
@@ -168,7 +233,73 @@ class PlatformSeeder extends Seeder
             'is_active' => true,
             'content_meta' => [
                 'max_word_count' => 2500,
-                'rubric' => 'Structure, Thesis Statement, Argumentation, Grammar',
+                'description' => 'Submit written essays for evaluation by expert CSS mentors.',
+            ],
+        ]);
+
+        DomainFlow::create([
+            'domain_id' => $css->id,
+            'version' => 1,
+            'is_active' => true,
+            'ui_schema' => [
+                'type' => 'TabbedLayout',
+                'props' => [
+                    'defaultTab' => 'compulsory',
+                    'tabs' => [
+                        [
+                            'id' => 'compulsory',
+                            'label' => 'Compulsory Subjects',
+                            'badge' => '2 Modules',
+                            'content' => [
+                                'type' => 'SubjectGrid',
+                                'props' => [
+                                    'columns' => 2,
+                                    'items' => [
+                                        [
+                                            'moduleId' => $cssEssayModule->id,
+                                            'title' => 'English Essay & Outline',
+                                            'description' => '2500 Word Essay Evaluation with Detailed Rubrics',
+                                            'actionLabel' => 'Submit Essay',
+                                        ],
+                                        [
+                                            'title' => 'General Science & Ability (MPT MCQs)',
+                                            'description' => 'Screening test practice question bank',
+                                            'actionLabel' => 'Start Practice',
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        [
+                            'id' => 'resources',
+                            'label' => 'Past Papers & Notes',
+                            'badge' => '2 Files',
+                            'content' => [
+                                'type' => 'ResourceList',
+                                'props' => [
+                                    'title' => 'CSS 2015-2026 Past Papers Compilation',
+                                    'items' => [
+                                        [
+                                            'title' => 'CSS English Precis Past Papers (10 Years)',
+                                            'fileType' => 'PDF Document',
+                                            'fileSize' => '8.2 MB',
+                                            'actionLabel' => 'Open PDF',
+                                        ],
+                                        [
+                                            'title' => 'Current Affairs Monthly Digest - August 2026',
+                                            'fileType' => 'PDF Document',
+                                            'fileSize' => '12.5 MB',
+                                            'actionLabel' => 'Open PDF',
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            'learning_schema' => [
+                'passing_percentage' => 40,
             ],
         ]);
 
@@ -201,23 +332,8 @@ class PlatformSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        $q3 = QuestionBank::create([
-            'question_type' => 'essay',
-            'code' => 'Q-CSS-ESSAY-001',
-            'question_text' => 'Analyze the economic challenges facing Pakistan and propose structural reforms.',
-            'payload' => [
-                'word_limit' => 2500,
-                'key_themes' => ['Fiscal Deficit', 'IMF Bailouts', 'Tax Base Expansion', 'Export Competitiveness'],
-            ],
-            'difficulty_level' => 'hard',
-            'explanation' => 'Candidate must construct a structured 2500-word essay with a clear outline.',
-            'is_active' => true,
-        ]);
-
-        // Attach Questions to Content Modules via Pivot
         $pmaPrepModule->questions()->attach($q1->id, ['sort_order' => 1, 'marks' => 1.00]);
         $pmaPrepModule->questions()->attach($q2->id, ['sort_order' => 2, 'marks' => 1.00]);
-        $cssEssayModule->questions()->attach($q3->id, ['sort_order' => 1, 'marks' => 100.00]);
 
         // -------------------------------------------------------------
         // USER SUBSCRIPTIONS SEEDING
@@ -236,12 +352,12 @@ class PlatformSeeder extends Seeder
         UserSubscription::create([
             'user_id' => $student->id,
             'domain_id' => $css->id,
-            'status' => 'pending',
+            'status' => 'active',
             'payment_method' => 'jazzcash',
             'transaction_id' => 'TRX-1122334455',
             'receipt_url' => 'receipts/sample_css_receipt.png',
-            'starts_at' => null,
-            'expires_at' => null,
+            'starts_at' => now(),
+            'expires_at' => now()->addYear(),
         ]);
     }
 }
