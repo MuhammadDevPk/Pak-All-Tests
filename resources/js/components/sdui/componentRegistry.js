@@ -16,7 +16,7 @@ export const componentRegistry = {
     ResourceList: defineAsyncComponent(() => import('./ResourceList.vue')),
 
     // Future Sub-Phase 3.4 Interactive Components
-    // McqPlayer: defineAsyncComponent(() => import('./McqPlayer.vue')),
-    // PdfViewer: defineAsyncComponent(() => import('./PdfViewer.vue')),
-    // SubjectiveUpload: defineAsyncComponent(() => import('./SubjectiveUpload.vue')),
+    McqPlayer: defineAsyncComponent(() => import('./McqPlayer.vue')),
+    PdfViewer: defineAsyncComponent(() => import('./PdfViewer.vue')),
+    SubjectiveUpload: defineAsyncComponent(() => import('./SubjectiveUpload.vue')),
 };
