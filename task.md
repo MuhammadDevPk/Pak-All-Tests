@@ -1,0 +1,41 @@
+# Project Progress & Status
+
+## Completed Milestones
+
+### 1. Foundational Infrastructure (Phase 1)
+- Relational schemas configured (PostgreSQL, custom type domains with `ltree` paths, JSONB storage for dynamic schemas).
+- Seeders built.
+
+### 2. Administrative Engine (Phase 2)
+- Filament resources built for domain management, content modules, question banks, and flow mappings.
+- Custom JSON schemas designed to map UI structures.
+
+### 3. Server-Driven UI (SDUI) Engine (Phase 3)
+- **`SduiRenderer.vue`**: Universal parser that recursively maps backend schema objects to frontend components.
+- **Structural Layouts**: `TabbedLayout.vue`, `PhaseStepperLayout.vue`, `SubjectGrid.vue`, `ResourceList.vue`, and `VerticalStack.vue`.
+- **Interactive players**:
+  - `McqPlayer.vue` (Timer-based exam engine with navigation pills, practice modes, and feedback).
+  - `PdfViewer.vue` (Iframe viewer with fullscreen capabilities).
+  - `SubjectiveUpload.vue` (Drag-and-drop submission tool for descriptive exams).
+  - `ProgressCard.vue` (SVG circular visual progress ring displaying accuracy/completion rates).
+- **Backend Pipelines**:
+  - `DomainDashboardController.php` (Sub-millisecond query execution, eager-loaded relation mappings, and subscription checks).
+  - `SduiPayloadTransformer.php` (Eagerly hydrates module nodes).
+  - `McqExecutionController.php` (Secure grading endpoint verifying correct choices, passing score thresholds, and analytics summaries).
+- **Quality Audited**: Verified template unwrapping syntax (no `.value` in templates) and resolved N+1 database queries.
+
+---
+
+## Active Roadmap (Next Phase)
+
+### Phase 4: Payment Verification & Delivery
+- **Sub-Phase 4.1**: Receipt screenshot uploads & Supabase S3 Object Storage integration.
+- **Sub-Phase 4.2**: Filament Manual Review Admin Queue (pending subscription uploads page).
+- **Sub-Phase 4.3**: Payment state machine transitions & active subscription updates.
+- **Sub-Phase 4.4**: Queue Event notifications (Meta WhatsApp API templates and transactional emails).
+- **Sub-Phase 4.5**: EasyPaisa / JazzCash Webhook receiver & signature verification.
+
+### Phase 5: Specialized AI Chatbots & Sub-Agents
+- Vectorization pipeline with pgvector.
+- AI Tutor floating action button chat interface.
+- WhatsApp inbound tutoring webhook handlers.
