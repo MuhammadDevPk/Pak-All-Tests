@@ -251,20 +251,35 @@ class PlatformSeeder extends Seeder
                             'label' => 'Compulsory Subjects',
                             'badge' => '2 Modules',
                             'content' => [
-                                'type' => 'SubjectGrid',
+                                'type' => 'VerticalStack',
                                 'props' => [
-                                    'columns' => 2,
-                                    'items' => [
+                                    'children' => [
                                         [
-                                            'moduleId' => $cssEssayModule->id,
-                                            'title' => 'English Essay & Outline',
-                                            'description' => '2500 Word Essay Evaluation with Detailed Rubrics',
-                                            'actionLabel' => 'Submit Essay',
+                                            'type' => 'ProgressCard',
+                                            'props' => [
+                                                'accuracy' => 84,
+                                                'completedCount' => 3,
+                                                'totalCount' => 5,
+                                            ],
                                         ],
                                         [
-                                            'title' => 'General Science & Ability (MPT MCQs)',
-                                            'description' => 'Screening test practice question bank',
-                                            'actionLabel' => 'Start Practice',
+                                            'type' => 'SubjectGrid',
+                                            'props' => [
+                                                'columns' => 2,
+                                                'items' => [
+                                                    [
+                                                        'moduleId' => $cssEssayModule->id,
+                                                        'title' => 'English Essay & Outline',
+                                                        'description' => '2500 Word Essay Evaluation with Detailed Rubrics',
+                                                        'actionLabel' => 'Submit Essay',
+                                                    ],
+                                                    [
+                                                        'title' => 'General Science & Ability (MPT MCQs)',
+                                                        'description' => 'Screening test practice question bank',
+                                                        'actionLabel' => 'Start Practice',
+                                                    ],
+                                                ],
+                                            ],
                                         ],
                                     ],
                                 ],

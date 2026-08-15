@@ -1,7 +1,6 @@
 <script setup>
 import { computed } from 'vue';
 import { componentRegistry } from './componentRegistry.js';
-import EmptyStateLayout from './EmptyStateLayout.vue';
 
 const props = defineProps({
     node: {
@@ -14,15 +13,15 @@ const props = defineProps({
 // Resolve string type to Vue Component
 const resolvedComponent = computed(() => {
     // props.node.type: Contains the string name of the component to load (e.g. 'EmptyStateLayout', 'TabbedLayout', 'SubjectGrid').
-    if(!props.node || !props.node.type) {
-        return EmptyStateLayout;
+    if (!props.node || !props.node.type) {
+        return componentRegistry.EmptyStateLayout;
     }
 
     const comp = componentRegistry[props.node.type];
 
-    if(!comp) {
-        console.warn(`[SDUI Engine] Unkbown Component type: "${props.node.type}". Falling back to EmptyStateLayout.`);
-        return EmptyStateLayout;
+    if (!comp) {
+        console.warn(`[SDUI Engine] Unknown component type: "${props.node.type}". Falling back to EmptyStateLayout.`);
+        return componentRegistry.EmptyStateLayout;
     }
 
     return comp;

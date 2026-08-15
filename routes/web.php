@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainDashboardController;
+use App\Http\Controllers\McqExecutionController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,7 @@ Route::middleware(['auth', 'verified', EnsureTeamMembership::class])
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/d/{domainSlug}', DomainDashboardController::class)->name('domain.dashboard');
+    Route::post('/api/modules/{module}/submit', McqExecutionController::class)->name('modules.submit');
 });
 
 Route::middleware(['auth'])->group(function () {

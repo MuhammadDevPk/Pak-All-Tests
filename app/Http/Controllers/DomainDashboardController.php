@@ -33,15 +33,14 @@ class DomainDashboardController extends Controller
             ->first();
 
         if (! $subscription) {
-            return Inertia::render('Subscription/PendingOrInactive',
-                [[
-                    'domain' => $domain->id,
+            return Inertia::render('Subscription/PendingOrInactive', [
+                'domain' => [
+                    'id' => $domain->id,
                     'name' => $domain->name,
                     'slug' => $domain->slug,
                 ],
-                [
-                    'subscriptionStatus' => $subscription?->status ?? 'none',
-                ]]);
+                'subscriptionStatus' => 'none',
+            ]);
         }
 
         $sduiPayload = $this->transformer->transform($domain, $user);

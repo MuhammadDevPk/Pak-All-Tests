@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import SduiRenderer from './SduiRenderer.vue';
+
 const props = defineProps({
     currentPhase: {
         type: [Number, String],

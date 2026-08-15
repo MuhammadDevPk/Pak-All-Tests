@@ -51,7 +51,7 @@ const selectTab = (id) => {
             </nav>
         </div>
 
-         <!-- Render Active Tab's SDUI Sub-Tree -->
+        <!-- Render Active Tab's SDUI Sub-Tree -->
         <div class="transition-opacity duration-150">
             <SduiRenderer v-if="activeTabContent" :node="activeTabContent" />
         </div>
