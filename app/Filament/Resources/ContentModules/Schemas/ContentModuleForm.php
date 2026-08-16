@@ -2,8 +2,9 @@
 
 namespace App\Filament\Resources\ContentModules\Schemas;
 
-use Filament\Forms\Components\KeyValue;
+use App\Models\Domain;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
@@ -29,7 +30,7 @@ class ContentModuleForm
                                 ->options(fn (): array => Cache::remember(
                                     'domains_select_options',
                                     3600,
-                                    fn () => \App\Models\Domain::query()
+                                    fn () => Domain::query()
                                         ->orderBy('name')
                                         ->limit(200)
                                         ->pluck('name', 'id')
@@ -83,15 +84,25 @@ class ContentModuleForm
                     ->description('Specify test parameters like duration, passing score, or PDF resource links.')
                     ->icon(Heroicon::OutlinedCog6Tooth)
                     ->schema([
-                        KeyValue::make('content_meta')
-                            ->label('Metadata Parameters (JSON Key-Value Pairs)')
-                            ->keyLabel('Setting Name')
-                            ->valueLabel('Setting Value')
-                            ->keyPlaceholder('e.g. duration_minutes')
-                            ->valuePlaceholder('e.g. 45')
-                            ->addActionLabel('Add Setting Parameter')
-                            ->reorderable()
-                            ->columnSpanFull(),
+                        Textarea::make('content_meta')
+                            ->label('Module Metadata (JSON)')
+                            ->helperText('Input a valid JSON object defining duration, passing limits, or other custom variables.')
+                            ->placeholder("{\n  \"duration_minutes\": 20,\n  \"passing_score\": 60,\n  \"description\": \"Test details\"\n}")
+                            ->rows(6)
+                            ->required()
+                            ->columnSpanFull()
+                            ->afterStateHydrated(fn ($state, $set) => is_array($state) ? $set('content_meta', json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) : null)
+                            ->dehydrateStateUsing(fn ($state) => json_decode($state, true))
+                            ->rules([
+                                fn () => function (string $attribute, $value, $fail) {
+                                    if (is_string($value)) {
+                                        json_decode($value);
+                                        if (json_last_error() !== JSON_ERROR_NONE) {
+                                            $fail('The '.$attribute.' must be a valid JSON string: '.json_last_error_msg());
+                                        }
+                                    }
+                                },
+                            ]),
                     ]),
             ]);
     }
