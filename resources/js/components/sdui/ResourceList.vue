@@ -1,5 +1,7 @@
 <script setup>
-defineProps({
+import { inject } from 'vue';
+
+const props = defineProps({
     title: {
         type: String,
         default: 'Study Resources & Notes',
@@ -10,6 +12,16 @@ defineProps({
         default: () => [],
     },
 });
+
+const sduiContext = inject('sduiContext', null);
+
+const startResource = (item) => {
+    if (item.moduleId && sduiContext) {
+        sduiContext.launchModule(item.moduleId);
+    } else if (item.fileUrl) {
+        window.open(item.fileUrl, '_blank');
+    }
+};
 </script>
 
 <template>
@@ -33,7 +45,7 @@ defineProps({
                         </span>
                     </div>
                 </div>
-                <button type="button" class="rounded-lg border border-sidebar-border/70 bg-sidebar px-3 py-1.5 text-xs font-medium text-foreground hover:bg-sidebar-accent transition-colors">
+                <button @click="startResource(item)" type="button" class="rounded-lg border border-sidebar-border/70 bg-sidebar px-3 py-1.5 text-xs font-medium text-foreground hover:bg-sidebar-accent transition-colors">
                     {{ item.actionLabel || 'View Document' }}
                 </button>
             </div>

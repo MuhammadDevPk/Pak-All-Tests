@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 
 const props = defineProps({
     columns: {
@@ -20,6 +20,15 @@ const gridClass = computed(() => {
     if (cols === 4) return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4';
     return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
 });
+
+const sduiContext = inject('sduiContext', null);
+
+const startItem = (item) => {
+    const moduleId = item.moduleId || item.module?.id;
+    if (moduleId && sduiContext) {
+        sduiContext.launchModule(moduleId);
+    }
+};
 </script>
 
 <template>
@@ -41,7 +50,7 @@ const gridClass = computed(() => {
             </div>
             <div class="mt-5 flex items-center justify-between border-t border-sidebar-border/50 pt-4">
                 <span>{{ item.module?.content_meta?.duration_minutes ? `${item.module.content_meta.duration_minutes} mins` : 'Self-Paced' }}</span>
-                <button type="button" class="inline-flex items-center justify-center rounded-lg bg-primary px-3.5 py-1.5 text-xs font-medium text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors">
+                <button @click="startItem(item)" type="button" class="inline-flex items-center justify-center rounded-lg bg-primary px-3.5 py-1.5 text-xs font-medium text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors">
                     {{ item.actionLabel || 'Start Module' }}
                 </button>
             </div>
