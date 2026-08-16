@@ -23,6 +23,7 @@
   - `SduiPayloadTransformer.php` (Eagerly hydrates module nodes).
   - `McqExecutionController.php` (Secure grading endpoint verifying correct choices, passing score thresholds, and analytics summaries).
 - **Quality Audited**: Verified template unwrapping syntax (no `.value` in templates) and resolved N+1 database queries.
+- **Filament UI Upgraded**: Replaced restrictive flat `KeyValue` fields with pretty-printed, syntax-validated JSON `Textarea` editors across `DomainFlowForm.php`, `QuestionBankForm.php`, and `ContentModuleForm.php` to enable nesting of layout trees, question options arrays, and rules.
 
 ---
 
