@@ -2,8 +2,9 @@
 
 namespace App\Filament\Resources\DomainFlows\Schemas;
 
-use Filament\Forms\Components\KeyValue;
+use App\Models\Domain;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
@@ -28,7 +29,7 @@ class DomainFlowForm
                                 ->options(fn (): array => Cache::remember(
                                     'domains_select_options',
                                     3600,
-                                    fn () => \App\Models\Domain::query()
+                                    fn () => Domain::query()
                                         ->orderBy('name')
                                         ->limit(200)
                                         ->pluck('name', 'id')
@@ -57,31 +58,47 @@ class DomainFlowForm
                     ->description('Define tab navigation, layout structures, and Vue 3 component mappings.')
                     ->icon(Heroicon::OutlinedWindow)
                     ->schema([
-                        KeyValue::make('ui_schema')
-                            ->label('UI Component Mapping (JSON Pairs)')
-                            ->keyLabel('Layout / Tab Key')
-                            ->valueLabel('Vue Component / Config')
-                            ->keyPlaceholder('e.g. layout')
-                            ->valuePlaceholder('e.g. two_tiered_tabs')
-                            ->addActionLabel('Add Component Mapping')
-                            ->reorderable()
+                        Textarea::make('ui_schema')
+                            ->label('UI Layout Schema (JSON)')
+                            ->helperText('Input a valid JSON object defining the page layout schema.')
+                            ->rows(15)
                             ->required()
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->afterStateHydrated(fn ($state, $set) => is_array($state) ? $set('ui_schema', json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) : null)
+                            ->dehydrateStateUsing(fn ($state) => json_decode($state, true))
+                            ->rules([
+                                fn () => function (string $attribute, $value, $fail) {
+                                    if (is_string($value)) {
+                                        json_decode($value);
+                                        if (json_last_error() !== JSON_ERROR_NONE) {
+                                            $fail('The '.$attribute.' must be a valid JSON string: '.json_last_error_msg());
+                                        }
+                                    }
+                                },
+                            ]),
                     ]),
 
                 Section::make('Pedagogical & Gating Rules Schema')
                     ->description('Define passing percentages, time limits, and prerequisite gating criteria.')
                     ->icon(Heroicon::OutlinedAcademicCap)
                     ->schema([
-                        KeyValue::make('learning_schema')
-                            ->label('Learning & Test Rules (JSON Pairs)')
-                            ->keyLabel('Rule Identifier')
-                            ->valueLabel('Rule Threshold / Limit')
-                            ->keyPlaceholder('e.g. time_limit_minutes')
-                            ->valuePlaceholder('e.g. 45')
-                            ->addActionLabel('Add Rule Definition')
-                            ->reorderable()
-                            ->columnSpanFull(),
+                        Textarea::make('learning_schema')
+                            ->label('Learning & Test Rules (JSON)')
+                            ->helperText('Input a valid JSON object defining passing, time limits, or grading configurations.')
+                            ->rows(6)
+                            ->columnSpanFull()
+                            ->afterStateHydrated(fn ($state, $set) => is_array($state) ? $set('learning_schema', json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) : null)
+                            ->dehydrateStateUsing(fn ($state) => json_decode($state, true))
+                            ->rules([
+                                fn () => function (string $attribute, $value, $fail) {
+                                    if (is_string($value)) {
+                                        json_decode($value);
+                                        if (json_last_error() !== JSON_ERROR_NONE) {
+                                            $fail('The '.$attribute.' must be a valid JSON string: '.json_last_error_msg());
+                                        }
+                                    }
+                                },
+                            ]),
                     ]),
             ]);
     }
