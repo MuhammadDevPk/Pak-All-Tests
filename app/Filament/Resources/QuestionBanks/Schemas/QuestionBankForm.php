@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\QuestionBanks\Schemas;
 
-use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
@@ -85,15 +85,25 @@ class QuestionBankForm
                     ->description('Store MCQ options, correct answer indices, essay word limits, or scoring rubrics.')
                     ->icon(Heroicon::OutlinedQueueList)
                     ->schema([
-                        KeyValue::make('payload')
-                            ->label('Dynamic Payload Properties (JSON Pairs)')
-                            ->keyLabel('Property Key')
-                            ->valueLabel('Property Value')
-                            ->keyPlaceholder('e.g. correct_option_index')
-                            ->valuePlaceholder('e.g. 2')
-                            ->addActionLabel('Add Payload Field')
-                            ->reorderable()
-                            ->columnSpanFull(),
+                        Textarea::make('payload')
+                            ->label('Question Payload (JSON)')
+                            ->helperText('Input a valid JSON object. E.g. {"options": ["Choice A", "Choice B"], "correct_option_index": 0}')
+                            ->placeholder("{\n  \"options\": [\n    \"Option A\",\n    \"Option B\"\n  ],\n  \"correct_option_index\": 0\n}")
+                            ->rows(8)
+                            ->required()
+                            ->columnSpanFull()
+                            ->afterStateHydrated(fn ($state, $set) => is_array($state) ? $set('payload', json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) : null)
+                            ->dehydrateStateUsing(fn ($state) => json_decode($state, true))
+                            ->rules([
+                                fn () => function (string $attribute, $value, $fail) {
+                                    if (is_string($value)) {
+                                        json_decode($value);
+                                        if (json_last_error() !== JSON_ERROR_NONE) {
+                                            $fail('The '.$attribute.' must be a valid JSON string: '.json_last_error_msg());
+                                        }
+                                    }
+                                },
+                            ]),
                     ]),
 
                 Section::make('Solution & Explanation')
