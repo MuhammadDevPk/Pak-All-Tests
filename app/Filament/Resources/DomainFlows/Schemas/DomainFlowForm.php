@@ -60,18 +60,25 @@ class DomainFlowForm
                     ->schema([
                         Textarea::make('ui_schema')
                             ->label('UI Layout Schema (JSON)')
-                            ->helperText('Input a valid JSON object defining the page layout schema.')
+                            ->helperText('Input a valid JSON object defining the page layout schema. Need component templates or key verification? Check the SDUI Schema Guide in the sidebar or visit /admin/sdui-schema-guide.')
                             ->rows(15)
                             ->required()
                             ->columnSpanFull()
                             ->afterStateHydrated(fn ($state, $set) => is_array($state) ? $set('ui_schema', json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) : null)
-                            ->dehydrateStateUsing(fn ($state) => json_decode($state, true))
+                            ->dehydrateStateUsing(fn ($state) => is_string($state) ? json_decode($state, true) : $state)
                             ->rules([
                                 fn () => function (string $attribute, $value, $fail) {
-                                    if (is_string($value)) {
-                                        json_decode($value);
-                                        if (json_last_error() !== JSON_ERROR_NONE) {
-                                            $fail('The '.$attribute.' must be a valid JSON string: '.json_last_error_msg());
+                                    $array = is_string($value) ? json_decode($value, true) : $value;
+                                    if (json_last_error() !== JSON_ERROR_NONE) {
+                                        $fail('The '.$attribute.' must be a valid JSON string: '.json_last_error_msg());
+                                        return;
+                                    }
+
+                                    if (is_array($array)) {
+                                        $validator = new \App\Services\SduiSchemaValidator();
+                                        $result = $validator->validate($array);
+                                        if (!$result['valid']) {
+                                            $fail('SDUI Schema Error: '.implode(' | ', $result['errors']));
                                         }
                                     }
                                 },
