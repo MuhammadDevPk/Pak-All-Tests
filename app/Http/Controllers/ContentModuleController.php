@@ -15,10 +15,20 @@ class ContentModuleController extends Controller
     {
         $user = $request->user();
 
+        if (! $module->is_active || ! $module->domain()->where('is_active', true)->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'This module is not currently available.',
+            ], 404);
+        }
+
         // Check if user has active subscription for the domain of this module
         $subscription = $user->subscriptions()
             ->where('domain_id', $module->domain_id)
             ->where('status', 'active')
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
             ->first();
 
         if (! $subscription) {
