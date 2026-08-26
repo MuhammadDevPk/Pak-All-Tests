@@ -19,7 +19,7 @@ const startResource = (item) => {
     if (item.moduleId && sduiContext) {
         sduiContext.launchModule(item.moduleId);
     } else if (item.fileUrl) {
-        window.open(item.fileUrl, '_blank');
+        window.open(item.fileUrl, '_blank', 'noopener,noreferrer');
     }
 };
 </script>
