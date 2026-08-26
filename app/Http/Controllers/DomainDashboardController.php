@@ -24,7 +24,9 @@ class DomainDashboardController extends Controller
         $domain = Domain::query()
             ->where('slug', $domainSlug)
             ->where('is_active', true)
-            ->with(['flow', 'contentModules'])
+            ->with([
+                'flow' => fn ($query) => $query->where('is_active', true),
+            ])
             ->firstOrFail();
 
         $subscription = $user->subscriptions()
