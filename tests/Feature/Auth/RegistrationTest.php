@@ -34,15 +34,17 @@ test('registration screen includes team invitation context', function () {
 });
 
 test('new users can register', function () {
+    $email = 'test-' . uniqid() . '@example.com';
+
     $response = $this->post(route('register.store'), [
         'name' => 'Test User',
-        'email' => 'test@example.com',
+        'email' => $email,
         'password' => 'password',
         'password_confirmation' => 'password',
     ]);
 
     $this->assertAuthenticated();
 
-    $user = User::where('email', 'test@example.com')->first();
-    $response->assertRedirect(route('dashboard'));
+    $user = User::where('email', $email)->first();
+    $response->assertRedirect('/' . $user->personalTeam()->slug . '/dashboard');
 });
