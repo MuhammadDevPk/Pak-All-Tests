@@ -152,6 +152,36 @@ class PlatformSeeder extends Seeder
             ],
         ]);
 
+        ContentModule::create([
+            'domain_id' => $pma->id,
+            'title' => 'PMA Initial Verbal & Non-Verbal Formula Book',
+            'slug' => 'pma-initial-verbal-non-verbal-formula-book',
+            'module_type' => 'pdf_repo',
+            'sort_order' => 8,
+            'is_active' => true,
+            'content_meta' => [
+                'file_type' => 'PDF Document',
+                'file_size' => '3.4 MB',
+                'file_url' => '/storage/modules/pma-formula-book.pdf',
+                'description' => 'Formula reference notes for verbal and non-verbal intelligence testing.',
+            ],
+        ]);
+
+        ContentModule::create([
+            'domain_id' => $pma->id,
+            'title' => 'ISSB Psychological & Medical Guidelines',
+            'slug' => 'issb-psychological-medical-guidelines',
+            'module_type' => 'pdf_repo',
+            'sort_order' => 9,
+            'is_active' => true,
+            'content_meta' => [
+                'file_type' => 'PDF Document',
+                'file_size' => '4.8 MB',
+                'file_url' => '/storage/modules/issb-guidelines.pdf',
+                'description' => 'Reference guidelines for psychological and medical screening.',
+            ],
+        ]);
+
         $pmaMockModule = ContentModule::create([
             'domain_id' => $pma->id,
             'title' => 'Full Length PMA Initial Mock',
@@ -324,19 +354,9 @@ class PlatformSeeder extends Seeder
                                 'type' => 'ResourceList',
                                 'props' => [
                                     'title' => 'PMA Handouts & Notes',
-                                    'items' => [
-                                        [
-                                            'title' => 'PMA Initial Verbal & Non-Verbal Formula Book',
-                                            'fileType' => 'PDF Document',
-                                            'fileSize' => '3.4 MB',
-                                            'actionLabel' => 'Download Notes',
-                                        ],
-                                        [
-                                            'title' => 'ISSB Psychological & Medical Guidelines',
-                                            'fileType' => 'PDF Document',
-                                            'fileSize' => '4.8 MB',
-                                            'actionLabel' => 'Download Notes',
-                                        ],
+                                    'moduleQuery' => [
+                                        'module_type' => 'pdf_repo',
+                                        'merge' => 'replace',
                                     ],
                                 ],
                             ],
