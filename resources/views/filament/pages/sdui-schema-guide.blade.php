@@ -375,9 +375,10 @@
                     </div>
                     <p style="font-size: 0.78125rem; color: #64748b;">Renders subject tiles grid (1, 2, 3, or 4 columns) launching tests directly.</p>
                     <div style="font-size: 0.75rem; line-height: 1.5;">
-                        <p style="font-weight: 700; color: #334155;">Mandatory Props:</p>
+                        <p style="font-weight: 700; color: #334155;">Props (Provide items OR moduleQuery):</p>
                         <ul style="list-style-type: disc; padding-left: 1rem; font-family: monospace; color: #475569;">
-                            <li><code style="color: #f59e0b;">items</code>: Array of subject items</li>
+                            <li><code style="color: #f59e0b;">items</code>: Manual array of items</li>
+                            <li><code style="color: #10b981;">moduleQuery</code>: Object to auto-populate (e.g. <code style="color: #475569;">{"module_type": "preparation", "slug_contains": "verbal"}</code>)</li>
                             <li><code style="color: #f59e0b;">columns</code>: Grid columns (default: 3)</li>
                         </ul>
                     </div>
@@ -421,9 +422,10 @@
                     </div>
                     <p style="font-size: 0.78125rem; color: #64748b;">Vertical list of download links or module launchers for candidates.</p>
                     <div style="font-size: 0.75rem; line-height: 1.5;">
-                        <p style="font-weight: 700; color: #334155;">Mandatory Props:</p>
+                        <p style="font-weight: 700; color: #334155;">Props (Provide items OR moduleQuery):</p>
                         <ul style="list-style-type: disc; padding-left: 1rem; font-family: monospace; color: #475569;">
-                            <li><code style="color: #f59e0b;">items</code>: Array of resource items</li>
+                            <li><code style="color: #f59e0b;">items</code>: Manual array of resource items</li>
+                            <li><code style="color: #10b981;">moduleQuery</code>: Object to auto-populate (e.g. <code style="color: #475569;">{"module_type": "pdf_repo"}</code>)</li>
                         </ul>
                     </div>
                 </div>
@@ -576,6 +578,14 @@
                     if (node.type === 'VerticalStack' && Array.isArray(props.children)) {
                         props.children.forEach(child => {
                             this.inspectNode(child, depth + 1, registeredComponents, typoMap);
+                        });
+                    }
+
+                    if (node.type === 'SubjectGrid' && Array.isArray(props.items)) {
+                        props.items.forEach(item => {
+                            if (item && item.type) {
+                                this.inspectNode(item, depth + 1, registeredComponents, typoMap);
+                            }
                         });
                     }
                 }
