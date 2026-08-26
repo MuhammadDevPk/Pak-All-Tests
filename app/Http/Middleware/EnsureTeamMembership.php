@@ -63,6 +63,10 @@ class EnsureTeamMembership
             $team = Team::where('slug', $team)->first();
         }
 
+        if ($team === null && $user = $request->user()) {
+            $team = $user->currentTeam ?? $user->personalTeam();
+        }
+
         return $team;
     }
 }
