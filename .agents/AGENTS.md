@@ -13,3 +13,19 @@ In every chat, code generation, code review, migration drafting, model definitio
 2. **Defensive Security & Integrity**: Zero SQL injection vectors, strictly parameterized raw SQL queries, correct DB constraints, and watertight RLS/authorization.
 3. **Clean & Scalable Schema Design**: Every column and index must earn its place. Avoid redundant indexes (`unique()` already creates a B-tree index in Postgres). Enforce 1-to-1 or 1-to-many relationships at the database kernel level.
 4. **No Legacy or Bloated Code**: No dummy fallbacks, no commented-out broken code, no unused dependencies.
+
+---
+
+## 📖 Sub-Architectural Rule Indexes
+You MUST read and adhere to the following specialized rules files when modifying files in this workspace:
+* **SDUI Blueprinting & Layouts**: [`sdui_blueprints.md`](file:///.agents/rules/sdui_blueprints.md)
+* **Database & Performance Optimization**: [`database_performance.md`](file:///.agents/rules/database_performance.md)
+* **Security Gating & Route Protection**: [`security_gating.md`](file:///.agents/rules/security_gating.md)
+* **Testing & Middleware Validation**: [`testing_validation.md`](file:///.agents/rules/testing_validation.md)
+
+### 📦 Core Module Reference Documents
+* **Domains & Hierarchies**: [`domains.md`](file:///.agents/rules/domains.md)
+* **Domain Flows & SDUI**: [`domain_flows.md`](file:///.agents/rules/domain_flows.md)
+* **Content Modules & Resources**: [`content_modules.md`](file:///.agents/rules/content_modules.md)
+* **Question Bank & MCQ Players**: [`question_bank.md`](file:///.agents/rules/question_bank.md)
+* **User Subscriptions & Payment Gating**: [`user_subscriptions.md`](file:///.agents/rules/user_subscriptions.md)
