@@ -24,6 +24,7 @@
   - `McqExecutionController.php` (Secure grading endpoint verifying correct choices, passing score thresholds, and analytics summaries).
 - **Quality Audited**: Verified template unwrapping syntax (no `.value` in templates) and resolved N+1 database queries.
 - **Filament UI Upgraded**: Replaced restrictive flat `KeyValue` fields with pretty-printed, syntax-validated JSON `Textarea` editors across `DomainFlowForm.php`, `QuestionBankForm.php`, and `ContentModuleForm.php` to enable nesting of layout trees, question options arrays, and rules.
+- **UI Design Guidelines Added**: Created [`.agents/rules/ui_design_guidelines.md`](file:///.agents/rules/ui_design_guidelines.md) enforcing senior product design principles, banning AI UI tropes (eyebrow pills, generic gradients, over-cardification, uniform radii), and mandating multi-device responsive standards (mobile, tablet, laptop, ultrawide).
 
 ---
 
