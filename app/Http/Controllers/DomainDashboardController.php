@@ -29,19 +29,36 @@ class DomainDashboardController extends Controller
             ])
             ->firstOrFail();
 
-        $subscription = $user->subscriptions()
+        $activeSubscription = $user->subscriptions()
             ->where('domain_id', $domain->id)
             ->where('status', 'active')
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
             ->first();
 
-        if (! $subscription) {
+        if (! $activeSubscription) {
+            $latestSubscription = $user->subscriptions()
+                ->where('domain_id', $domain->id)
+                ->latest('id')
+                ->first();
+
             return Inertia::render('Subscription/PendingOrInactive', [
                 'domain' => [
                     'id' => $domain->id,
                     'name' => $domain->name,
                     'slug' => $domain->slug,
                 ],
-                'subscriptionStatus' => 'none',
+                'subscription' => $latestSubscription ? [
+                    'id' => $latestSubscription->id,
+                    'status' => $latestSubscription->status,
+                    'payment_method' => $latestSubscription->payment_method,
+                    'transaction_id' => $latestSubscription->transaction_id,
+                    'receipt_url' => $latestSubscription->receipt_url ? asset('storage/'.$latestSubscription->receipt_url) : null,
+                    'rejection_reason' => $latestSubscription->rejection_reason,
+                    'created_at' => $latestSubscription->created_at?->diffForHumans(),
+                ] : null,
+                'subscriptionStatus' => $latestSubscription?->status ?? 'none',
             ]);
         }
 
