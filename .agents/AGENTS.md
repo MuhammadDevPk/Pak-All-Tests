@@ -26,6 +26,7 @@ You MUST read and adhere to the following specialized rules files when modifying
 * **Database & Performance Optimization**: [`database_performance.md`](file:///.agents/rules/database_performance.md)
 * **Security Gating & Route Protection**: [`security_gating.md`](file:///.agents/rules/security_gating.md)
 * **Testing & Middleware Validation**: [`testing_validation.md`](file:///.agents/rules/testing_validation.md)
+* **UI Design Guidelines & Anti-AI Fingerprint**: [`ui_design_guidelines.md`](file:///.agents/rules/ui_design_guidelines.md)
 
 ### 📦 Core Module Reference Documents
 * **Domains & Hierarchies**: [`domains.md`](file:///.agents/rules/domains.md)
