@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class QuestionBank extends Model
 {
-
     protected $table = 'question_bank';
 
     protected $guarded = [];

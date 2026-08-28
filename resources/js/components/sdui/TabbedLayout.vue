@@ -18,6 +18,7 @@ const activeTabId = ref(props.defaultTab || props.tabs[0]?.id || '');
 
 const activeTabContent = computed(() => {
     const matchedTab = props.tabs.find((tab) => tab.id === activeTabId.value);
+
     return matchedTab?.content || null;
 });
 
@@ -29,22 +30,32 @@ const selectTab = (id) => {
 <template>
     <div class="flex flex-col gap-6">
         <!-- Navigation Tab Header -->
-        <div class="flex border-b border-sidebar-border/70 overflow-x-auto dark:border-sidebar-border scrollbar-none">
+        <div
+            class="flex scrollbar-none overflow-x-auto border-b border-sidebar-border/70 dark:border-sidebar-border"
+        >
             <nav class="-mb-px flex space-x-6">
-                <button v-for="tab in tabs" :key="tab.id" type="button" @click="selectTab(tab.id)"
-                    :class="['group inline-flex items-center gap-2 whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium transition-colors',
-                        activeTabId === tab.id
-                            ? 'border-primary text-primary font-semibold'
-                            : 'border-transparent text-muted-foreground hover:border-sidebar-border hover:text-foreground'
-                    ]">
-                    <span>{{ tab.label }}</span>
-                    <span v-if="tab.badge"
+                <button
+                    v-for="tab in tabs"
+                    :key="tab.id"
+                    type="button"
+                    @click="selectTab(tab.id)"
                     :class="[
+                        'group inline-flex items-center gap-2 border-b-2 px-1 py-3 text-sm font-medium whitespace-nowrap transition-colors',
+                        activeTabId === tab.id
+                            ? 'border-primary font-semibold text-primary'
+                            : 'border-transparent text-muted-foreground hover:border-sidebar-border hover:text-foreground',
+                    ]"
+                >
+                    <span>{{ tab.label }}</span>
+                    <span
+                        v-if="tab.badge"
+                        :class="[
                             'rounded-full px-2 py-0.5 text-xs font-semibold',
                             activeTabId === tab.id
                                 ? 'bg-primary/10 text-primary'
-                                : 'bg-sidebar-accent text-muted-foreground'
-                        ]">
+                                : 'bg-sidebar-accent text-muted-foreground',
+                        ]"
+                    >
                         {{ tab.badge }}
                     </span>
                 </button>

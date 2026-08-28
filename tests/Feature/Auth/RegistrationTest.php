@@ -34,7 +34,7 @@ test('registration screen includes team invitation context', function () {
 });
 
 test('new users can register', function () {
-    $email = 'test-' . uniqid() . '@example.com';
+    $email = 'test-'.uniqid().'@example.com';
 
     $response = $this->post(route('register.store'), [
         'name' => 'Test User',
@@ -46,5 +46,5 @@ test('new users can register', function () {
     $this->assertAuthenticated();
 
     $user = User::where('email', $email)->first();
-    $response->assertRedirect('/' . $user->personalTeam()->slug . '/dashboard');
+    $response->assertRedirect('/'.$user->personalTeam()->slug.'/dashboard');
 });

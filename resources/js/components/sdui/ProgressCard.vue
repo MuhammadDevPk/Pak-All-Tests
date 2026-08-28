@@ -22,15 +22,23 @@ const circumference = 2 * Math.PI * radius;
 
 const strokeDashoffset = computed(() => {
     const progress = Math.min(Math.max(props.accuracy, 0), 100);
+
     return circumference - (progress / 100) * circumference;
 });
 </script>
 
 <template>
-    <div class="flex items-center justify-between rounded-xl border border-sidebar-border/70 bg-card p-5 dark:bg-card/50">
+    <div
+        class="flex items-center justify-between rounded-xl border border-sidebar-border/70 bg-card p-5 dark:bg-card/50"
+    >
         <div class="flex flex-col gap-1.5">
-            <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Test Accuracy</span>
-            <span class="text-2xl font-extrabold text-foreground">{{ accuracy }}%</span>
+            <span
+                class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                >Test Accuracy</span
+            >
+            <span class="text-2xl font-extrabold text-foreground"
+                >{{ accuracy }}%</span
+            >
             <span class="text-xs text-muted-foreground">
                 Completed {{ completedCount }} of {{ totalCount }} study modules
             </span>

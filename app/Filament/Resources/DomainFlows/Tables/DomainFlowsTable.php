@@ -9,6 +9,7 @@ use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Collection;
 
 class DomainFlowsTable
 {
@@ -20,7 +21,7 @@ class DomainFlowsTable
                 ?string $search,
                 ?string $sortColumn,
                 ?string $sortDirection,
-            ): \Illuminate\Support\Collection => DomainFlow::getCachedTableRecords(
+            ): Collection => DomainFlow::getCachedTableRecords(
                 fn () => DomainFlow::query()->with('domain')->orderBy('id', 'asc')->get(),
                 ['domain'],
                 $search,

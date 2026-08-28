@@ -63,12 +63,12 @@ class DomainFlowForm
                     ->icon(Heroicon::OutlinedWindow)
                     ->schema([
                         Repeater::make('phases')
-                            ->label(false)
+                            ->hiddenLabel()
                             ->addActionLabel('+ Add Phase')
                             ->reorderable()
                             ->collapsible()
                             ->itemLabel(fn (array $state): string => trim(($state['title'] ?? '')) ?: 'Untitled Phase')
-                            ->schema(static::phaseFields())
+                            ->schema(self::phaseFields())
                             ->columnSpanFull(),
                     ]),
 
@@ -99,6 +99,9 @@ class DomainFlowForm
 
     // ─── Phase-level fields ────────────────────────────────────────────────────
 
+    /**
+     * @return array<int, mixed>
+     */
     private static function phaseFields(): array
     {
         return [
@@ -117,9 +120,9 @@ class DomainFlowForm
                 ->label('Phase Content Type')
                 ->options([
                     'TabbedLayout' => '🗂  Tabbed Layout  — nest multiple tabs',
-                    'SubjectGrid'  => '⊞  Subject Grid   — test/practice cards',
+                    'SubjectGrid' => '⊞  Subject Grid   — test/practice cards',
                     'ResourceList' => '📄  Resource List  — handouts & documents',
-                    'McqPlayer'    => '🧠  MCQ Player     — direct MCQ module',
+                    'McqPlayer' => '🧠  MCQ Player     — direct MCQ module',
                 ])
                 ->required()
                 ->live()
@@ -138,17 +141,20 @@ class DomainFlowForm
                 ->reorderable()
                 ->collapsible()
                 ->itemLabel(fn (array $state): string => trim($state['label'] ?? '') ?: 'Untitled Tab')
-                ->schema(static::tabFields())
+                ->schema(self::tabFields())
                 ->hidden(fn (Get $get) => $get('content_type') !== 'TabbedLayout')
                 ->columnSpanFull(),
 
             // ── Phase-level direct content fields (when not TabbedLayout) ──
-            ...static::contentItemFields(),
+            ...self::contentItemFields(),
         ];
     }
 
     // ─── Tab-level fields ──────────────────────────────────────────────────────
 
+    /**
+     * @return array<int, mixed>
+     */
     private static function tabFields(): array
     {
         return [
@@ -169,20 +175,23 @@ class DomainFlowForm
             Select::make('content_type')
                 ->label('Tab Content Type')
                 ->options([
-                    'SubjectGrid'  => '⊞  Subject Grid   — test/practice cards',
+                    'SubjectGrid' => '⊞  Subject Grid   — test/practice cards',
                     'ResourceList' => '📄  Resource List  — handouts & documents',
-                    'McqPlayer'    => '🧠  MCQ Player     — direct MCQ module',
+                    'McqPlayer' => '🧠  MCQ Player     — direct MCQ module',
                 ])
                 ->required()
                 ->live()
                 ->default('SubjectGrid'),
 
-            ...static::contentItemFields(),
+            ...self::contentItemFields(),
         ];
     }
 
     // ─── Content items fields (SubjectGrid, ResourceList, McqPlayer) ───────────
 
+    /**
+     * @return array<int, mixed>
+     */
     private static function contentItemFields(): array
     {
         return [
@@ -205,11 +214,11 @@ class DomainFlowForm
                 ->label('Item Source')
                 ->options([
                     'moduleQuery' => '⚡ Auto — pull from Content Modules (recommended)',
-                    'manual'      => '✋ Manual — pin specific modules by hand',
+                    'manual' => '✋ Manual — pin specific modules by hand',
                 ])
                 ->default('moduleQuery')
                 ->live()
-                ->hidden(fn (Get $get) => !in_array($get('content_type'), ['SubjectGrid', 'ResourceList'])),
+                ->hidden(fn (Get $get) => ! in_array($get('content_type'), ['SubjectGrid', 'ResourceList'])),
 
             // ── moduleQuery config ────────────────────────────────────────
             Grid::make(3)->schema([
@@ -217,9 +226,9 @@ class DomainFlowForm
                     ->label('Module Type Filter')
                     ->options([
                         'preparation' => 'Preparation',
-                        'mock_test'   => 'Mock Test',
-                        'pdf_repo'    => 'PDF Repository',
-                        'subjective'  => 'Subjective',
+                        'mock_test' => 'Mock Test',
+                        'pdf_repo' => 'PDF Repository',
+                        'subjective' => 'Subjective',
                     ])
                     ->required()
                     ->default('preparation'),
@@ -233,12 +242,12 @@ class DomainFlowForm
                     ->label('Merge Mode')
                     ->options([
                         'replace' => 'Replace — query replaces manual items',
-                        'append'  => 'Append  — query added after manual items',
+                        'append' => 'Append  — query added after manual items',
                         'prepend' => 'Prepend — query added before manual items',
                     ])
                     ->default('replace'),
             ])->hidden(fn (Get $get) => $get('source_mode') !== 'moduleQuery'
-                || !in_array($get('content_type'), ['SubjectGrid', 'ResourceList'])),
+                || ! in_array($get('content_type'), ['SubjectGrid', 'ResourceList'])),
 
             // ── Manual items repeater ─────────────────────────────────────
             Repeater::make('manual_items')
@@ -275,7 +284,7 @@ class DomainFlowForm
                     ]),
                 ])
                 ->hidden(fn (Get $get) => $get('source_mode') !== 'manual'
-                    || !in_array($get('content_type'), ['SubjectGrid', 'ResourceList']))
+                    || ! in_array($get('content_type'), ['SubjectGrid', 'ResourceList']))
                 ->columnSpanFull(),
 
             // ── McqPlayer: direct module picker ──────────────────────────

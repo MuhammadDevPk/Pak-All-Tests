@@ -10,12 +10,14 @@ class SduiPayloadTransformer
 {
     /**
      * Transform Domain and flow into a dynamic SDUI Inertia payload.
+     *
+     * @return array<string, mixed>
      */
     public function transform(Domain $domain, User $user): array
     {
         $flow = $domain->flow;
 
-        $uiSchema = $flow?->ui_schema ?? [
+        $uiSchema = $flow !== null ? $flow->ui_schema : [
             'type' => 'EmptyStateLayout',
             'props' => [
                 'title' => 'Domain Under Construction',
@@ -23,13 +25,14 @@ class SduiPayloadTransformer
             ],
         ];
 
+        /** @var Collection<int|string, array<string, mixed>> $modules */
         $modules = $domain->contentModules()
             ->where('is_active', true)
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get()
             ->keyBy('id')
-            ->map(fn ($module) => [
+            ->map(fn ($module): array => [
                 'id' => $module->id,
                 'type' => $module->module_type,
                 'title' => $module->title,
@@ -56,7 +59,9 @@ class SduiPayloadTransformer
     }
 
     /**
+     * @param  array<string, mixed>  $node
      * @param  Collection<int|string, array<string, mixed>>  $modules
+     * @return array<string, mixed>
      */
     private function hydrateSchemaNodes(array $node, Collection $modules): array
     {

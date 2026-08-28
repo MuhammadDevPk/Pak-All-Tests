@@ -51,3 +51,10 @@ This document defines the foundational engineering philosophy that **MUST be str
 ## 4. 🧪 Automated Validation Mandate
 * Every non-trivial change must be accompanied by or validated against automated tests (Pest / PHPUnit).
 * Run the test suite before declaring work complete to ensure 100% regression-free code.
+
+---
+
+## 5. 🎨 Frontend Tech Stack: Pure JavaScript Vue (No TypeScript in Vue)
+* **Standard**: Write all Vue components using **clean, pure JavaScript** (`<script setup>`), NOT TypeScript (`lang="ts"`).
+* **Simplicity & Velocity**: Keep component state, props, and logic in idiomatic modern JS (ESNext, Vue 3 Composition API).
+* Do not introduce TypeScript complexity or type definitions into `.vue` components.

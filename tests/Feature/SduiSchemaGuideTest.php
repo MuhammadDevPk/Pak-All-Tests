@@ -12,7 +12,7 @@ class SduiSchemaGuideTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->validator = new SduiSchemaValidator();
+        $this->validator = new SduiSchemaValidator;
     }
 
     public function test_valid_sdui_schema_passes_validation(): void

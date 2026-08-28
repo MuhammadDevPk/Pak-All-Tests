@@ -83,7 +83,6 @@ class Domain extends Model
             ->withTimestamps();
     }
 
-
     protected static function booted()
     {
 

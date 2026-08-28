@@ -2,14 +2,13 @@
 
 namespace App\Filament\Pages;
 
-use App\Services\SduiSchemaValidator;
 use Filament\Pages\Page;
 
 class SduiSchemaGuide extends Page
 {
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-code-bracket-square';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-code-bracket-square';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'System Documentation';
+    protected static string|\UnitEnum|null $navigationGroup = 'System Documentation';
 
     protected static ?string $navigationLabel = 'SDUI Schema Guide';
 
@@ -21,6 +20,8 @@ class SduiSchemaGuide extends Page
 
     /**
      * Get JSON Templates for common exam flow structures.
+     *
+     * @return array<string, array{name: string, description: string, json: array<string, mixed>}>
      */
     public function getTemplates(): array
     {

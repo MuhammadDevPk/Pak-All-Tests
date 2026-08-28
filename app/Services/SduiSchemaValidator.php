@@ -36,6 +36,7 @@ class SduiSchemaValidator
     /**
      * Validate an SDUI JSON array schema and return an array of errors/warnings.
      *
+     * @param  array<string, mixed>  $schema
      * @return array{valid: bool, errors: string[], warnings: string[], node_count: int, max_depth: int}
      */
     public function validate(array $schema): array
@@ -56,6 +57,10 @@ class SduiSchemaValidator
         ];
     }
 
+    /**
+     * @param  list<string>  $errors
+     * @param  list<string>  $warnings
+     */
     private function inspectNode(mixed $node, int $depth, array &$errors, array &$warnings, int &$nodeCount, int &$maxDepth): void
     {
         if (! is_array($node)) {
@@ -182,6 +187,9 @@ class SduiSchemaValidator
         }
     }
 
+    /**
+     * @param  list<string>  $errors
+     */
     private function validateModuleQuery(mixed $query, int $depth, array &$errors): void
     {
         if (! is_array($query)) {

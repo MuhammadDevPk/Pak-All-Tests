@@ -20,7 +20,10 @@ const resolvedComponent = computed(() => {
     const comp = componentRegistry[props.node.type];
 
     if (!comp) {
-        console.warn(`[SDUI Engine] Unknown component type: "${props.node.type}". Falling back to EmptyStateLayout.`);
+        console.warn(
+            `[SDUI Engine] Unknown component type: "${props.node.type}". Falling back to EmptyStateLayout.`,
+        );
+
         return componentRegistry.EmptyStateLayout;
     }
 

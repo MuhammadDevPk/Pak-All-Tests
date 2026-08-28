@@ -17,6 +17,9 @@ class UiSchemaCompiler
 
     /**
      * Compile Filament Repeater state → canonical SDUI JSON.
+     *
+     * @param  array<string, mixed>  $builderState
+     * @return array<string, mixed>
      */
     public static function compile(array $builderState): array
     {
@@ -24,24 +27,27 @@ class UiSchemaCompiler
 
         foreach (($builderState['phases'] ?? []) as $index => $phase) {
             $phases[] = [
-                'number'   => $index + 1,
-                'title'    => $phase['title'] ?? '',
+                'number' => $index + 1,
+                'title' => $phase['title'] ?? '',
                 'subtitle' => $phase['subtitle'] ?? '',
-                'content'  => static::compileContentNode($phase),
+                'content' => self::compileContentNode($phase),
             ];
         }
 
         return [
-            'type'  => 'PhaseStepperLayout',
+            'type' => 'PhaseStepperLayout',
             'props' => [
                 'currentPhase' => 1,
-                'phases'       => $phases,
+                'phases' => $phases,
             ],
         ];
     }
 
     /**
      * Decompile canonical SDUI JSON → Filament Repeater state.
+     *
+     * @param  array<string, mixed>  $uiSchema
+     * @return array<string, mixed>
      */
     public static function decompile(array $uiSchema): array
     {
@@ -50,10 +56,10 @@ class UiSchemaCompiler
         foreach ($uiSchema['props']['phases'] ?? [] as $phase) {
             $phases[] = array_merge(
                 [
-                    'title'    => $phase['title'] ?? '',
+                    'title' => $phase['title'] ?? '',
                     'subtitle' => $phase['subtitle'] ?? '',
                 ],
-                static::decompileContentNode($phase['content'] ?? [])
+                self::decompileContentNode($phase['content'] ?? [])
             );
         }
 
@@ -62,34 +68,38 @@ class UiSchemaCompiler
 
     // ─── Content Node Compilation ───────────────────────────────────────────
 
+    /**
+     * @param  array<string, mixed>  $node
+     * @return array<string, mixed>
+     */
     private static function compileContentNode(array $node): array
     {
         return match ($node['content_type'] ?? '') {
             'TabbedLayout' => [
-                'type'  => 'TabbedLayout',
+                'type' => 'TabbedLayout',
                 'props' => [
                     'defaultTab' => $node['default_tab'] ?? (($node['tabs'][0]['id'] ?? '') ?: ''),
-                    'tabs'       => array_values(array_map(
+                    'tabs' => array_values(array_map(
                         fn ($tab) => [
-                            'id'      => $tab['id'] ?? '',
-                            'label'   => $tab['label'] ?? '',
-                            'badge'   => $tab['badge'] ?? '',
-                            'content' => static::compileContentNode($tab),
+                            'id' => $tab['id'] ?? '',
+                            'label' => $tab['label'] ?? '',
+                            'badge' => $tab['badge'] ?? '',
+                            'content' => self::compileContentNode($tab),
                         ],
                         $node['tabs'] ?? []
                     )),
                 ],
             ],
             'SubjectGrid' => [
-                'type'  => 'SubjectGrid',
-                'props' => static::compileGridProps($node),
+                'type' => 'SubjectGrid',
+                'props' => self::compileGridProps($node),
             ],
             'ResourceList' => [
-                'type'  => 'ResourceList',
-                'props' => static::compileResourceProps($node),
+                'type' => 'ResourceList',
+                'props' => self::compileResourceProps($node),
             ],
             'McqPlayer' => [
-                'type'  => 'McqPlayer',
+                'type' => 'McqPlayer',
                 'props' => [
                     'moduleId' => (int) ($node['mcq_module_id'] ?? 0),
                 ],
@@ -98,93 +108,101 @@ class UiSchemaCompiler
         };
     }
 
+    /**
+     * @param  array<string, mixed>  $content
+     * @return array<string, mixed>
+     */
     private static function decompileContentNode(array $content): array
     {
-        $type  = $content['type'] ?? '';
+        $type = $content['type'] ?? '';
         $props = $content['props'] ?? [];
-        $base  = ['content_type' => $type];
+        $base = ['content_type' => $type];
 
         return match ($type) {
             'TabbedLayout' => array_merge($base, [
                 'default_tab' => $props['defaultTab'] ?? '',
-                'tabs'        => array_values(array_map(
+                'tabs' => array_values(array_map(
                     fn ($tab) => array_merge(
                         [
-                            'id'    => $tab['id'] ?? '',
+                            'id' => $tab['id'] ?? '',
                             'label' => $tab['label'] ?? '',
                             'badge' => $tab['badge'] ?? '',
                         ],
-                        static::decompileContentNode($tab['content'] ?? [])
+                        self::decompileContentNode($tab['content'] ?? [])
                     ),
                     $props['tabs'] ?? []
                 )),
                 // grid / resource defaults (hidden but needed for clean state)
                 'mcq_module_id' => '',
-                'source_mode'   => 'moduleQuery',
-                'columns'       => 2,
-                'resource_title'=> '',
-                'module_type'   => 'preparation',
+                'source_mode' => 'moduleQuery',
+                'columns' => 2,
+                'resource_title' => '',
+                'module_type' => 'preparation',
                 'slug_contains' => '',
-                'merge'         => 'replace',
-                'manual_items'  => [],
+                'merge' => 'replace',
+                'manual_items' => [],
             ]),
-            'SubjectGrid' => array_merge($base, static::decompileGridProps($props), [
-                'default_tab'   => '',
-                'tabs'          => [],
+            'SubjectGrid' => array_merge($base, self::decompileGridProps($props), [
+                'default_tab' => '',
+                'tabs' => [],
                 'mcq_module_id' => '',
-                'resource_title'=> '',
+                'resource_title' => '',
             ]),
-            'ResourceList' => array_merge($base, static::decompileResourceProps($props), [
-                'default_tab'   => '',
-                'tabs'          => [],
+            'ResourceList' => array_merge($base, self::decompileResourceProps($props), [
+                'default_tab' => '',
+                'tabs' => [],
                 'mcq_module_id' => '',
-                'columns'       => 2,
+                'columns' => 2,
             ]),
             'McqPlayer' => array_merge($base, [
                 'mcq_module_id' => (string) ($props['moduleId'] ?? ''),
-                'default_tab'   => '',
-                'tabs'          => [],
-                'source_mode'   => 'moduleQuery',
-                'columns'       => 2,
-                'resource_title'=> '',
-                'module_type'   => 'preparation',
+                'default_tab' => '',
+                'tabs' => [],
+                'source_mode' => 'moduleQuery',
+                'columns' => 2,
+                'resource_title' => '',
+                'module_type' => 'preparation',
                 'slug_contains' => '',
-                'merge'         => 'replace',
-                'manual_items'  => [],
+                'merge' => 'replace',
+                'manual_items' => [],
             ]),
             default => array_merge($base, [
-                'default_tab'   => '',
-                'tabs'          => [],
+                'default_tab' => '',
+                'tabs' => [],
                 'mcq_module_id' => '',
-                'source_mode'   => 'moduleQuery',
-                'columns'       => 2,
-                'resource_title'=> '',
-                'module_type'   => 'preparation',
+                'source_mode' => 'moduleQuery',
+                'columns' => 2,
+                'resource_title' => '',
+                'module_type' => 'preparation',
                 'slug_contains' => '',
-                'merge'         => 'replace',
-                'manual_items'  => [],
+                'merge' => 'replace',
+                'manual_items' => [],
             ]),
         };
     }
 
     // ─── Grid / Resource Helpers ────────────────────────────────────────────
 
+    /**
+     * @param  array<string, mixed>  $node
+     * @return array<string, mixed>
+     */
     private static function compileGridProps(array $node): array
     {
         $props = ['columns' => (int) ($node['columns'] ?? 2)];
 
         if (($node['source_mode'] ?? 'moduleQuery') === 'moduleQuery') {
             $q = ['module_type' => $node['module_type'] ?? 'preparation'];
-            if (!empty($node['slug_contains'])) {
+            if (! empty($node['slug_contains'])) {
                 $q['slug_contains'] = $node['slug_contains'];
             }
-            $q['merge']        = $node['merge'] ?? 'replace';
+            $q['merge'] = $node['merge'] ?? 'replace';
             $props['moduleQuery'] = $q;
         } else {
             $props['items'] = array_values(array_map(
                 fn ($item) => array_filter([
-                    'moduleId'    => (int) ($item['module_id'] ?? 0),
-                    'title'       => $item['title'] ?: null,
+                    'moduleId' => (int) ($item['module_id'] ?? 0),
+                    'title' => $item['title'] ?: null,
                     'description' => $item['description'] ?: null,
                     'actionLabel' => $item['action_label'] ?: 'Start',
                 ]),
@@ -195,30 +213,34 @@ class UiSchemaCompiler
         return $props;
     }
 
+    /**
+     * @param  array<string, mixed>  $props
+     * @return array<string, mixed>
+     */
     private static function decompileGridProps(array $props): array
     {
         if (isset($props['moduleQuery'])) {
             return [
-                'source_mode'   => 'moduleQuery',
-                'columns'       => $props['columns'] ?? 2,
-                'module_type'   => $props['moduleQuery']['module_type'] ?? 'preparation',
+                'source_mode' => 'moduleQuery',
+                'columns' => $props['columns'] ?? 2,
+                'module_type' => $props['moduleQuery']['module_type'] ?? 'preparation',
                 'slug_contains' => $props['moduleQuery']['slug_contains'] ?? '',
-                'merge'         => $props['moduleQuery']['merge'] ?? 'replace',
-                'manual_items'  => [],
+                'merge' => $props['moduleQuery']['merge'] ?? 'replace',
+                'manual_items' => [],
             ];
         }
 
         return [
-            'source_mode'   => 'manual',
-            'columns'       => $props['columns'] ?? 2,
-            'module_type'   => '',
+            'source_mode' => 'manual',
+            'columns' => $props['columns'] ?? 2,
+            'module_type' => '',
             'slug_contains' => '',
-            'merge'         => 'replace',
-            'manual_items'  => array_values(array_map(
+            'merge' => 'replace',
+            'manual_items' => array_values(array_map(
                 fn ($item) => [
-                    'module_id'    => (string) ($item['moduleId'] ?? ''),
-                    'title'        => $item['title'] ?? '',
-                    'description'  => $item['description'] ?? '',
+                    'module_id' => (string) ($item['moduleId'] ?? ''),
+                    'title' => $item['title'] ?? '',
+                    'description' => $item['description'] ?? '',
                     'action_label' => $item['actionLabel'] ?? 'Start',
                 ],
                 $props['items'] ?? []
@@ -226,28 +248,32 @@ class UiSchemaCompiler
         ];
     }
 
+    /**
+     * @param  array<string, mixed>  $node
+     * @return array<string, mixed>
+     */
     private static function compileResourceProps(array $node): array
     {
         $props = [];
 
-        if (!empty($node['resource_title'])) {
+        if (! empty($node['resource_title'])) {
             $props['title'] = $node['resource_title'];
         }
 
         if (($node['source_mode'] ?? 'moduleQuery') === 'moduleQuery') {
             $q = ['module_type' => $node['module_type'] ?? 'pdf_repo'];
-            if (!empty($node['slug_contains'])) {
+            if (! empty($node['slug_contains'])) {
                 $q['slug_contains'] = $node['slug_contains'];
             }
-            $q['merge']           = $node['merge'] ?? 'replace';
+            $q['merge'] = $node['merge'] ?? 'replace';
             $props['moduleQuery'] = $q;
         } else {
             $props['items'] = array_values(array_map(
                 fn ($item) => array_filter([
-                    'moduleId'    => (int) ($item['module_id'] ?? 0),
-                    'title'       => $item['title'] ?: null,
-                    'fileSize'    => $item['file_size'] ?: null,
-                    'fileType'    => $item['file_type'] ?: null,
+                    'moduleId' => (int) ($item['module_id'] ?? 0),
+                    'title' => $item['title'] ?: null,
+                    'fileSize' => $item['file_size'] ?: null,
+                    'fileType' => $item['file_type'] ?: null,
                     'actionLabel' => $item['action_label'] ?: 'Download',
                 ]),
                 $node['manual_items'] ?? []
@@ -257,31 +283,35 @@ class UiSchemaCompiler
         return $props;
     }
 
+    /**
+     * @param  array<string, mixed>  $props
+     * @return array<string, mixed>
+     */
     private static function decompileResourceProps(array $props): array
     {
         $base = ['resource_title' => $props['title'] ?? ''];
 
         if (isset($props['moduleQuery'])) {
             return array_merge($base, [
-                'source_mode'   => 'moduleQuery',
-                'module_type'   => $props['moduleQuery']['module_type'] ?? 'pdf_repo',
+                'source_mode' => 'moduleQuery',
+                'module_type' => $props['moduleQuery']['module_type'] ?? 'pdf_repo',
                 'slug_contains' => $props['moduleQuery']['slug_contains'] ?? '',
-                'merge'         => $props['moduleQuery']['merge'] ?? 'replace',
-                'manual_items'  => [],
+                'merge' => $props['moduleQuery']['merge'] ?? 'replace',
+                'manual_items' => [],
             ]);
         }
 
         return array_merge($base, [
-            'source_mode'   => 'manual',
-            'module_type'   => '',
+            'source_mode' => 'manual',
+            'module_type' => '',
             'slug_contains' => '',
-            'merge'         => 'replace',
-            'manual_items'  => array_values(array_map(
+            'merge' => 'replace',
+            'manual_items' => array_values(array_map(
                 fn ($item) => [
-                    'module_id'    => (string) ($item['moduleId'] ?? ''),
-                    'title'        => $item['title'] ?? '',
-                    'file_size'    => $item['fileSize'] ?? '',
-                    'file_type'    => $item['fileType'] ?? '',
+                    'module_id' => (string) ($item['moduleId'] ?? ''),
+                    'title' => $item['title'] ?? '',
+                    'file_size' => $item['fileSize'] ?? '',
+                    'file_type' => $item['fileType'] ?? '',
                     'action_label' => $item['actionLabel'] ?? 'Download',
                 ],
                 $props['items'] ?? []

@@ -9,6 +9,7 @@ use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Collection;
 
 class ContentModulesTable
 {
@@ -20,7 +21,7 @@ class ContentModulesTable
                 ?string $search,
                 ?string $sortColumn,
                 ?string $sortDirection,
-            ): \Illuminate\Support\Collection => ContentModule::getCachedTableRecords(
+            ): Collection => ContentModule::getCachedTableRecords(
                 fn () => ContentModule::query()->with('domain')->orderBy('domain_id', 'asc')->orderBy('sort_order', 'asc')->orderBy('id', 'asc')->get(),
                 ['domain'],
                 $search,

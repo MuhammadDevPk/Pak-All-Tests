@@ -1,9 +1,9 @@
 <script setup>
-import { ref, provide, defineAsyncComponent } from 'vue';
 import { Head } from '@inertiajs/vue3';
+import { ref, provide, defineAsyncComponent } from 'vue';
 import SduiRenderer from '@/components/sdui/SduiRenderer.vue';
 
-const props = defineProps({
+defineProps({
     sdui: {
         type: Object,
         required: true,
@@ -15,11 +15,16 @@ const activeQuestions = ref([]);
 const isLoadingModule = ref(false);
 
 const launchModule = async (moduleId) => {
-    if (!moduleId) return;
+    if (!moduleId) {
+        return;
+    }
+
     isLoadingModule.value = true;
+
     try {
         const response = await fetch(`/api/modules/${moduleId}`);
         const data = await response.json();
+
         if (data.status === 'success') {
             activeModule.value = data.module;
             activeQuestions.value = data.questions || [];
@@ -43,15 +48,23 @@ provide('sduiContext', {
     launchModule,
 });
 
-const McqPlayer = defineAsyncComponent(() => import('@/components/sdui/McqPlayer.vue'));
-const PdfViewer = defineAsyncComponent(() => import('@/components/sdui/PdfViewer.vue'));
-const SubjectiveUpload = defineAsyncComponent(() => import('@/components/sdui/SubjectiveUpload.vue'));
+const McqPlayer = defineAsyncComponent(
+    () => import('@/components/sdui/McqPlayer.vue'),
+);
+const PdfViewer = defineAsyncComponent(
+    () => import('@/components/sdui/PdfViewer.vue'),
+);
+const SubjectiveUpload = defineAsyncComponent(
+    () => import('@/components/sdui/SubjectiveUpload.vue'),
+);
 </script>
 
 <template>
     <Head :title="sdui?.meta?.domain?.name || 'Dashboard'" />
     <div class="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
-        <div class="flex flex-col gap-1 border-b border-sidebar-border/70 pb-4 dark:border-sidebar-border">
+        <div
+            class="flex flex-col gap-1 border-b border-sidebar-border/70 pb-4 dark:border-sidebar-border"
+        >
             <h1 class="text-2xl font-bold tracking-tight text-foreground">
                 {{ sdui?.meta?.domain?.name }}
             </h1>
@@ -60,7 +73,7 @@ const SubjectiveUpload = defineAsyncComponent(() => import('@/components/sdui/Su
             </p>
         </div>
 
-        <div v-if="activeModule" class="mt-2 flex-1 flex flex-col gap-4">
+        <div v-if="activeModule" class="mt-2 flex flex-1 flex-col gap-4">
             <button
                 type="button"
                 @click="closePlayer"
@@ -70,7 +83,10 @@ const SubjectiveUpload = defineAsyncComponent(() => import('@/components/sdui/Su
             </button>
 
             <McqPlayer
-                v-if="activeModule.module_type === 'mock_test' || activeModule.module_type === 'preparation'"
+                v-if="
+                    activeModule.module_type === 'mock_test' ||
+                    activeModule.module_type === 'preparation'
+                "
                 :module="activeModule"
                 :questions="activeQuestions"
                 mode="practice"
@@ -85,12 +101,20 @@ const SubjectiveUpload = defineAsyncComponent(() => import('@/components/sdui/Su
             <SubjectiveUpload
                 v-else
                 :title="activeModule.title"
-                :instructions="activeModule.content_meta?.instructions || activeModule.content_meta?.description"
-                :maxWordCount="activeModule.content_meta?.max_word_count || 1000"
+                :instructions="
+                    activeModule.content_meta?.instructions ||
+                    activeModule.content_meta?.description
+                "
+                :maxWordCount="
+                    activeModule.content_meta?.max_word_count || 1000
+                "
             />
         </div>
         <div v-else class="mt-2 flex-1">
-            <div v-if="isLoadingModule" class="flex min-h-[300px] items-center justify-center text-sm text-muted-foreground animate-pulse">
+            <div
+                v-if="isLoadingModule"
+                class="flex min-h-[300px] animate-pulse items-center justify-center text-sm text-muted-foreground"
+            >
                 Loading module content...
             </div>
             <SduiRenderer v-else-if="sdui?.layout" :node="sdui.layout" />

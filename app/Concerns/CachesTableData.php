@@ -2,6 +2,7 @@
 
 namespace App\Concerns;
 
+use App\Models\Domain;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -41,7 +42,7 @@ trait CachesTableData
      */
     public static function getCacheKeyPrefix(): string
     {
-        return 'table_cache:' . (new static())->getTable();
+        return 'table_cache:'.app(static::class)->getTable();
     }
 
     /**
@@ -50,11 +51,11 @@ trait CachesTableData
     public static function flushCache(): void
     {
         $prefix = static::getCacheKeyPrefix();
-        Cache::forget($prefix . ':all');
-        Cache::forget($prefix . ':select_options');
+        Cache::forget($prefix.':all');
+        Cache::forget($prefix.':select_options');
 
         // Special case: clearing domain select dropdown cache shared across resources
-        if (static::class === \App\Models\Domain::class) {
+        if (static::class === Domain::class) {
             Cache::forget('domains_select_options');
         }
     }
@@ -68,7 +69,7 @@ trait CachesTableData
      * table search box and column sorting still work correctly on cached data
      * (PHP-side filtering on the in-memory collection — still sub-5ms total).
      *
-     * @param  \Closure(): Collection<int, Model>  $queryCallback
+     * @param  \Closure(): (Collection<int, mixed>|\Illuminate\Support\Collection<int, mixed>)  $queryCallback
      * @param  array<int, string>  $relations
      * @param  string|null  $search  Active search term from Filament table header
      * @param  array<int, string>  $searchableColumns  Column names to search within
@@ -84,7 +85,7 @@ trait CachesTableData
         ?string $sortColumn = null,
         string $sortDirection = 'asc',
     ): Collection {
-        $key = static::getCacheKeyPrefix() . ':all';
+        $key = static::getCacheKeyPrefix().':all';
 
         /** @var array{models: array<int, array<string, mixed>>, relations: array<string, array<int, array<string, mixed>|null>>}|null $cached */
         $cached = Cache::get($key);
@@ -95,7 +96,7 @@ trait CachesTableData
 
             foreach ($cached['relations'] as $relationName => $relationData) {
                 foreach ($collection as $index => $model) {
-                    if (isset($relationData[$index]) && $relationData[$index] !== null) {
+                    if (isset($relationData[$index])) {
                         $relatedModel = $model->$relationName()->getRelated()->newInstance();
                         $relatedModel->forceFill($relationData[$index])->syncOriginal();
                         $relatedModel->exists = true;
@@ -117,6 +118,7 @@ trait CachesTableData
                 $relationAttributes[$rel] = $collection->map(function (Model $m) use ($rel) {
                     /** @var Model|null $related */
                     $related = $m->getRelationValue($rel);
+
                     return $related !== null ? $related->getAttributes() : null;
                 })->all();
             }
@@ -137,6 +139,7 @@ trait CachesTableData
                         return true;
                     }
                 }
+
                 return false;
             })->values();
         }
@@ -159,7 +162,7 @@ trait CachesTableData
      */
     protected static function resolveNestedAttribute(Model $model, string $column): mixed
     {
-        if (!str_contains($column, '.')) {
+        if (! str_contains($column, '.')) {
             return $model->getAttribute($column);
         }
 

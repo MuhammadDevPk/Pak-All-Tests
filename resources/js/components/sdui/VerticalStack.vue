@@ -1,4 +1,5 @@
-xxQ<script setup>
+xxQ
+<script setup>
 import SduiRenderer from './SduiRenderer.vue';
 
 defineProps({

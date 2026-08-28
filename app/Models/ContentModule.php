@@ -20,7 +20,7 @@ class ContentModule extends Model
     protected static function booted(): void
     {
         static::creating(function (ContentModule $module) {
-            if (($module->sort_order === null || (int) $module->sort_order <= 0) && $module->domain_id) {
+            if ((int) ($module->sort_order ?? 0) <= 0 && $module->domain_id) {
                 $module->sort_order = (static::where('domain_id', $module->domain_id)->max('sort_order') ?? 0) + 1;
             }
         });

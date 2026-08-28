@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\UserSubscriptions\Schemas;
 
+use App\Models\Domain;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -36,7 +37,7 @@ class UserSubscriptionForm
                                 ->options(fn (): array => Cache::remember(
                                     'domains_select_options',
                                     3600,
-                                    fn () => \App\Models\Domain::query()
+                                    fn () => Domain::query()
                                         ->orderBy('name')
                                         ->limit(200)
                                         ->pluck('name', 'id')

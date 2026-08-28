@@ -6,6 +6,7 @@ use App\Models\Team;
 use App\Models\User;
 use Illuminate\Auth\EloquentUserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -29,9 +30,11 @@ use Illuminate\Support\Facades\Cache;
  */
 class CachingUserProvider extends EloquentUserProvider
 {
-    private const CACHE_TTL_SECONDS    = 300; // 5 minutes
-    private const USER_KEY_PREFIX      = 'auth_user:';
-    private const TEAM_KEY_PREFIX      = 'auth_team:';
+    private const CACHE_TTL_SECONDS = 300; // 5 minutes
+
+    private const USER_KEY_PREFIX = 'auth_user:';
+
+    private const TEAM_KEY_PREFIX = 'auth_team:';
 
     /**
      * Retrieve a user by their unique identifier.
@@ -42,7 +45,7 @@ class CachingUserProvider extends EloquentUserProvider
      */
     public function retrieveById(mixed $identifier): ?Authenticatable
     {
-        $userKey = self::USER_KEY_PREFIX . $identifier;
+        $userKey = self::USER_KEY_PREFIX.$identifier;
 
         /** @var array<string, mixed>|null $userAttributes */
         $userAttributes = Cache::get($userKey);
@@ -83,17 +86,17 @@ class CachingUserProvider extends EloquentUserProvider
             $teamId = $user->current_team_id;
             if ($teamId !== null && $user->relationLoaded('currentTeam') && $user->currentTeam !== null) {
                 Cache::put(
-                    self::TEAM_KEY_PREFIX . $teamId,
+                    self::TEAM_KEY_PREFIX.$teamId,
                     $user->currentTeam->getAttributes(),
                     self::CACHE_TTL_SECONDS,
                 );
             } elseif ($teamId === null) {
                 // Explicitly cache "no team" to avoid DB lookup next time
-                Cache::put(self::USER_KEY_PREFIX . $identifier . ':no_team', true, self::CACHE_TTL_SECONDS);
+                Cache::put(self::USER_KEY_PREFIX.$identifier.':no_team', true, self::CACHE_TTL_SECONDS);
             }
         }
 
-        return $user instanceof Authenticatable ? $user : null;
+        return ($user instanceof Authenticatable && $user instanceof Model) ? $user : null;
     }
 
     /**
@@ -102,13 +105,13 @@ class CachingUserProvider extends EloquentUserProvider
      */
     private function resolveTeamFromCache(int|string $teamId): ?Team
     {
-        $teamKey = self::TEAM_KEY_PREFIX . $teamId;
+        $teamKey = self::TEAM_KEY_PREFIX.$teamId;
 
         /** @var array<string, mixed>|null $teamAttrs */
         $teamAttrs = Cache::get($teamKey);
 
         if ($teamAttrs !== null) {
-            $team = new Team();
+            $team = new Team;
             $team->forceFill($teamAttrs)->syncOriginal();
             $team->exists = true;
 
@@ -156,14 +159,14 @@ class CachingUserProvider extends EloquentUserProvider
     {
         // Evict team cache first — read team_id from Redis before forgetting user key
         /** @var array<string, mixed>|null $userAttributes */
-        $userAttributes = Cache::get(self::USER_KEY_PREFIX . $identifier);
+        $userAttributes = Cache::get(self::USER_KEY_PREFIX.$identifier);
         if ($userAttributes !== null) {
             $teamId = $userAttributes['current_team_id'] ?? null;
             if ($teamId !== null) {
-                Cache::forget(self::TEAM_KEY_PREFIX . $teamId);
+                Cache::forget(self::TEAM_KEY_PREFIX.$teamId);
             }
         }
 
-        Cache::forget(self::USER_KEY_PREFIX . $identifier);
+        Cache::forget(self::USER_KEY_PREFIX.$identifier);
     }
 }

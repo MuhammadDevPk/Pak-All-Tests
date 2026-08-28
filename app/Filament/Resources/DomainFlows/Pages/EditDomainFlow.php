@@ -25,13 +25,13 @@ class EditDomainFlow extends EditRecord
     protected function mutateFormDataBeforeFill(array $data): array
     {
         // Expand ui_schema JSON → phases Repeater state
-        if (!empty($data['ui_schema']) && is_array($data['ui_schema'])) {
+        if (! empty($data['ui_schema']) && is_array($data['ui_schema'])) {
             $decompiled = UiSchemaCompiler::decompile($data['ui_schema']);
             $data['phases'] = $decompiled['phases'] ?? [];
         }
 
         // Expand learning_schema JSON → individual form fields
-        if (!empty($data['learning_schema']) && is_array($data['learning_schema'])) {
+        if (! empty($data['learning_schema']) && is_array($data['learning_schema'])) {
             $data['passing_percentage'] = $data['learning_schema']['passing_percentage'] ?? null;
             $data['time_limit_minutes'] = $data['learning_schema']['time_limit_minutes'] ?? null;
         }
@@ -66,4 +66,3 @@ class EditDomainFlow extends EditRecord
         return $data;
     }
 }
-

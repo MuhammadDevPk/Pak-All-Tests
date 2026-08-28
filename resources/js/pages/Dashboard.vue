@@ -14,9 +14,7 @@ defineOptions({
         breadcrumbs: [
             {
                 title: 'Dashboard',
-                href: props.currentTeam
-                    ? dashboard(props.currentTeam.slug)
-                    : '/',
+                href: props.currentTeam ? dashboard().url : '/',
             },
         ],
     }),

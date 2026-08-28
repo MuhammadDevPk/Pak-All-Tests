@@ -12,14 +12,18 @@ export const componentRegistry = {
     // Sub-Phase 3.3 Structural Layouts
     TabbedLayout: defineAsyncComponent(() => import('./TabbedLayout.vue')),
     SubjectGrid: defineAsyncComponent(() => import('./SubjectGrid.vue')),
-    PhaseStepperLayout: defineAsyncComponent(() => import('./PhaseStepperLayout.vue')),
+    PhaseStepperLayout: defineAsyncComponent(
+        () => import('./PhaseStepperLayout.vue'),
+    ),
     ResourceList: defineAsyncComponent(() => import('./ResourceList.vue')),
     VerticalStack: defineAsyncComponent(() => import('./VerticalStack.vue')),
 
     // Sub-Phase 3.4 Interactive Components
     McqPlayer: defineAsyncComponent(() => import('./McqPlayer.vue')),
     PdfViewer: defineAsyncComponent(() => import('./PdfViewer.vue')),
-    SubjectiveUpload: defineAsyncComponent(() => import('./SubjectiveUpload.vue')),
+    SubjectiveUpload: defineAsyncComponent(
+        () => import('./SubjectiveUpload.vue'),
+    ),
 
     // Sub-Phase 3.5 Progress Analytics Components
     ProgressCard: defineAsyncComponent(() => import('./ProgressCard.vue')),
