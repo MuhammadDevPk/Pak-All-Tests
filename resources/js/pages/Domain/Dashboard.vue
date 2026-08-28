@@ -80,6 +80,7 @@ const SubjectiveUpload = defineAsyncComponent(() => import('@/components/sdui/Su
                 :title="activeModule.title"
                 :fileUrl="activeModule.content_meta?.file_url"
                 :description="activeModule.content_meta?.description"
+                :files="activeModule.content_meta?.files || []"
             />
             <SubjectiveUpload
                 v-else
