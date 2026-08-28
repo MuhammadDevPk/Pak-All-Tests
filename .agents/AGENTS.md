@@ -18,6 +18,7 @@ In every chat, code generation, code review, migration drafting, model definitio
 
 ## 📖 Sub-Architectural Rule Indexes
 You MUST read and adhere to the following specialized rules files when modifying files in this workspace:
+* **Mistakes & Anti-Patterns**: [`mistakes_and_descriptions.md`](file:///.agents/rules/mistakes_and_descriptions.md)
 * **SDUI Blueprinting & Layouts**: [`sdui_blueprints.md`](file:///.agents/rules/sdui_blueprints.md)
 * **Database & Performance Optimization**: [`database_performance.md`](file:///.agents/rules/database_performance.md)
 * **Security Gating & Route Protection**: [`security_gating.md`](file:///.agents/rules/security_gating.md)
