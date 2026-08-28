@@ -28,11 +28,18 @@
 
 ---
 
+### 4. Payment Verification & Delivery (Phase 4)
+- **Sub-Phase 4.1 (Completed)**: 
+  - Created `SubscriptionReceiptController.php` supporting receipt uploads (PNG, JPG, PDF up to 10MB) to public storage disk and state transitions.
+  - Redesigned `PendingOrInactive.vue` with Pakistani payment gateways (EasyPaisa, JazzCash, Meezan Bank IBFT), one-click copy, drag-and-drop receipt upload, live image previews, and distinct status state handling (`pending`, `rejected`, `none`).
+  - Automated test suite `SubscriptionReceiptTest.php` passing 100% (5 tests, 30 assertions).
+
+---
+
 ## Active Roadmap (Next Phase)
 
 ### Phase 4: Payment Verification & Delivery
-- **Sub-Phase 4.1**: Receipt screenshot uploads & Supabase S3 Object Storage integration.
-- **Sub-Phase 4.2**: Filament Manual Review Admin Queue (pending subscription uploads page).
+- **Sub-Phase 4.2**: Filament Manual Review Admin Queue (pending subscription uploads page & review actions).
 - **Sub-Phase 4.3**: Payment state machine transitions & active subscription updates.
 - **Sub-Phase 4.4**: Queue Event notifications (Meta WhatsApp API templates and transactional emails).
 - **Sub-Phase 4.5**: EasyPaisa / JazzCash Webhook receiver & signature verification.
