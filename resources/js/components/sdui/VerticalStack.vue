@@ -1,4 +1,3 @@
-xxQ
 <script setup>
 import SduiRenderer from './SduiRenderer.vue';
 
