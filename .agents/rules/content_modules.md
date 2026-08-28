@@ -46,3 +46,12 @@ if (!$module->is_active || !$module->domain()->where('is_active', true)->exists(
 }
 ```
 * **Subscription Gating**: Rejects attempts if the authenticated candidate does not hold an active, non-expired subscription for the module's parent domain.
+
+---
+
+## 5. Dynamic Sort Order & Sequential Re-Indexing
+To ensure seamless curriculum management and avoid manual numbering:
+* **Auto-Default on Creation**: The `ContentModule` model and Filament form automatically calculate the next available sort order per domain:
+  `sort_order = (ContentModule::where('domain_id', $domainId)->max('sort_order') ?? 0) + 1`
+* **Automatic Gap Compaction on Deletion**: When any content module is deleted, Eloquent lifecycle hooks automatically re-compact and re-index all remaining modules in that domain (`1, 2, 3, 4...`) without leaving holes or skipped numbers (`ContentModule::reorderDomainModules($domainId)`).
+* **Table Ordering**: Filament content modules table lists records ordered by `domain_id` and `sort_order` ascending by default.
