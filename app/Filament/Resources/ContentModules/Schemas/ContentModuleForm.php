@@ -5,12 +5,14 @@ namespace App\Filament\Resources\ContentModules\Schemas;
 use App\Models\ContentModule;
 use App\Models\Domain;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Cache;
@@ -57,6 +59,7 @@ class ContentModuleForm
                                     'pdf_repo' => 'PDF / Document Repository',
                                 ])
                                 ->required()
+                                ->live()
                                 ->native(false),
 
                             TextInput::make('title')
@@ -90,53 +93,112 @@ class ContentModuleForm
                         ]),
                     ]),
 
-                Section::make('Document & PDF File Upload')
-                    ->description('Upload PDF study guides, syllabus books, past papers, or document resources for candidate access.')
+                Section::make('Attached Documents & Resources')
+                    ->description('Upload or link PDF study guides, formula books, past papers, or individual files under this module.')
                     ->icon(Heroicon::OutlinedDocumentArrowUp)
                     ->schema([
-                        FileUpload::make('document_file')
-                            ->label('Upload PDF / Document File')
-                            ->disk('public')
-                            ->directory('content-modules/documents')
-                            ->acceptedFileTypes([
-                                'application/pdf',
-                                'application/msword',
-                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                                'image/jpeg',
-                                'image/png',
-                                'image/webp',
-                            ])
-                            ->maxSize(51200) // 50MB max file size
-                            ->downloadable()
-                            ->openable()
-                            ->live()
+                        Repeater::make('files')
+                            ->label('Attached Files / Documents')
+                            ->addActionLabel('+ Add File / Document')
+                            ->reorderable()
+                            ->collapsible()
+                            ->itemLabel(fn (array $state): string => trim($state['title'] ?? '') ?: 'Untitled Document')
                             ->dehydrated(false)
-                            ->helperText('Upload a PDF, Word document, or image file. The file URL will be saved to content_meta.')
                             ->afterStateHydrated(function ($component, $record) {
                                 if ($record && is_array($record->content_meta)) {
-                                    $url = $record->content_meta['file_url'] ?? $record->content_meta['file_path'] ?? null;
-                                    if ($url && str_contains($url, '/storage/')) {
-                                        $component->state(str_replace('/storage/', '', $url));
+                                    $meta = $record->content_meta;
+                                    if (! empty($meta['files']) && is_array($meta['files'])) {
+                                        $items = [];
+                                        foreach ($meta['files'] as $f) {
+                                            $url = $f['file_url'] ?? '';
+                                            $isUpload = str_starts_with($url, '/storage/');
+                                            $filePath = $isUpload ? str_replace('/storage/', '', $url) : null;
+                                            $items[] = [
+                                                'title' => $f['title'] ?? '',
+                                                'source_type' => $f['source_type'] ?? ($isUpload ? 'upload' : 'url'),
+                                                'document_file' => $filePath ? [(string) Str::uuid() => $filePath] : [],
+                                                'file_url' => $url,
+                                                'file_type' => $f['file_type'] ?? 'PDF Document',
+                                                'file_size' => $f['file_size'] ?? '',
+                                            ];
+                                        }
+                                        $component->state($items);
+                                    } elseif (! empty($meta['file_url'])) {
+                                        $url = $meta['file_url'];
+                                        $isUpload = str_starts_with($url, '/storage/');
+                                        $filePath = $isUpload ? str_replace('/storage/', '', $url) : null;
+                                        $component->state([[
+                                            'title' => $record->title,
+                                            'source_type' => $isUpload ? 'upload' : 'url',
+                                            'document_file' => $filePath ? [(string) Str::uuid() => $filePath] : [],
+                                            'file_url' => $url,
+                                            'file_type' => $meta['file_type'] ?? 'PDF Document',
+                                            'file_size' => $meta['file_size'] ?? '',
+                                        ]]);
                                     }
                                 }
                             })
-                            ->afterStateUpdated(function ($state, callable $set) {
-                                if ($state) {
-                                    $filePath = is_array($state) ? reset($state) : $state;
-                                    $set('file_url', '/storage/'.ltrim($filePath, '/'));
-                                }
-                            }),
+                            ->schema([
+                                Grid::make(3)->schema([
+                                    TextInput::make('title')
+                                        ->label('Individual File Title')
+                                        ->placeholder('e.g. Part 1: Verbal Formula Book')
+                                        ->required()
+                                        ->columnSpan(2),
 
-                        TextInput::make('file_url')
-                            ->label('Document / PDF File URL')
-                            ->placeholder('e.g. /storage/content-modules/documents/verbal-notes.pdf or https://...')
-                            ->dehydrated(false)
-                            ->helperText('Automatically populated when uploading a file above, or enter an external URL.')
-                            ->afterStateHydrated(function ($component, $record) {
-                                if ($record && is_array($record->content_meta)) {
-                                    $component->state($record->content_meta['file_url'] ?? $record->content_meta['file_path'] ?? null);
-                                }
-                            }),
+                                    Select::make('source_type')
+                                        ->label('Source Type')
+                                        ->options([
+                                            'upload' => '📁 Upload File',
+                                            'url' => '🔗 External / Drive URL',
+                                        ])
+                                        ->default('upload')
+                                        ->live(),
+                                ]),
+
+                                FileUpload::make('document_file')
+                                    ->label('Upload PDF / Document File')
+                                    ->disk('public')
+                                    ->directory('content-modules/documents')
+                                    ->acceptedFileTypes([
+                                        'application/pdf',
+                                        'application/msword',
+                                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                        'image/jpeg',
+                                        'image/png',
+                                        'image/webp',
+                                    ])
+                                    ->maxSize(51200) // 50MB max file size
+                                    ->downloadable()
+                                    ->openable()
+                                    ->live()
+                                    ->hidden(fn (Get $get) => $get('source_type') === 'url')
+                                    ->afterStateUpdated(function ($state, callable $set) {
+                                        if ($state) {
+                                            $filePath = is_array($state) ? reset($state) : $state;
+                                            $set('file_url', '/storage/'.ltrim($filePath, '/'));
+                                        }
+                                    }),
+
+                                TextInput::make('file_url')
+                                    ->label('Document / PDF File URL')
+                                    ->placeholder('e.g. https://drive.google.com/file/d/.../preview or /storage/...')
+                                    ->helperText('Paste a direct PDF link, Google Drive link, or external document URL.')
+                                    ->hidden(fn (Get $get) => $get('source_type') === 'upload' && blank($get('file_url')))
+                                    ->columnSpanFull(),
+
+                                Grid::make(2)->schema([
+                                    TextInput::make('file_size')
+                                        ->label('File Size (Optional)')
+                                        ->placeholder('e.g. 2.4 MB'),
+
+                                    TextInput::make('file_type')
+                                        ->label('File Format')
+                                        ->default('PDF Document')
+                                        ->placeholder('e.g. PDF Document, Word Doc'),
+                                ]),
+                            ])
+                            ->columnSpanFull(),
                     ]),
 
                 Section::make('Content Metadata & Configuration')
@@ -152,18 +214,37 @@ class ContentModuleForm
                             ->afterStateHydrated(fn ($state, $set) => is_array($state) ? $set('content_meta', json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) : null)
                             ->dehydrateStateUsing(function ($state, callable $get) {
                                 $meta = is_string($state) ? json_decode($state, true) : ($state ?? []);
-                                if (!is_array($meta)) {
+                                if (! is_array($meta)) {
                                     $meta = [];
                                 }
 
-                                $docFile = $get('document_file');
-                                $fileUrl = $get('file_url');
+                                $files = $get('files');
+                                if (is_array($files) && count($files) > 0) {
+                                    $cleanFiles = [];
+                                    foreach ($files as $f) {
+                                        $fileUrl = $f['file_url'] ?? null;
+                                        if (! empty($f['document_file'])) {
+                                            $filePath = is_array($f['document_file']) ? reset($f['document_file']) : $f['document_file'];
+                                            $fileUrl = '/storage/'.ltrim($filePath, '/');
+                                        }
 
-                                if ($docFile) {
-                                    $filePath = is_array($docFile) ? reset($docFile) : $docFile;
-                                    $meta['file_url'] = '/storage/'.ltrim($filePath, '/');
-                                } elseif ($fileUrl) {
-                                    $meta['file_url'] = $fileUrl;
+                                        if (! empty($fileUrl) || ! empty($f['title'])) {
+                                            $cleanFiles[] = [
+                                                'title' => $f['title'] ?? 'Document',
+                                                'file_url' => $fileUrl,
+                                                'file_type' => $f['file_type'] ?? 'PDF Document',
+                                                'file_size' => $f['file_size'] ?? null,
+                                                'source_type' => $f['source_type'] ?? 'upload',
+                                            ];
+                                        }
+                                    }
+
+                                    $meta['files'] = $cleanFiles;
+                                    if (count($cleanFiles) > 0) {
+                                        $meta['file_url'] = $cleanFiles[0]['file_url'];
+                                        $meta['file_type'] = $cleanFiles[0]['file_type'];
+                                        $meta['file_size'] = $cleanFiles[0]['file_size'];
+                                    }
                                 }
 
                                 return $meta;
