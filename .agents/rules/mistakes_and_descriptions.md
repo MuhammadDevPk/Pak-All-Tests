@@ -146,3 +146,21 @@ Select::make('domain_id')
         fn () => Domain::query()->orderBy('name')->pluck('name', 'id')->all()
     ))
 ```
+
+---
+
+## 6. Filament FileUpload Component State Must Always Be an Array
+
+### 💥 The Symptom
+* `ErrorException: foreach() argument must be of type array|object, string given in BaseFileUpload.php:923` or `Argument #2 ($value) must be of type array, string given`.
+
+### 🔍 What Happened (Root Cause)
+Filament's internal `FileUpload` state representation in Livewire requires an `array` (`[(string) Str::uuid() => $filePath]` or `[]`). Passing a raw string path directly during `afterStateHydrated()` causes Filament's validation and file lookup loops to crash because PHP cannot run `foreach()` on a string.
+
+### ✅ The Fix & Prevention Rule
+* **Rule**: When hydrating any `FileUpload` component state, always provide an array:
+```php
+// ✅ CORRECT: Always wrap file path in an array keyed by UUID or empty array
+$filePath = $isUpload ? str_replace('/storage/', '', $url) : null;
+'document_file' => $filePath ? [(string) Str::uuid() => $filePath] : [],
+```
