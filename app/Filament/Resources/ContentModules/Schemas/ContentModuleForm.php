@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ContentModules\Schemas;
 
+use App\Models\ContentModule;
 use App\Models\Domain;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -38,6 +39,13 @@ class ContentModuleForm
                                         ->all(),
                                 ))
                                 ->searchable()
+                                ->live()
+                                ->afterStateUpdated(function (string $operation, $state, callable $set) {
+                                    if ($operation === 'create' && $state) {
+                                        $next = (ContentModule::where('domain_id', $state)->max('sort_order') ?? 0) + 1;
+                                        $set('sort_order', $next);
+                                    }
+                                })
                                 ->required()
                                 ->placeholder('Select Domain'),
 
@@ -70,7 +78,8 @@ class ContentModuleForm
                             TextInput::make('sort_order')
                                 ->label('Sort Order Index')
                                 ->numeric()
-                                ->default(0)
+                                ->default(1)
+                                ->helperText('Sequence index in candidate dashboards. Auto-calculated for the chosen domain.')
                                 ->required(),
 
                             Toggle::make('is_active')

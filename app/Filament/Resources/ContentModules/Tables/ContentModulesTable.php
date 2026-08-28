@@ -21,13 +21,14 @@ class ContentModulesTable
                 ?string $sortColumn,
                 ?string $sortDirection,
             ): \Illuminate\Support\Collection => ContentModule::getCachedTableRecords(
-                fn () => ContentModule::query()->with('domain')->orderBy('id', 'asc')->get(),
+                fn () => ContentModule::query()->with('domain')->orderBy('domain_id', 'asc')->orderBy('sort_order', 'asc')->orderBy('id', 'asc')->get(),
                 ['domain'],
                 $search,
                 ['title', 'slug', 'module_type', 'domain.name'],
                 $sortColumn,
                 $sortDirection ?? 'asc',
             ))
+            ->defaultSort('sort_order', 'asc')
             ->columns([
                 TextColumn::make('title')
                     ->searchable()
