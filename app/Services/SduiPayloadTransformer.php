@@ -147,6 +147,7 @@ class SduiPayloadTransformer
     {
         $meta = is_array($module['content_meta'] ?? null) ? $module['content_meta'] : [];
         $isPdf = $module['type'] === 'pdf_repo';
+        $files = is_array($meta['files'] ?? null) ? $meta['files'] : [];
 
         return array_filter([
             'moduleId' => $module['id'],
@@ -155,6 +156,8 @@ class SduiPayloadTransformer
             'actionLabel' => $isPdf ? 'View PDF' : 'Start Practice',
             'fileType' => $meta['file_type'] ?? null,
             'fileSize' => $meta['file_size'] ?? null,
+            'fileUrl' => $meta['file_url'] ?? null,
+            'files' => count($files) > 0 ? $files : null,
         ], static fn (mixed $value): bool => $value !== null);
     }
 
