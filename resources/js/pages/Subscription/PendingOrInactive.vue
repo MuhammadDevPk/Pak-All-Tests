@@ -1,14 +1,16 @@
-<script setup lang="ts">
+<script setup>
 import { Head, Link } from '@inertiajs/vue3';
 
-defineProps<{
+defineProps({
     domain: {
-        id: number;
-        name: string;
-        slug: string;
-    };
-    subscriptionStatus: string;
-}>();
+        type: Object,
+        required: true,
+    },
+    subscriptionStatus: {
+        type: String,
+        default: 'none',
+    },
+});
 </script>
 
 <template>
