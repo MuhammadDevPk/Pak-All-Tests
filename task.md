@@ -26,9 +26,7 @@
 - **Filament UI Upgraded**: Replaced restrictive flat `KeyValue` fields with pretty-printed, syntax-validated JSON `Textarea` editors across `DomainFlowForm.php`, `QuestionBankForm.php`, and `ContentModuleForm.php` to enable nesting of layout trees, question options arrays, and rules.
 - **UI Design Guidelines Added**: Created [`.agents/rules/ui_design_guidelines.md`](file:///.agents/rules/ui_design_guidelines.md) enforcing senior product design principles, banning AI UI tropes (eyebrow pills, generic gradients, over-cardification, uniform radii), and mandating multi-device responsive standards (mobile, tablet, laptop, ultrawide).
 
----
-
-### 4. Payment Verification & Delivery (Phase 4)
+### 4. Payment Verification & Delivery (Phase 4 — MVP Complete)
 - **Sub-Phase 4.1 (Completed)**: 
   - Created `SubscriptionReceiptController.php` supporting receipt uploads (PNG, JPG, PDF up to 10MB) to public storage disk and state transitions.
   - Redesigned `PendingOrInactive.vue` with Pakistani payment gateways (EasyPaisa, JazzCash, Meezan Bank IBFT), one-click copy, drag-and-drop receipt upload, live image previews, and distinct status state handling (`pending`, `rejected`, `none`).
@@ -38,7 +36,6 @@
   - Implemented one-click **Approve** and **Reject** review actions with reason modals and notifications in `UserSubscriptionsTable.php` and `EditUserSubscription.php`.
   - Added filter tabs (`Pending Verification`, `All`, `Active`, `Rejected`) and live navigation count badges in `ListUserSubscriptions.php` and `UserSubscriptionResource.php`.
   - Automated test suite `FilamentUserSubscriptionReviewTest.php` passing 100% (2 tests, 29 assertions).
-
 - **Sub-Phase 4.3 (Completed)**:
   - Created `SubscriptionManager` service managing state machine transitions (`activate`, `reject`, `expireLapsedSubscriptions`, `hasActiveAccess`).
   - Added Eloquent scopes (`active`, `pending`, `rejected`, `expired`) and boolean status helpers to `UserSubscription` and `User`.
@@ -48,13 +45,16 @@
 
 ---
 
-## Active Roadmap (Next Phase)
+## 🔮 Post-MVP Commercial Expansion (Deferred for Scale)
+- **Sub-Phase 4.4 (Post-MVP)**: Meta WhatsApp API Cloud message templates and transactional queued emails for instant candidate notifications upon subscription approval/rejection.
+- **Sub-Phase 4.5 (Post-MVP)**: EasyPaisa & JazzCash Corporate Merchant IPN Webhook receivers with HMAC signature verification for instant zero-human-intervention checkout.
 
-### Phase 4: Payment Verification & Delivery
-- **Sub-Phase 4.4**: Queue Event notifications (Meta WhatsApp API templates and transactional emails).
-- **Sub-Phase 4.5**: EasyPaisa / JazzCash Webhook receiver & signature verification.
+---
+
+## 🎯 Active Roadmap (Next Phase)
 
 ### Phase 5: Specialized AI Chatbots & Sub-Agents
-- Vectorization pipeline with pgvector.
-- AI Tutor floating action button chat interface.
-- WhatsApp inbound tutoring webhook handlers.
+- **Sub-Phase 5.1**: Knowledge Vectorization & pgvector pipeline (embedding question banks, past papers, military interview rubrics, and CSS syllabus).
+- **Sub-Phase 5.2**: AI Tutor Floating Action Button (FAB) web widget in candidate dashboard with real-time streaming hints and Socratic guidance.
+- **Sub-Phase 5.3**: Subjective Essay & WAT/SRT AI evaluation engine providing rubric scores and constructive feedback.
+- **Sub-Phase 5.4**: Inbound WhatsApp tutoring sub-agent for mobile-first MCQ drills and daily current affairs digests.
