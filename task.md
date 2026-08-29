@@ -39,12 +39,18 @@
   - Added filter tabs (`Pending Verification`, `All`, `Active`, `Rejected`) and live navigation count badges in `ListUserSubscriptions.php` and `UserSubscriptionResource.php`.
   - Automated test suite `FilamentUserSubscriptionReviewTest.php` passing 100% (2 tests, 29 assertions).
 
+- **Sub-Phase 4.3 (Completed)**:
+  - Created `SubscriptionManager` service managing state machine transitions (`activate`, `reject`, `expireLapsedSubscriptions`, `hasActiveAccess`).
+  - Added Eloquent scopes (`active`, `pending`, `rejected`, `expired`) and boolean status helpers to `UserSubscription` and `User`.
+  - Created `ExpireLapsedSubscriptionsCommand` (`subscriptions:expire-lapsed`) registered in `routes/console.php` for daily scheduled batch expiration.
+  - Standardized subscription gating across `DomainDashboardController`, `ContentModuleController`, and `McqExecutionController`.
+  - Automated test suite `SubscriptionStateMachineTest.php` passing 100% (11 tests, 86 assertions across all subscription suites).
+
 ---
 
 ## Active Roadmap (Next Phase)
 
 ### Phase 4: Payment Verification & Delivery
-- **Sub-Phase 4.3**: Payment state machine transitions & active subscription updates.
 - **Sub-Phase 4.4**: Queue Event notifications (Meta WhatsApp API templates and transactional emails).
 - **Sub-Phase 4.5**: EasyPaisa / JazzCash Webhook receiver & signature verification.
 
