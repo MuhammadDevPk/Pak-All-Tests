@@ -33,13 +33,17 @@
   - Created `SubscriptionReceiptController.php` supporting receipt uploads (PNG, JPG, PDF up to 10MB) to public storage disk and state transitions.
   - Redesigned `PendingOrInactive.vue` with Pakistani payment gateways (EasyPaisa, JazzCash, Meezan Bank IBFT), one-click copy, drag-and-drop receipt upload, live image previews, and distinct status state handling (`pending`, `rejected`, `none`).
   - Automated test suite `SubscriptionReceiptTest.php` passing 100% (5 tests, 30 assertions).
+- **Sub-Phase 4.2 (Completed)**:
+  - Upgraded `UserSubscriptionForm.php` with a read-only, high-resolution receipt inspection preview and PDF download action.
+  - Implemented one-click **Approve** and **Reject** review actions with reason modals and notifications in `UserSubscriptionsTable.php` and `EditUserSubscription.php`.
+  - Added filter tabs (`Pending Verification`, `All`, `Active`, `Rejected`) and live navigation count badges in `ListUserSubscriptions.php` and `UserSubscriptionResource.php`.
+  - Automated test suite `FilamentUserSubscriptionReviewTest.php` passing 100% (2 tests, 29 assertions).
 
 ---
 
 ## Active Roadmap (Next Phase)
 
 ### Phase 4: Payment Verification & Delivery
-- **Sub-Phase 4.2**: Filament Manual Review Admin Queue (pending subscription uploads page & review actions).
 - **Sub-Phase 4.3**: Payment state machine transitions & active subscription updates.
 - **Sub-Phase 4.4**: Queue Event notifications (Meta WhatsApp API templates and transactional emails).
 - **Sub-Phase 4.5**: EasyPaisa / JazzCash Webhook receiver & signature verification.
