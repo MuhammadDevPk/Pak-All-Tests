@@ -11,9 +11,17 @@ test('authenticated users can submit and evaluate MCQ test modules', function ()
 
     $domain = Domain::create([
         'name' => 'PMA Intelligence Prep',
-        'slug' => 'pma-intel',
-        'code' => 'PMA',
+        'slug' => 'pma-intel-'.uniqid(),
+        'code' => 'PMA_'.uniqid(),
         'is_active' => true,
+    ]);
+
+    UserSubscription::create([
+        'user_id' => $user->id,
+        'domain_id' => $domain->id,
+        'status' => 'active',
+        'starts_at' => now(),
+        'expires_at' => now()->addYear(),
     ]);
 
     $module = ContentModule::create([
@@ -77,8 +85,8 @@ test('users can fetch module details and questions if subscribed', function () {
 
     $domain = Domain::create([
         'name' => 'PMA Intelligence Prep',
-        'slug' => 'pma-intel',
-        'code' => 'PMA',
+        'slug' => 'pma-intel-'.uniqid(),
+        'code' => 'PMA_'.uniqid(),
         'is_active' => true,
     ]);
 
@@ -133,8 +141,8 @@ test('users cannot fetch module details if not subscribed', function () {
 
     $domain = Domain::create([
         'name' => 'PMA Intelligence Prep',
-        'slug' => 'pma-intel',
-        'code' => 'PMA',
+        'slug' => 'pma-intel-'.uniqid(),
+        'code' => 'PMA_'.uniqid(),
         'is_active' => true,
     ]);
 
