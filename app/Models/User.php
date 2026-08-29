@@ -72,6 +72,25 @@ class User extends Authenticatable implements FilamentUser, PasskeyUser
     }
 
     /**
+     * Determine if the user holds an active, non-expired subscription for a domain.
+     */
+    public function hasActiveSubscriptionFor(Domain $domain): bool
+    {
+        return $this->activeSubscriptionFor($domain) !== null;
+    }
+
+    /**
+     * Retrieve the user's active, non-expired subscription for a domain.
+     */
+    public function activeSubscriptionFor(Domain $domain): ?UserSubscription
+    {
+        return $this->subscriptions()
+            ->where('domain_id', $domain->id)
+            ->active()
+            ->first();
+    }
+
+    /**
      * @return BelongsToMany<Domain, $this>
      */
     public function subscribedDomains(): BelongsToMany

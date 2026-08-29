@@ -3,16 +3,37 @@
 namespace App\Http\Controllers;
 
 use App\Models\ContentModule;
+use App\Services\SubscriptionManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class McqExecutionController extends Controller
 {
+    public function __construct(
+        protected SubscriptionManager $subscriptionManager
+    ) {}
+
     /**
      * Grade submitted MCQ responses and calculate score details.
      */
     public function __invoke(Request $request, ContentModule $module): JsonResponse
     {
+        $user = $request->user();
+
+        if (! $module->is_active || ! $module->domain()->where('is_active', true)->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'This module is not currently available.',
+            ], 404);
+        }
+
+        if (! $this->subscriptionManager->hasActiveAccess($user, $module->domain)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized. Active subscription required to submit test responses.',
+            ], 403);
+        }
+
         $request->validate([
             'answers' => ['required', 'array'],
         ]);

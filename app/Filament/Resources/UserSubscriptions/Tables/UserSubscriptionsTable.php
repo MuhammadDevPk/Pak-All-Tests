@@ -4,6 +4,7 @@ namespace App\Filament\Resources\UserSubscriptions\Tables;
 
 use App\Models\Domain;
 use App\Models\UserSubscription;
+use App\Services\SubscriptionManager;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -133,12 +134,7 @@ class UserSubscriptionsTable
                     ->modalHeading(fn ($record) => "Approve {$record->domain?->name} Access")
                     ->modalDescription(fn ($record) => "Are you sure you want to approve {$record->user?->name}'s subscription? Access will be granted for 1 year.")
                     ->action(function (UserSubscription $record): void {
-                        $record->update([
-                            'status' => 'active',
-                            'starts_at' => now(),
-                            'expires_at' => now()->addYear(),
-                            'rejection_reason' => null,
-                        ]);
+                        app(SubscriptionManager::class)->activate($record);
 
                         Notification::make()
                             ->title('Subscription Approved')
@@ -161,10 +157,7 @@ class UserSubscriptionsTable
                     ->modalHeading('Reject Subscription Proof')
                     ->modalSubmitActionLabel('Confirm Rejection')
                     ->action(function (UserSubscription $record, array $data): void {
-                        $record->update([
-                            'status' => 'rejected',
-                            'rejection_reason' => $data['rejection_reason'],
-                        ]);
+                        app(SubscriptionManager::class)->reject($record, $data['rejection_reason']);
 
                         Notification::make()
                             ->title('Subscription Rejected')

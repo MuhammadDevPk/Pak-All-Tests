@@ -4,6 +4,7 @@ namespace App\Filament\Resources\UserSubscriptions\Pages;
 
 use App\Filament\Resources\UserSubscriptions\UserSubscriptionResource;
 use App\Models\UserSubscription;
+use App\Services\SubscriptionManager;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\Textarea;
@@ -30,12 +31,7 @@ class EditUserSubscription extends EditRecord
                     /** @var UserSubscription $subscription */
                     $subscription = $this->record;
 
-                    $subscription->update([
-                        'status' => 'active',
-                        'starts_at' => now(),
-                        'expires_at' => now()->addYear(),
-                        'rejection_reason' => null,
-                    ]);
+                    app(SubscriptionManager::class)->activate($subscription);
 
                     Notification::make()
                         ->title('Subscription Approved')
@@ -63,10 +59,7 @@ class EditUserSubscription extends EditRecord
                     /** @var UserSubscription $subscription */
                     $subscription = $this->record;
 
-                    $subscription->update([
-                        'status' => 'rejected',
-                        'rejection_reason' => $data['rejection_reason'],
-                    ]);
+                    app(SubscriptionManager::class)->reject($subscription, $data['rejection_reason']);
 
                     Notification::make()
                         ->title('Subscription Rejected')

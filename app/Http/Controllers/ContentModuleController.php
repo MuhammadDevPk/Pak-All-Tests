@@ -3,11 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\ContentModule;
+use App\Services\SubscriptionManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ContentModuleController extends Controller
 {
+    public function __construct(
+        protected SubscriptionManager $subscriptionManager
+    ) {}
+
     /**
      * Fetch the content module details and loaded questions.
      */
@@ -23,15 +28,7 @@ class ContentModuleController extends Controller
         }
 
         // Check if user has active subscription for the domain of this module
-        $subscription = $user->subscriptions()
-            ->where('domain_id', $module->domain_id)
-            ->where('status', 'active')
-            ->where(function ($query) {
-                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
-            })
-            ->first();
-
-        if (! $subscription) {
+        if (! $this->subscriptionManager->hasActiveAccess($user, $module->domain)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized. Active subscription required for this domain.',

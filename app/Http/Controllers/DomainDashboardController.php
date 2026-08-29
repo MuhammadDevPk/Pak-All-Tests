@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Domain;
 use App\Services\SduiPayloadTransformer;
+use App\Services\SubscriptionManager;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -11,7 +12,8 @@ use Inertia\Response;
 class DomainDashboardController extends Controller
 {
     public function __construct(
-        protected SduiPayloadTransformer $transformer
+        protected SduiPayloadTransformer $transformer,
+        protected SubscriptionManager $subscriptionManager
     ) {}
 
     /**
@@ -29,19 +31,10 @@ class DomainDashboardController extends Controller
             ])
             ->firstOrFail();
 
-        $activeSubscription = $user->subscriptions()
-            ->where('domain_id', $domain->id)
-            ->where('status', 'active')
-            ->where(function ($query) {
-                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
-            })
-            ->first();
+        $activeSubscription = $this->subscriptionManager->getActiveSubscription($user, $domain);
 
         if (! $activeSubscription) {
-            $latestSubscription = $user->subscriptions()
-                ->where('domain_id', $domain->id)
-                ->latest('id')
-                ->first();
+            $latestSubscription = $this->subscriptionManager->getLatestSubscription($user, $domain);
 
             return Inertia::render('Subscription/PendingOrInactive', [
                 'domain' => [
