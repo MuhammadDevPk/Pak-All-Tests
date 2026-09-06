@@ -5,9 +5,11 @@ namespace Database\Seeders;
 use App\Models\ContentModule;
 use App\Models\Domain;
 use App\Models\DomainFlow;
+use App\Models\DomainKnowledgeEmbedding;
 use App\Models\QuestionBank;
 use App\Models\User;
 use App\Models\UserSubscription;
+use App\Services\Ai\KnowledgeVectorizationService;
 use Illuminate\Database\Seeder;
 
 class PlatformSeeder extends Seeder
@@ -32,6 +34,7 @@ class PlatformSeeder extends Seeder
         );
 
         // 2. Clear old module data cleanly if re-running
+        DomainKnowledgeEmbedding::query()->delete();
         DomainFlow::query()->delete();
         ContentModule::query()->delete();
         QuestionBank::query()->delete();
@@ -711,5 +714,13 @@ class PlatformSeeder extends Seeder
             'starts_at' => now(),
             'expires_at' => now()->addYear(),
         ]);
+
+        // -------------------------------------------------------------
+        // VECTORIZE DOMAIN KNOWLEDGE BASE
+        // -------------------------------------------------------------
+        $vectorizer = app(KnowledgeVectorizationService::class);
+        foreach (Domain::whereNotNull('parent_id')->get() as $leafDomain) {
+            $vectorizer->vectorizeDomain($leafDomain);
+        }
     }
 }
