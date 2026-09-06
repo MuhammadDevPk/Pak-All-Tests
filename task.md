@@ -43,6 +43,16 @@
   - Standardized subscription gating across `DomainDashboardController`, `ContentModuleController`, and `McqExecutionController`.
   - Automated test suite `SubscriptionStateMachineTest.php` passing 100% (11 tests, 86 assertions across all subscription suites).
 
+### 5. Specialized AI Chatbots & Sub-Agents (Phase 5)
+- **Sub-Phase 5.1 (Completed)**:
+  - Enabled PostgreSQL `vector` extension and generated `domain_knowledge_embeddings` schema with HNSW cosine distance index (`vector_cosine_ops`) and composite foreign key indexes.
+  - Built `EmbeddingService` supporting normalized 1536-dimensional float vectors across `fake` (deterministic offline/CI), `openai` (`text-embedding-3-small`), and `gemini` (`text-embedding-004`).
+  - Created `KnowledgeVectorizationService` for single-roundtrip batch vectorization of question banks (prompts, options, explanations), content modules (syllabus overview, instructions), and evaluation rubrics.
+  - Implemented domain-partitioned semantic similarity search with the PostgreSQL `<=>` operator (`scopeNearestCosine`).
+  - Created `VectorizeDomainKnowledgeJob` for asynchronous queue-backed knowledge indexing.
+  - Added **Sync AI Vectors** action with `Heroicon::OutlinedSparkles` to Filament's `DomainsTable`.
+  - Comprehensive feature test suite `DomainKnowledgeVectorizationTest.php` passing 100% (8 tests, 41 assertions).
+
 ---
 
 ## 🔮 Post-MVP Commercial Expansion (Deferred for Scale)
@@ -53,8 +63,7 @@
 
 ## 🎯 Active Roadmap (Next Phase)
 
-### Phase 5: Specialized AI Chatbots & Sub-Agents
-- **Sub-Phase 5.1**: Knowledge Vectorization & pgvector pipeline (embedding question banks, past papers, military interview rubrics, and CSS syllabus).
+### Phase 5 Remaining Sub-Phases:
 - **Sub-Phase 5.2**: AI Tutor Floating Action Button (FAB) web widget in candidate dashboard with real-time streaming hints and Socratic guidance.
 - **Sub-Phase 5.3**: Subjective Essay & WAT/SRT AI evaluation engine providing rubric scores and constructive feedback.
 - **Sub-Phase 5.4**: Inbound WhatsApp tutoring sub-agent for mobile-first MCQ drills and daily current affairs digests.
