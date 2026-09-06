@@ -27,6 +27,7 @@ You MUST read and adhere to the following specialized rules files when modifying
 * **Security Gating & Route Protection**: [`security_gating.md`](file:///.agents/rules/security_gating.md)
 * **Testing & Middleware Validation**: [`testing_validation.md`](file:///.agents/rules/testing_validation.md)
 * **UI Design Guidelines & Anti-AI Fingerprint**: [`ui_design_guidelines.md`](file:///.agents/rules/ui_design_guidelines.md)
+* **AI Agent Architecture & Socratic Tutor Guidelines**: [`agent_architecture_guidelines.md`](file:///.agents/rules/agent_architecture_guidelines.md)
 
 ### 📦 Core Module Reference Documents
 * **Domains & Hierarchies**: [`domains.md`](file:///.agents/rules/domains.md)
