@@ -3,9 +3,13 @@
 namespace App\Filament\Resources\ContentModules\Tables;
 
 use App\Models\ContentModule;
+use App\Services\Ai\KnowledgeVectorizationService;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -69,6 +73,29 @@ class ContentModulesTable
                 //
             ])
             ->recordActions([
+                Action::make('vectorize')
+                    ->label('Vectorize')
+                    ->icon(Heroicon::OutlinedSparkles)
+                    ->color('success')
+                    ->action(function (ContentModule $record, KnowledgeVectorizationService $service) {
+                        if (! $record->domain_id) {
+                            Notification::make()
+                                ->title('No Domain Assigned')
+                                ->body('Assign this module to a domain before vectorizing.')
+                                ->warning()
+                                ->send();
+
+                            return;
+                        }
+
+                        $service->vectorizeModule($record);
+
+                        Notification::make()
+                            ->title('Module Vectorized')
+                            ->body('Syllabus & module metadata vectors successfully generated.')
+                            ->success()
+                            ->send();
+                    }),
                 EditAction::make(),
             ])
             ->toolbarActions([
