@@ -58,6 +58,14 @@ class Domain extends Model
     }
 
     /**
+     * @return HasMany<DomainKnowledgeEmbedding, $this>
+     */
+    public function knowledgeEmbeddings(): HasMany
+    {
+        return $this->hasMany(DomainKnowledgeEmbedding::class);
+    }
+
+    /**
      * @return HasMany<UserSubscription, $this>
      */
     public function subscriptions(): HasMany
