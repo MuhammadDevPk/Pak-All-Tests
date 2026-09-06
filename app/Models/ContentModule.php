@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Concerns\CachesTableData;
+use App\Jobs\VectorizeDomainKnowledgeJob;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ContentModule extends Model
 {
@@ -28,6 +30,12 @@ class ContentModule extends Model
         static::deleted(function (ContentModule $module) {
             if ($module->domain_id) {
                 static::reorderDomainModules($module->domain_id);
+            }
+        });
+
+        static::saved(function (ContentModule $module) {
+            if (config('ai.auto_vectorize', true) && $module->domain_id && $module->is_active) {
+                VectorizeDomainKnowledgeJob::dispatch(moduleId: $module->id);
             }
         });
     }
@@ -70,5 +78,13 @@ class ContentModule extends Model
         return $this->belongsToMany(QuestionBank::class, 'module_questions', 'module_id', 'question_id')
             ->withPivot(['sort_order', 'marks'])
             ->orderByPivot('sort_order', 'asc');
+    }
+
+    /**
+     * @return HasMany<DomainKnowledgeEmbedding, $this>
+     */
+    public function knowledgeEmbeddings(): HasMany
+    {
+        return $this->hasMany(DomainKnowledgeEmbedding::class);
     }
 }
