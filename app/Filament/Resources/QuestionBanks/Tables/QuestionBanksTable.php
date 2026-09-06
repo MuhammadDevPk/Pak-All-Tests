@@ -3,9 +3,13 @@
 namespace App\Filament\Resources\QuestionBanks\Tables;
 
 use App\Models\QuestionBank;
+use App\Services\Ai\KnowledgeVectorizationService;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\PaginationMode;
@@ -64,6 +68,28 @@ class QuestionBanksTable
                 //
             ])
             ->recordActions([
+                Action::make('vectorize')
+                    ->label('Vectorize')
+                    ->icon(Heroicon::OutlinedSparkles)
+                    ->color('success')
+                    ->action(function (QuestionBank $record, KnowledgeVectorizationService $service) {
+                        $created = $service->vectorizeQuestion($record);
+                        if (empty($created)) {
+                            Notification::make()
+                                ->title('No Associated Domains')
+                                ->body('Attach this question to a content module under a domain before vectorizing.')
+                                ->warning()
+                                ->send();
+
+                            return;
+                        }
+
+                        Notification::make()
+                            ->title('Question Vectorized')
+                            ->body('Question vectors successfully generated and stored.')
+                            ->success()
+                            ->send();
+                    }),
                 EditAction::make(),
             ])
             ->toolbarActions([
