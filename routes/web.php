@@ -10,9 +10,8 @@ use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return 'Homepage is working without database queries!';
-})->name('home');
+Route::inertia('/', 'Welcome')->name('home');
+
 
 Route::get('/ping', function () {
     return 'Ping is working without database queries!';
