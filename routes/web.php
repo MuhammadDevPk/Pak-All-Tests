@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
 
-
 Route::get('/ping', function () {
     return 'Ping is working without database queries!';
 });
