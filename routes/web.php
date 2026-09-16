@@ -15,6 +15,10 @@ Route::get('/', function () {
     return 'Homepage is working without database queries!';
 });
 
+Route::get('/ping', function () {
+    return 'Ping is working without database queries!';
+});
+
 Route::middleware(['auth', 'verified', EnsureTeamMembership::class])
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
