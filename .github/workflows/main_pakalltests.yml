@@ -45,6 +45,12 @@ jobs:
           npm ci
           npm run build
 
+      - name: Publish Filament and Livewire Assets
+        run: |
+          php artisan filament:assets
+          php artisan livewire:publish --assets
+
+
       - name: Prune non-production files
         run: |
           rm -rf node_modules .git .github tests docs .vscode .claude scratch
