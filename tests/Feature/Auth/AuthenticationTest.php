@@ -46,7 +46,7 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect('/'.$user->personalTeam()->slug.'/dashboard');
+    $response->assertRedirect('/#exams');
 });
 
 test('passkey login response redirects to the current team dashboard', function () {
@@ -60,7 +60,7 @@ test('passkey login response redirects to the current team dashboard', function 
 
     $jsonResponse = app(PasskeyLoginResponse::class)->toResponse($request);
 
-    expect($jsonResponse->getData()->redirect)->toBe(url('/'.$user->personalTeam()->slug.'/dashboard'));
+    expect($jsonResponse->getData()->redirect)->toBe(url('/#exams'));
 });
 
 test('users with two factor enabled are redirected to two factor challenge', function () {

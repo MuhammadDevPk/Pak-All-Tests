@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Auth\CachingUserProvider;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Cache\Events\KeyWritten;
@@ -35,6 +36,8 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }
+
+        RedirectIfAuthenticated::redirectUsing(fn () => config('fortify.home', '/#exams'));
 
         $this->configureDefaults();
         $this->registerCachingUserProvider();
