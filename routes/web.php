@@ -7,7 +7,7 @@ use App\Http\Controllers\DomainDashboardController;
 use App\Http\Controllers\McqExecutionController;
 use App\Http\Controllers\SubscriptionReceiptController;
 use App\Http\Controllers\Teams\TeamInvitationController;
-use App\Http\Middleware\EnsureTeamMembership;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
@@ -16,12 +16,16 @@ Route::get('/ping', function () {
     return 'Ping is working without database queries!';
 });
 
-Route::middleware(['auth', 'verified', EnsureTeamMembership::class])
-    ->group(function () {
-        Route::get('dashboard', DashboardController::class)->name('dashboard');
-    });
+Route::middleware(['auth'])->group(function () {
+    Route::get('dashboard', function (Request $request) {
+        $user = $request->user();
+        if ($user && $user->currentTeam && $user->belongsToTeam($user->currentTeam)) {
+            return app(DashboardController::class)($request);
+        }
 
-Route::middleware(['auth', 'verified'])->group(function () {
+        return redirect('/#exams');
+    })->name('dashboard');
+
     Route::get('/d/{domainSlug}', DomainDashboardController::class)->name('domain.dashboard');
     Route::get('/api/modules/{module}', ContentModuleController::class)->name('modules.show');
     Route::post('/api/modules/{module}/submit', McqExecutionController::class)->name('modules.submit');

@@ -154,12 +154,12 @@ const capabilities = [
                 <!-- Auth Action Buttons -->
                 <div class="hidden items-center gap-3 sm:flex">
                     <template v-if="isAuthenticated">
-                        <Link
-                            href="/dashboard"
+                        <a
+                            href="#exams"
                             class="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-xs transition-all hover:bg-primary/90 active:scale-[0.98]"
                         >
-                            Candidate Dashboard →
-                        </Link>
+                            Exam Programs ↓
+                        </a>
                     </template>
                     <template v-else>
                         <Link
@@ -239,12 +239,13 @@ const capabilities = [
                     class="flex flex-col gap-2 border-t border-sidebar-border pt-4"
                 >
                     <template v-if="isAuthenticated">
-                        <Link
-                            href="/dashboard"
+                        <a
+                            href="#exams"
+                            @click="mobileMenuOpen = false"
                             class="w-full rounded-lg bg-primary py-2.5 text-center text-xs font-semibold text-primary-foreground"
                         >
-                            Candidate Dashboard
-                        </Link>
+                            Exam Programs
+                        </a>
                     </template>
                     <template v-else>
                         <Link
@@ -305,13 +306,13 @@ const capabilities = [
 
                             <!-- CTAs -->
                             <div class="flex flex-wrap items-center gap-4 pt-2">
-                                <Link
+                                <a
                                     v-if="isAuthenticated"
-                                    href="/dashboard"
+                                    href="#exams"
                                     class="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-[0.98]"
                                 >
-                                    Go to My Dashboard →
-                                </Link>
+                                    Explore Exam Programs ↓
+                                </a>
                                 <Link
                                     v-else
                                     href="/register"
@@ -703,13 +704,13 @@ const capabilities = [
                     <div
                         class="flex flex-wrap items-center justify-center gap-4 pt-2"
                     >
-                        <Link
+                        <a
                             v-if="isAuthenticated"
-                            href="/dashboard"
+                            href="#exams"
                             class="rounded-lg bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground shadow-xs transition-all hover:bg-primary/90 active:scale-[0.98]"
                         >
-                            Open Candidate Portal →
-                        </Link>
+                            Explore Exam Programs ↓
+                        </a>
                         <Link
                             v-else
                             href="/register"
