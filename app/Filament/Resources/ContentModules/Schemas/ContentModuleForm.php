@@ -103,41 +103,6 @@ class ContentModuleForm
                             ->reorderable()
                             ->collapsible()
                             ->itemLabel(fn (array $state): string => trim($state['title'] ?? '') ?: 'Untitled Document')
-                            ->dehydrated(false)
-                            ->afterStateHydrated(function ($component, $record) {
-                                if ($record && is_array($record->content_meta)) {
-                                    $meta = $record->content_meta;
-                                    if (! empty($meta['files']) && is_array($meta['files'])) {
-                                        $items = [];
-                                        foreach ($meta['files'] as $f) {
-                                            $url = $f['file_url'] ?? '';
-                                            $isUpload = str_starts_with($url, '/storage/');
-                                            $filePath = $isUpload ? str_replace('/storage/', '', $url) : null;
-                                            $items[] = [
-                                                'title' => $f['title'] ?? '',
-                                                'source_type' => $f['source_type'] ?? ($isUpload ? 'upload' : 'url'),
-                                                'document_file' => $filePath ? [(string) Str::uuid() => $filePath] : [],
-                                                'file_url' => $url,
-                                                'file_type' => $f['file_type'] ?? 'PDF Document',
-                                                'file_size' => $f['file_size'] ?? '',
-                                            ];
-                                        }
-                                        $component->state($items);
-                                    } elseif (! empty($meta['file_url'])) {
-                                        $url = $meta['file_url'];
-                                        $isUpload = str_starts_with($url, '/storage/');
-                                        $filePath = $isUpload ? str_replace('/storage/', '', $url) : null;
-                                        $component->state([[
-                                            'title' => $record->title,
-                                            'source_type' => $isUpload ? 'upload' : 'url',
-                                            'document_file' => $filePath ? [(string) Str::uuid() => $filePath] : [],
-                                            'file_url' => $url,
-                                            'file_type' => $meta['file_type'] ?? 'PDF Document',
-                                            'file_size' => $meta['file_size'] ?? '',
-                                        ]]);
-                                    }
-                                }
-                            })
                             ->schema([
                                 Grid::make(3)->schema([
                                     TextInput::make('title')
@@ -171,20 +136,13 @@ class ContentModuleForm
                                     ->maxSize(51200) // 50MB max file size
                                     ->downloadable()
                                     ->openable()
-                                    ->live()
-                                    ->hidden(fn (Get $get) => $get('source_type') === 'url')
-                                    ->afterStateUpdated(function ($state, callable $set) {
-                                        if ($state) {
-                                            $filePath = is_array($state) ? reset($state) : $state;
-                                            $set('file_url', '/storage/'.ltrim($filePath, '/'));
-                                        }
-                                    }),
+                                    ->hidden(fn (Get $get) => $get('source_type') === 'url'),
 
                                 TextInput::make('file_url')
                                     ->label('Document / PDF File URL')
                                     ->placeholder('e.g. https://drive.google.com/file/d/.../preview or /storage/...')
                                     ->helperText('Paste a direct PDF link, Google Drive link, or external document URL.')
-                                    ->hidden(fn (Get $get) => $get('source_type') === 'upload' && blank($get('file_url')))
+                                    ->hidden(fn (Get $get) => $get('source_type') === 'upload')
                                     ->columnSpanFull(),
 
                                 Grid::make(2)->schema([
@@ -212,43 +170,7 @@ class ContentModuleForm
                             ->rows(6)
                             ->columnSpanFull()
                             ->afterStateHydrated(fn ($state, $set) => is_array($state) ? $set('content_meta', json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) : null)
-                            ->dehydrateStateUsing(function ($state, callable $get) {
-                                $meta = is_string($state) ? json_decode($state, true) : ($state ?? []);
-                                if (! is_array($meta)) {
-                                    $meta = [];
-                                }
-
-                                $files = $get('files');
-                                if (is_array($files) && count($files) > 0) {
-                                    $cleanFiles = [];
-                                    foreach ($files as $f) {
-                                        $fileUrl = $f['file_url'] ?? null;
-                                        if (! empty($f['document_file'])) {
-                                            $filePath = is_array($f['document_file']) ? reset($f['document_file']) : $f['document_file'];
-                                            $fileUrl = '/storage/'.ltrim($filePath, '/');
-                                        }
-
-                                        if (! empty($fileUrl) || ! empty($f['title'])) {
-                                            $cleanFiles[] = [
-                                                'title' => $f['title'] ?? 'Document',
-                                                'file_url' => $fileUrl,
-                                                'file_type' => $f['file_type'] ?? 'PDF Document',
-                                                'file_size' => $f['file_size'] ?? null,
-                                                'source_type' => $f['source_type'] ?? 'upload',
-                                            ];
-                                        }
-                                    }
-
-                                    $meta['files'] = $cleanFiles;
-                                    if (count($cleanFiles) > 0) {
-                                        $meta['file_url'] = $cleanFiles[0]['file_url'];
-                                        $meta['file_type'] = $cleanFiles[0]['file_type'];
-                                        $meta['file_size'] = $cleanFiles[0]['file_size'];
-                                    }
-                                }
-
-                                return $meta;
-                            })
+                            ->dehydrateStateUsing(fn ($state) => is_string($state) ? json_decode($state, true) : ($state ?? []))
                             ->rules([
                                 fn () => function (string $attribute, $value, $fail) {
                                     if (is_string($value) && trim($value) !== '') {
