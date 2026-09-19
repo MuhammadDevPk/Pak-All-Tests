@@ -8,14 +8,27 @@
 
 ## ⚡ SYSTEM INITIALIZATION PROTOCOL (Mandatory Step 0)
 
-Before executing ANY file edit, running modifying terminal commands, generating new features, or presenting solutions to the user, you MUST silently inspect and read the governance files located in `.agent/`:
+Before executing ANY file edit, running modifying terminal commands, generating new features, or presenting solutions to the user, you MUST silently inspect and read the governance files located in `.agent/` and `.agents/rules/`:
 
-1. [`.agent/AGENT.md`](file:///.agent/AGENT.md) — Detected technology stack, localization standards, anti-AI design laws, and the mandatory auto-update protocol.
+### 1. Core Operational Governance (`.agent/`)
+1. [`.agent/AGENT.md`](file:///.agent/AGENT.md) — Detected technology stack, Pakistani market & exam standards, anti-AI design laws, and the mandatory auto-update protocol.
 2. [`.agent/ARCHITECTURE.md`](file:///.agent/ARCHITECTURE.md) — Complete reverse-engineered architectural blueprint of this codebase (directories, models, services, controllers, Filament resources, jobs).
 3. [`.agent/PATTERNS.md`](file:///.agent/PATTERNS.md) — Standardized Laravel Feature Lifecycle (FormRequest → Thin Controller → Service/Transaction → Inertia/SDUI → Pest Test), loop limits, and the "No Dead Clicks" law.
 4. [`.agent/MEMORY.md`](file:///.agent/MEMORY.md) — Active rolling memory log of project decisions, known environment quirks, and technical debt.
 
+### 2. Domain & Sub-Architectural Rulebook (`.agents/rules/`)
+* [`.agents/rules/senior_architect_principles.md`](file:///.agents/rules/senior_architect_principles.md) — Radical simplicity, Pure JavaScript Vue mandate, zero assumptions.
+* [`.agents/rules/ui_design_guidelines.md`](file:///.agents/rules/ui_design_guidelines.md) — Academic Rigor & Military Precision, anti-AI visual fingerprint, mathematical nested radius.
+* [`.agents/rules/agent_architecture_guidelines.md`](file:///.agents/rules/agent_architecture_guidelines.md) — Socratic AI Tutor, SSE streaming protocol, intent routing, PMA/ISSB/CSS/MDCAT institutional knowledge.
+* [`.agents/rules/user_subscriptions.md`](file:///.agents/rules/user_subscriptions.md) — EasyPaisa / JazzCash payment gating, TRX verification queue, WhatsApp Cloud API notifications.
+* [`.agents/rules/domains.md`](file:///.agents/rules/domains.md) & [`.agents/rules/domain_flows.md`](file:///.agents/rules/domain_flows.md) — PostgreSQL `ltree` hierarchies, SDUI page layout compilation.
+* [`.agents/rules/content_modules.md`](file:///.agents/rules/content_modules.md) & [`.agents/rules/question_bank.md`](file:///.agents/rules/question_bank.md) — Content nodes, MCQ players, test session state machines.
+* [`.agents/rules/database_performance.md`](file:///.agents/rules/database_performance.md) — Sub-millisecond queries, indexing strategies, zero N+1.
+* [`.agents/rules/security_gating.md`](file:///.agents/rules/security_gating.md) & [`.agents/rules/testing_validation.md`](file:///.agents/rules/testing_validation.md) — Route guards, Pest `DatabaseTransactions`.
+* [`.agents/rules/mistakes_and_descriptions.md`](file:///.agents/rules/mistakes_and_descriptions.md) — Anti-patterns and known historical traps.
+
 Failure to review these files before writing code constitutes an immediate governance breach.
+
 
 ---
 

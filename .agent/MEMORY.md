@@ -73,15 +73,16 @@ This log records the 10 most critical architectural decisions, infrastructure fi
   ```
 - Any storage symlink must be verified or recreated using `php artisan storage:link 2>/dev/null || true`.
 
-### 4. Database Collation & Multi-Byte Unicode Support
-- **Quirk**: PostgreSQL handles UTF-8 natively with standard collation, but MySQL/MariaDB fallback connections must explicitly maintain `utf8mb4_unicode_ci` to prevent Cyrillic truncation, casing mismatches in search queries, or emoji corruption.
+### 4. Database Collation & Multi-Byte Unicode / Urdu Support
+- **Quirk**: PostgreSQL handles UTF-8 natively with standard collation, but MySQL/MariaDB fallback connections must explicitly maintain `utf8mb4_unicode_ci` to prevent Urdu script truncation, casing mismatches in question bank search queries, or emoji corruption.
 
 ### 5. Queue Workers & Background Processing
 - **Quirk**: Default local environment runs `QUEUE_CONNECTION=sync` or `database`. In production, heavy AI embedding calculations (`GenerateEmbeddingJob`) and bulk question imports will block web workers if processed synchronously.
 - **Requirement**: Production deployment requires a persistent daemon worker (`php artisan queue:work --tries=3 --timeout=120`) managed via Supervisor or systemd.
 
-### 6. Regional API & Gateway Sandbox Readiness (Russian / CIS Localization)
-- **Quirk**: Integrating Russian market services (Yookassa payment webhooks, DaData address/INN standardization, 1C sync) requires handling network latency, webhook retries, and strict signature verification.
+### 6. Regional Payment Gateway & Notification Webhooks (EasyPaisa / JazzCash / WhatsApp)
+- **Quirk**: Candidate subscriptions currently use manual proof uploads (TRX ID and payment receipt image), with automated IPN webhooks planned for EasyPaisa and JazzCash merchant accounts.
 - **Requirement**:
-  - Yookassa webhooks must implement idempotency key verification and HMAC-SHA256 signature checking before crediting user balances.
-  - DaData lookups must implement a 3-second HTTP timeout with local Redis cache fallback (`ttl: 86400`) to prevent slow external API calls from hanging user onboarding forms.
+  - Webhook endpoints (`POST /api/webhooks/easypaisa` and `POST /api/webhooks/jazzcash`) must implement idempotency key verification and HMAC-SHA256 signature checking before calling `SubscriptionManager::activate()`.
+  - Meta WhatsApp Cloud API integrations must format recipient numbers in international E.164 format (`923XXXXXXXXX`) with a 3-second HTTP timeout and Redis queuing to ensure notification dispatches never block candidate web workers.
+

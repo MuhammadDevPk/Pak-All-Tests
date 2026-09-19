@@ -23,48 +23,36 @@
 
 ---
 
-## 2. Russian Market & Localization Standards (RU / CIS)
+## 2. Pakistani Competitive Exam Domain & Regional Standards (PK)
 
-When building public portals, enterprise SaaS modules, marketing pages, or client integration endpoints targeting the Russian / CIS market, strictly enforce the following localization standards:
+When building candidate portals, assessment engines, domain landing pages, checkout flows, or AI tutoring components, strictly adhere to the following Pakistani regional, linguistic, and domain standards:
 
-### A. Clean Cyrillic Typography Standards
-1. **Typographic Quotation Marks**: Never use ASCII straight quotes (`"..."`). Always use Russian typographic quotation marks (chevrons): `«...»`. For quotes inside quotes, use paws: `«... „...“ ...»`.
-2. **Non-Breaking Spaces Before Prepositions**: Never allow short prepositions and conjunctions (в, на, с, по, о, к, из, от, у, за, и, а, но) to hang at the end of a line. Always bind them to the next word with a non-breaking space (`&nbsp;` in HTML / Blade, `\u00A0` in strings).
-3. **Russian Pluralization Rules**: Never concatenate words like `5 дней(я)`. Always apply proper 3-form Slavic pluralization:
-   ```php
-   // 1 день (one), 2-4 дня (few), 5-20 дней (many)
-   function pluralize_ru(int $number, string $one, string $few, string $many): string
-   {
-       $n = abs($number) % 100;
-       $n1 = $n % 10;
-       if ($n > 10 && $n < 20) {
-           return $many;
-       }
-       if ($n1 > 1 && $n1 < 5) {
-           return $few;
-       }
-       if ($n1 === 1) {
-           return $one;
-       }
-       return $many;
-   }
-   ```
+### A. Target Audience & Institutional Domain Scope
+* **Armed Forces Initial Tests**: PMA Long Course, PAF GD(P), Pak Navy (AS&RC test protocols: Verbal, Non-Verbal Intelligence, and Academic sub-tests).
+* **ISSB (Inter-Services Selection Board)**: 4-day psychological and outdoor evaluation (WAT, SRT, TAT, GTO Tasks, Deputy President interview).
+* **Civil Services & Provincial Commissions**: CSS Competitive Examination (FPSC), PMS, PPSC, SPSC, KPPSC, BPSC.
+* **Medical & Professional Entry**: MDCAT (PMDC curriculum), ECAT.
+* **Tone**: *"Academic Rigor & Military Precision"* — Authoritative, disciplined, structured, objective, and distraction-free.
 
-### B. 5-Second Clarity (Business Copy Standard)
-* Any landing page, feature description, pricing block, or checkout flow must be understandable by a non-technical business owner or operations manager in **under 5 seconds**.
-* Ban engineering jargon (`payload`, `endpoint`, `SDUI schema`, `entity`) from user-facing copy.
-* Use authoritative, concise, disciplined Russian business terminology:
-  - *Bad*: «Инновационный омниканальный пайплайн для автоматизации рутины»
-  - *Good*: «Приём платежей и мгновенная выдача доступов к тестам»
+### B. Language & Typography Standards
+1. **Bilingual Capability (English & Roman Urdu)**:
+   - Primary test questions, official syllabi, and administrative documentation must be presented in clear, formal English.
+   - The Socratic AI Tutor must understand and seamlessly communicate in Roman Urdu (e.g., *"Formula ko dubara dekhein, agar mass constant ho tou force barhne par acceleration pe kya asar parega?"*) when candidates converse in Roman Urdu.
+2. **5-Second Clarity (Candidate UX Standard)**:
+   - Test instructions, timer limits, negative marking warnings, and pricing blocks must be instantly comprehensible to candidates in under 5 seconds.
+   - Ban engineering jargon (`payload`, `SDUI schema`, `polymorphic key`) from candidate interfaces.
+   - Clearly state scoring schemes (e.g. *"+1 Mark per correct answer, 0.25 Negative marking applies"*).
 
 ### C. Formatting & Regional Conventions
-* **Phone Masking**: Standard Russian phone mask: `+7 (XXX) XXX-XX-XX` with clean numeric unmasking (`79XXXXXXXXX`) on backend persistence.
-* **Date & Time**: European date formatting: `DD.MM.YYYY` (e.g. `19.09.2026`) and 24-hour time (`HH:mm`).
-* **Currency Formatting**: Format Russian Rubles with a non-breaking space between thousands and the official symbol: `1 000 ₽` (never `1000rub` or `1000 р.`).
-* **Regional Gateways & Ecosystems**: When integrating regional services, follow standard contracts:
-  - *Payment Gateways*: Yookassa (ЮKassa), Tinkoff (T-Bank), Robokassa (webhook signature validation, idempotent callbacks).
-  - *Address & Company Validation*: DaData API (clean INN, KPP, OGRN, Bik, dadata address suggestions).
-  - *Enterprise Sync*: 1C:Enterprise (CommerceML, XML/REST asynchronous queuing).
+* **Phone Masking**: Pakistani mobile number format: `+92 (3XX) XXXXXXX` or `03XX-XXXXXXX`, cleanly normalized to E.164 (`923XXXXXXXXX`) on database persistence.
+* **Date & Time**: Date formatting `DD.MM.YYYY` or `DD/MM/YYYY` (e.g. `19.09.2026`) and Pakistan Standard Time (PKT, UTC+5) for exam deadlines and live sessions.
+* **Currency Formatting**: Format Pakistani Rupees with official standard symbol or prefix: `PKR 2,500` or `₨ 2,500` (comma thousands separator, never bare ambiguous symbols).
+* **Regional Payment Gateways**:
+  - *Current Active Flow*: Candidate manual payment via **EasyPaisa**, **JazzCash**, or **Direct Bank Transfer** with TRX ID and receipt screenshot upload.
+  - *Verification State Machine*: Transitions via `SubscriptionManager` (`pending` $\rightarrow$ `active` / `rejected` / `expired`) reviewed in Filament admin queue.
+  - *Post-MVP Merchant Webhooks*: Direct EasyPaisa / JazzCash IPN webhook integration (`POST /api/webhooks/easypaisa` with HMAC-SHA256 signature verification).
+  - *Candidate Messaging*: Automated notifications via **Meta WhatsApp Cloud API** to candidate's Pakistani mobile number (`+92...`) for subscription confirmations, exam reminders, and test status alerts.
+
 
 ---
 
