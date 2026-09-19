@@ -2,6 +2,7 @@
 import { Head } from '@inertiajs/vue3';
 import { ref, provide, defineAsyncComponent } from 'vue';
 import SduiRenderer from '@/components/sdui/SduiRenderer.vue';
+import AiTutorWidget from '@/components/ai/AiTutorWidget.vue';
 
 defineProps({
     sdui: {
@@ -12,6 +13,7 @@ defineProps({
 
 const activeModule = ref(null);
 const activeQuestions = ref([]);
+const activeQuestion = ref(null);
 const isLoadingModule = ref(false);
 
 const launchModule = async (moduleId) => {
@@ -42,6 +44,7 @@ const launchModule = async (moduleId) => {
 const closePlayer = () => {
     activeModule.value = null;
     activeQuestions.value = [];
+    activeQuestion.value = null;
 };
 
 provide('sduiContext', {
@@ -90,6 +93,7 @@ const SubjectiveUpload = defineAsyncComponent(
                 :module="activeModule"
                 :questions="activeQuestions"
                 mode="practice"
+                @question-change="(q) => (activeQuestion = q)"
             />
             <PdfViewer
                 v-else-if="activeModule.module_type === 'pdf_repo'"
@@ -119,5 +123,13 @@ const SubjectiveUpload = defineAsyncComponent(
             </div>
             <SduiRenderer v-else-if="sdui?.layout" :node="sdui.layout" />
         </div>
+
+        <!-- AI Socratic Tutor Floating Action Button & Sliding Drawer -->
+        <AiTutorWidget
+            v-if="sdui?.meta?.domain"
+            :domain="sdui.meta.domain"
+            :active-module="activeModule"
+            :active-question="activeQuestion"
+        />
     </div>
 </template>

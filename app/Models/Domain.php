@@ -66,6 +66,14 @@ class Domain extends Model
     }
 
     /**
+     * @return HasMany<DomainChatMessage, $this>
+     */
+    public function chatMessages(): HasMany
+    {
+        return $this->hasMany(DomainChatMessage::class);
+    }
+
+    /**
      * @return HasMany<UserSubscription, $this>
      */
     public function subscriptions(): HasMany

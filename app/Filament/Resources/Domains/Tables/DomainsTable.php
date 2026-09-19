@@ -26,7 +26,7 @@ class DomainsTable
                 ?string $sortColumn,
                 ?string $sortDirection,
             ): Collection => Domain::getCachedTableRecords(
-                fn () => Domain::query()->with('parent')->withCount('knowledgeEmbeddings')->orderBy('id', 'asc')->get(),
+                fn () => Domain::query()->with('parent')->withCount(['knowledgeEmbeddings', 'chatMessages'])->orderBy('id', 'asc')->get(),
                 ['parent'],
                 $search,
                 ['name', 'code', 'path', 'parent.name'],
@@ -65,6 +65,14 @@ class DomainsTable
                     ->color(fn (?int $state): string => ($state ?? 0) > 0 ? 'success' : 'gray')
                     ->formatStateUsing(fn (?int $state): string => ($state ?? 0) > 0 ? "{$state} Vectors" : 'Unsynced')
                     ->icon(Heroicon::OutlinedCpuChip)
+                    ->sortable(),
+
+                TextColumn::make('chat_messages_count')
+                    ->label('AI Chats')
+                    ->badge()
+                    ->color(fn (?int $state): string => ($state ?? 0) > 0 ? 'info' : 'gray')
+                    ->formatStateUsing(fn (?int $state): string => ($state ?? 0) > 0 ? "{$state} Messages" : 'No Chats')
+                    ->icon(Heroicon::OutlinedChatBubbleLeftRight)
                     ->sortable(),
 
                 IconColumn::make('is_active')

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 const props = defineProps({
     module: {
         type: Object,
@@ -15,6 +15,8 @@ const props = defineProps({
         default: 'test', // 'test' or 'practice'
     },
 });
+
+const emit = defineEmits(['question-change']);
 
 const currentQuestionIndex = ref(0);
 const selectedAnswers = ref({});
@@ -111,10 +113,19 @@ onMounted(() => {
         }, 1000);
     }
 });
+watch(
+    currentQuestion,
+    (newQ) => {
+        emit('question-change', newQ);
+    },
+    { immediate: true },
+);
+
 onUnmounted(() => {
     if (timerInterval) {
         clearInterval(timerInterval);
     }
+    emit('question-change', null);
 });
 </script>
 

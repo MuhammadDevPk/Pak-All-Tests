@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\ContentModule;
 use App\Models\Domain;
+use App\Models\DomainChatMessage;
 use App\Models\DomainFlow;
 use App\Models\DomainKnowledgeEmbedding;
 use App\Models\QuestionBank;
@@ -34,6 +35,7 @@ class PlatformSeeder extends Seeder
         );
 
         // 2. Clear old module data cleanly if re-running
+        DomainChatMessage::query()->delete();
         DomainKnowledgeEmbedding::query()->delete();
         DomainFlow::query()->delete();
         ContentModule::query()->delete();
@@ -713,6 +715,31 @@ class PlatformSeeder extends Seeder
             'receipt_url' => 'receipts/sample_css_receipt.png',
             'starts_at' => now(),
             'expires_at' => now()->addYear(),
+        ]);
+
+        // -------------------------------------------------------------
+        // SAMPLE AI TUTOR CONVERSATION SEEDING
+        // -------------------------------------------------------------
+        DomainChatMessage::create([
+            'domain_id' => $pma->id,
+            'user_id' => $student->id,
+            'role' => 'user',
+            'content' => 'What is the optimal time management strategy for the PMA Verbal Intelligence Test?',
+            'context_metadata' => ['active_module_id' => $pmaPrepModule->id],
+            'created_at' => now()->subHours(2),
+        ]);
+
+        DomainChatMessage::create([
+            'domain_id' => $pma->id,
+            'user_id' => $student->id,
+            'role' => 'assistant',
+            'content' => "**Exam Strategy & Criteria for PMA Initial**:\n\n1. **Speed is Paramount**: You typically get 30 minutes for 84 verbal questions (approximately **21 seconds per question**).\n2. **Bank Quick Marks**: Solve coding-decoding and direct analogies instantly.\n3. **Skip & Return**: If a series problem takes more than 15 seconds, flag it and proceed.\n4. **Zero Penalty**: There is no negative marking, so never leave any item unanswered.",
+            'context_metadata' => [
+                'sources' => [
+                    ['title' => 'Verbal Intelligence Test 1', 'similarity' => 0.88],
+                ],
+            ],
+            'created_at' => now()->subHours(2)->addMinutes(1),
         ]);
 
         // -------------------------------------------------------------

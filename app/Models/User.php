@@ -107,4 +107,12 @@ class User extends Authenticatable implements FilamentUser, PasskeyUser
             ])
             ->withTimestamps();
     }
+
+    /**
+     * @return HasMany<DomainChatMessage, $this>
+     */
+    public function chatMessages(): HasMany
+    {
+        return $this->hasMany(DomainChatMessage::class);
+    }
 }
