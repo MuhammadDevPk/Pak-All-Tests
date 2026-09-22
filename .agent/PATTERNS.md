@@ -186,3 +186,82 @@ return $domains
       $userAnswer = $answersByQuestionId[$question->id] ?? null; // O(1)
   }
   ```
+
+---
+
+## 4. Remote Database & Connection Pooling Transaction Laws (Sub-200ms Mandate)
+
+This application connects to remote PostgreSQL infrastructure (Supabase PgBouncer on port `6543`). WAN query latency averages 50–80ms per round-trip.
+
+1. **The Sub-200ms Transaction Rule**: Database transactions (`DB::transaction(...)`) must NEVER hold locks for longer than 200 milliseconds.
+2. **Ban Sequential Loop Inserts**: Never execute `$model->save()` or `$relation->attach()` inside a `foreach` loop within a transaction.
+3. **Multi-Row Bulk Execution**:
+   - Collect rows into an array in memory.
+   - Execute a single multi-row `Model::insert($data)` or `DB::table(...)->insertOrIgnore($pivotData)` to collapse 100 queries into 1 round-trip.
+   - For mass association, use `syncWithoutDetaching()` or `insertOrIgnore` to prevent primary/foreign key conflict crashes.
+
+---
+
+## 5. Filament & Livewire State Hydration Protection (Cache-Pointer Pattern)
+
+Livewire serializes its entire component state into JSON on every network round-trip. Storing collections or large arrays (>20 items) inside component properties causes payload bloat (100KB+), UI freezes, and `CorruptComponentPayloadException`.
+
+1. **The Cache-Pointer Standard**:
+   When previewing, generating, or processing multi-record datasets:
+   - Store the heavy array in temporary cache:
+     ```php
+     $batchId = (string) Str::uuid();
+     Cache::put("import_batch_{$batchId}", $heavyData, now()->addMinutes(30));
+     ```
+   - In Livewire/Filament form state, store **ONLY the 36-byte UUID `$batchId`**.
+   - Read or paginate from the cache on demand.
+2. **Modal Memory Discipline**: Modals must never render more than 10–15 items in a single view window without pagination or virtual windowing.
+
+---
+
+## 6. PostgreSQL Constraint Integrity & Nullable Column Safety
+
+PostgreSQL enforces strict standard SQL constraint evaluations.
+
+1. **The Empty String vs NULL Law**:
+   - In PostgreSQL, multiple `NULL` values in a `UNIQUE` column are allowed.
+   - Empty string `""` is a distinct character value. Passing `""` to two rows violates the unique constraint!
+   - **Rule**: Any nullable unique column (`code`, `slug`, `sku`, `phone`) must strictly sanitize empty strings to `null`:
+     ```php
+     $data['code'] = filled($input) ? trim($input) : null;
+     ```
+2. **Pivot Primary Key Safety**:
+   - Composite keys (e.g. `module_questions: [module_id, question_id]`) must be guarded using `ON CONFLICT DO NOTHING` via `DB::table(...)->insertOrIgnore(...)` or Eloquent `syncWithoutDetaching()`.
+
+---
+
+## 7. Resilient Text Ingestion, Deduplication & Tokenization
+
+When accepting user-pasted text, past papers, or documents:
+
+1. **Ban Rigid Single Regexes**:
+   - Real-world text formats vary widely (inline options `a) b) c) d)` on one line, bracketed `(A)` / `[A]`, uppercase/lowercase, trailing answer keys).
+   - Use multi-pattern tokenizers that normalize inline options and brackets into standard tokens before extraction.
+2. **Unparsed Line Diagnostics**:
+   - Ingestion parsers must NEVER silently discard unrecognized lines.
+   - Always return an `unparsed_lines` diagnostic collection to surface yellow alerts in the UI so the user can review skipped content.
+3. **Idempotency & Normalized Deduplication (SHA-256)**:
+   - Calculate normalized content hashes:
+     ```php
+     $hash = hash('sha256', Str::lower(preg_replace('/[^a-z0-9]/', '', $questionText)));
+     ```
+   - If an identical question already exists in `question_bank`, reuse the existing record ID and link it to the newly requested domain/module without duplicating database rows or polluting vector search.
+
+---
+
+## 8. Zero-Token Architecture (Pure Code vs AI Cost Separation)
+
+Never spend AI tokens on tasks that pure deterministic code can solve in milliseconds for $0.
+
+| Scenario | Input Data | Architecture Strategy | Token Cost |
+| :--- | :--- | :--- | :--- |
+| **Complete Questions** | Question text + Options A–D + Answer key | **Pure PHP Tokenizer** (0.01s regex parsing) | **0 Tokens ($0.00)** |
+| **Missing Options** | Question text + Correct Answer only | **AI Distractor Engine** (LLM generates 3 wrong choices + rationale) | **Minimal (~75 tokens/Q)** |
+| **Topic / Notes** | Chapter text, syllabus, or raw notes | **Full AI Generator** (LLM drafts questions, choices, and explanations) | **Standard (~150 tokens/Q)** |
+
+* **The 10-Question Chunking Rule**: When invoking LLMs, strictly chunk requests into micro-batches of $\le$ 10 questions. Never ask for 50+ questions in a single prompt to eliminate output token truncation and JSON parse failures.

@@ -10,13 +10,14 @@
 
 This log records the 10 most critical architectural decisions, infrastructure fixes, and operational milestones shaping the active codebase.
 
-### Entry 10 — 2026-09-19: Senior Autonomous Governance System Establishment
+### Entry 10 — 2026-09-23: Question Ingestion Standards & Anti-Pattern Governance
+- **Action**: Established strict repository standards for bulk data ingestion, remote PostgreSQL transaction limits, and Livewire state management.
+- **Impact**: Banned sequential loops inside `DB::transaction(...)` across remote Supabase connections (mandating sub-200ms bulk multi-row inserts); enforced the Cache-Pointer pattern (`$batchId`) to eliminate Livewire modal payload bloat; mandated strict `NULL` sanitization on unique nullable columns (`code`); and instituted the Zero-Token rule (pure PHP for formatted MCQs, AI strictly for distractor generation).
+
+### Entry 09 — 2026-09-19: Senior Autonomous Governance System Establishment
 - **Action**: Formalized the repository governance protocol across `AGENTS.md`, `.agent/AGENT.md`, `.agent/ARCHITECTURE.md`, `.agent/PATTERNS.md`, and `.agent/MEMORY.md`.
 - **Impact**: Established mandatory pre-conclusion checks (Pest testing, Pint code formatting, zero orphan classes), strict thin controller patterns, loop complexity limits ($O(1)$ lookups, max 2 indentation levels), and anti-AI frontend design laws.
 
-### Entry 09 — 2026-09-18: Dynamic File Upload & `content_meta` Synchronization
-- **Action**: Created the `HandlesModuleFiles` Filament trait to eliminate 404 errors caused by uploaded study resources and syllabus documents.
-- **Impact**: Automatically intercepts Filament repeater state updates, moves stored files from temporary paths to target storage, and synchronizes the document metadata directly into PostgreSQL `content_meta` JSONB.
 
 ### Entry 08 — 2026-09-17: Azure App Service File Upload Limits (64MB)
 - **Action**: Configured `client_max_body_size 64M;` in root `default` Nginx configuration and deployed `uploads.ini` (`upload_max_filesize = 64M`, `post_max_size = 64M`, `memory_limit = 256M`).
@@ -85,4 +86,13 @@ This log records the 10 most critical architectural decisions, infrastructure fi
 - **Requirement**:
   - Webhook endpoints (`POST /api/webhooks/easypaisa` and `POST /api/webhooks/jazzcash`) must implement idempotency key verification and HMAC-SHA256 signature checking before calling `SubscriptionManager::activate()`.
   - Meta WhatsApp Cloud API integrations must format recipient numbers in international E.164 format (`923XXXXXXXXX`) with a 3-second HTTP timeout and Redis queuing to ensure notification dispatches never block candidate web workers.
+
+### 7. Livewire Modal Payload Size & Cache-Pointer Architecture
+- **Quirk**: Livewire serializes component properties on every client-server exchange. Passing large datasets (>20 items) into Filament modal state degrades UI responsiveness and risks payload corruption.
+- **Requirement**: Always store temporary bulk records in cache and pass only the UUID `batch_id` into Livewire form state.
+
+### 8. Remote PostgreSQL PgBouncer Bulk Insert Performance
+- **Quirk**: Supabase PgBouncer (port 6543) incurs 50–80ms round-trip latency per query. Executing loops of individual `INSERT`s or pivot `attach()` calls inside a transaction causes long-lived locks (>10s) and pool exhaustion.
+- **Requirement**: Multi-record mutations must strictly use multi-row bulk `insert` and `insertOrIgnore` to guarantee all transaction locks complete in under 200 milliseconds.
+
 
