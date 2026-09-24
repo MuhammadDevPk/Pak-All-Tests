@@ -51,7 +51,7 @@ class DomainDashboardController extends Controller
                     'rejection_reason' => $latestSubscription->rejection_reason,
                     'created_at' => $latestSubscription->created_at?->diffForHumans(),
                 ] : null,
-                'subscriptionStatus' => $latestSubscription?->status ?? 'none',
+                'subscriptionStatus' => $latestSubscription ? $latestSubscription->status : 'none',
             ]);
         }
 
