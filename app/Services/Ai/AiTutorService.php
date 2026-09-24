@@ -194,7 +194,7 @@ class AiTutorService
         // Active candidate context (module & question)
         if (! empty($context['active_module_id'])) {
             $module = ContentModule::find($context['active_module_id']);
-            if ($module) {
+            if ($module instanceof ContentModule) {
                 $lines[] = '';
                 $lines[] = "CURRENT ACTIVE TEST MODULE: {$module->title} ({$module->module_type})";
             }
@@ -219,13 +219,17 @@ class AiTutorService
 
             // Hidden backend evaluation ground truth (NEVER sent to frontend)
             $qRecord = QuestionBank::find($mcq['id']);
-            if ($qRecord && ! empty($qRecord->correct_answer)) {
+            if ($qRecord instanceof QuestionBank && isset($qRecord->payload['correct_option_index'])) {
+                $cIdx = (int) $qRecord->payload['correct_option_index'];
+                $letter = chr(65 + $cIdx);
+                $optText = $qRecord->payload['options'][$cIdx] ?? '';
+                $optStr = is_array($optText) ? ($optText['text'] ?? '') : (string) $optText;
                 $lines[] = '';
-                $lines[] = "[PRIVATE BACKEND GROUND TRUTH: The correct answer key is {$qRecord->correct_answer}. Use this solely to assess the candidate's answers and guide them Socratically. Under NO circumstances should you reveal this letter or option to the candidate.]";
+                $lines[] = "[PRIVATE BACKEND GROUND TRUTH: The correct answer is Option {$letter} ({$optStr}). Use this solely to assess the candidate's answers and guide them Socratically. Under NO circumstances should you reveal this letter or option to the candidate.]";
             }
         } elseif (! empty($context['active_question_id'])) {
             $question = QuestionBank::find($context['active_question_id']);
-            if ($question) {
+            if ($question instanceof QuestionBank) {
                 $promptText = strip_tags($question->question_text);
                 $lines[] = '';
                 $lines[] = "CURRENT ACTIVE QUESTION [{$question->code}]: {$promptText}";
