@@ -104,6 +104,9 @@ app/
 │       ├── TwoFactorLoginResponse.php
 │       ├── VerifyEmailResponse.php
 │       └── Concerns/RedirectsToCurrentTeam.php # Safe team-agnostic URL resolver
+├── Actions/
+│   └── QuestionBank/
+│       └── StoreGeneratedQuestionsAction.php # Atomic bulk question persistence & multi-domain linking
 ├── Jobs/
 │   └── VectorizeDomainKnowledgeJob.php   # Queued vectorization for pgvector embeddings
 ├── Models/                               # Eloquent Models (detailed in section 3)
@@ -123,8 +126,10 @@ app/
         ├── AiCompletionService.php       # Multi-driver LLM caller (OpenAI / Gemini / Fake)
         ├── AiTutorService.php            # Socratic mentor execution loop & tool routing
         ├── EmbeddingService.php          # Vector(1536) embedding client
-        └── KnowledgeVectorizationService.php # RAG indexing pipeline for questions & notes
+        ├── KnowledgeVectorizationService.php # RAG indexing pipeline for questions & notes
+        └── McqGeneratorService.php       # Pure-PHP parser & batched AI distractor engine
 ```
+
 
 ---
 
