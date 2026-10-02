@@ -10,6 +10,14 @@
 
 This log records the 10 most critical architectural decisions, infrastructure fixes, and operational milestones shaping the active codebase.
 
+### Entry 11 — 2026-10-03: Governance Hardening & Engineering Resilience Protocol
+- **Action**: Codified exhaustive production failure mode mitigations, 12-point Pre-Conclusion Gate, concurrency/locking contracts, OWASP security protections, queue worker isolation, and data lifecycle compliance across the governance layer.
+- **Impact**: Eliminates high-severity race conditions (double submissions, duplicate webhook processing), prevents PgBouncer statement crashes and FastCGI buffer overflow, enforces sub-200ms transaction boundaries, and guarantees zero PII/answer-key leakage.
+- **Files Changed**: `.agent/AGENT.md`, `.agent/ARCHITECTURE.md`, `.agent/PATTERNS.md`, `.agent/MEMORY.md`.
+- **Blast Radius**: Autonomous agents, code review pipelines, database transactions, background queue workers, and test validation runners.
+- **Rollback Path**: Revert governance markdown commits via `git checkout HEAD~1 -- .agent/`.
+- **Lessons**: Autonomous coding assistants require explicit, falsifiable architectural gates (12-point checklist) and hard failure-mode matrices to prevent recurring regressions on remote cloud databases.
+
 ### Entry 10 — 2026-09-23: Question Ingestion Standards & Anti-Pattern Governance
 - **Action**: Established strict repository standards for bulk data ingestion, remote PostgreSQL transaction limits, and Livewire state management.
 - **Impact**: Banned sequential loops inside `DB::transaction(...)` across remote Supabase connections (mandating sub-200ms bulk multi-row inserts); enforced the Cache-Pointer pattern (`$batchId`) to eliminate Livewire modal payload bloat; mandated strict `NULL` sanitization on unique nullable columns (`code`); and instituted the Zero-Token rule (pure PHP for formatted MCQs, AI strictly for distractor generation).
@@ -94,5 +102,21 @@ This log records the 10 most critical architectural decisions, infrastructure fi
 ### 8. Remote PostgreSQL PgBouncer Bulk Insert Performance
 - **Quirk**: Supabase PgBouncer (port 6543) incurs 50–80ms round-trip latency per query. Executing loops of individual `INSERT`s or pivot `attach()` calls inside a transaction causes long-lived locks (>10s) and pool exhaustion.
 - **Requirement**: Multi-record mutations must strictly use multi-row bulk `insert` and `insertOrIgnore` to guarantee all transaction locks complete in under 200 milliseconds.
+
+---
+
+## ⚠️ Hardening Directives
+
+The following 8 directives are durable, non-negotiable architectural mandates:
+
+- **HD-1: Time-Zone Discipline**: All storage UTC. All display PKT. All exam timers server-authoritative. Client clock is an untrusted hint used only for visual animations.
+- **HD-2: Idempotency Everywhere**: Webhooks, job dispatch, notification send, subscription activation — each requires a unique idempotency key persisted before side-effects occur.
+- **HD-3: PII & Answer-Key Log Hygiene**: Structured logs may never contain candidate emails, phone numbers, passwords, CNIC numbers, TRX IDs, or MCQ correct-answer indices.
+- **HD-4: Currency Precision**: All PKR amounts stored as integer paisa (never float). Format with comma thousands separators at the presentation layer only (`PKR 2,500`).
+- **HD-5: Text Safety**: All user-supplied text (question banks, Roman Urdu chat, receipts) is normalized, length-capped, and HTML-escaped before storage and again before render.
+- **HD-6: Blast-Radius Declaration**: Any change touching `SubscriptionManager`, `AiTutorService`, `SduiPayloadTransformer`, or the Fortify pipeline requires an explicit Blast Radius block and full CI run.
+- **HD-7: Rollback Path**: Every migration, queue schema change, and integration update ships with a documented, tested rollback command.
+- **HD-8: Observability Minimum**: Every new endpoint and every new queued job emits a structured JSON log line with `correlation_id`, `user_id` (nullable), `domain_slug` (nullable), and `duration_ms`.
+
 
 

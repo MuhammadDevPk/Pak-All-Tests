@@ -141,6 +141,18 @@ Every new feature, mutation, or API endpoint must strictly traverse the followin
    - If a feature is scheduled for a later sprint, **do not render the button**.
    - If a button exists, it must either trigger a functional modal, initiate a real API call, or route to an active Inertia view.
 
+### A. Production Anti-Pattern Catalog (10 Cardinal Sins)
+1. **Unread Source Additions**: Adding or altering rules in any governance file without reading the entire file first.
+2. **Silent Catch-and-Log**: Catching an exception and logging it without re-throwing, degrading gracefully, or presenting explicit feedback.
+3. **`env()` Outside `config/`**: Calling `env()` in controllers, models, or services; breaks silently whenever `config:cache` is compiled.
+4. **DDL Drops in Tests**: Running `migrate:fresh` or DDL drops against remote database connections; strictly enforce `DatabaseTransactions`.
+5. **Database Queries in Presentation**: Querying models or relations inside a Blade directive or Vue computed property.
+6. **Filament N+1 Lazy Loading**: Defining table columns that traverse relations without `$table->modifyQueryUsing(fn ($q) => $q->with([...]))`.
+7. **Unparameterized `DB::raw()`**: Concatenating variables into raw SQL strings instead of using parameter bindings (`?` or `:binding`).
+8. **Livewire Mass Hydration**: Passing collections or arrays with $>20$ items directly to Livewire component state; use the Cache-Pointer pattern (see §5).
+9. **Client-Trusted Time**: Trusting client timestamps for exam timers or session expiry; server UTC is the sole clock.
+10. **File Extension Naivety**: Validating uploaded documents solely by client extension (`$file->getClientOriginalExtension()`) without verifying MIME magic bytes (`finfo`).
+
 ---
 
 ## 3. Computational Limits & Loop Architecture
@@ -265,3 +277,185 @@ Never spend AI tokens on tasks that pure deterministic code can solve in millise
 | **Topic / Notes** | Chapter text, syllabus, or raw notes | **Full AI Generator** (LLM drafts questions, choices, and explanations) | **Standard (~150 tokens/Q)** |
 
 * **The 10-Question Chunking Rule**: When invoking LLMs, strictly chunk requests into micro-batches of $\le$ 10 questions. Never ask for 50+ questions in a single prompt to eliminate output token truncation and JSON parse failures.
+
+---
+
+## 9. Correctness & Concurrency Patterns
+
+### A. Optimistic vs Pessimistic Locking
+1. **Optimistic Locking (`lock_version`)**:
+   - Mandatory for candidate exam session state and subscription records.
+   - Models maintain an integer `lock_version` column:
+     ```php
+     $affected = UserSubscription::where('id', $sub->id)
+         ->where('lock_version', $sub->lock_version)
+         ->update([
+             'status' => 'active',
+             'lock_version' => $sub->lock_version + 1,
+         ]);
+     if ($affected === 0) {
+         throw new ConcurrencyException("Subscription was modified concurrently.");
+     }
+     ```
+2. **Pessimistic Locking (`lockForUpdate`) & PgBouncer Caveat**:
+   - Use `lockForUpdate()` ONLY for high-contention financial balance or coupon allocations.
+   - **PgBouncer Law**: When running in transaction-pooling mode (Supabase port 6543), row locks MUST be released in $<200\text{ms}$. Never execute third-party HTTP calls (WhatsApp, EasyPaisa) while holding a `lockForUpdate()`.
+
+### B. Race Condition Prevention Catalog
+- **Double-Submit Answers**: Guarded by a unique composite index on `(exam_attempt_id, question_id)` in the grading database.
+- **Double-Webhook Delivery**: Guaranteed idempotent by writing `(provider, trx_id)` to `webhook_events` with an immediate `insertOrIgnore` before executing transitions.
+- **Duplicate WhatsApp Notification**: Check Redis key `lock:notification:{type}:{user_id}:{entity_id}` before queue dispatch.
+- **Double Subscription Activation**: Guarded by atomic database state machine transitions (`WHERE status = 'pending'`).
+
+### C. Time-Zone Contract
+- **Storage**: All database timestamps (`created_at`, `starts_at`, `expires_at`) MUST be stored in UTC (`timestamp with time zone` or standard UTC).
+- **Presentation**: All candidate-facing dates, countdowns, and exam schedules are converted to Pakistan Standard Time (PKT, UTC+5) strictly at the presentation layer.
+- **Server-Authoritative Clock**: Exam timers calculate remaining duration as:
+  $$\text{Remaining} = \text{session\_started\_at} + \text{duration\_seconds} - \text{NOW()}_{\text{UTC}}$$
+  Client time is an untrusted hint used only for visual CSS animations.
+
+---
+
+## 10. Security Patterns (OWASP Top 10 for Pak-All-Tests)
+
+### A. IDOR Defense & Server-Side Re-Resolution
+- **Never trust client-supplied entity IDs**: A candidate passing `/api/modules/{module}/questions` must have their active domain access verified against `SubscriptionManager::hasActiveAccess($user, $module->domain)`.
+- If a candidate accesses a module or question outside their active subscription, return HTTP 404 (never 403) to prevent resource ID enumeration.
+
+### B. Mass Assignment & Property Whitelisting
+- **Ban `$guarded = []`**: Every model MUST explicitly declare `$fillable = [...]`.
+- Form requests must validate every incoming property with strict types (`'integer'`, `'string'`, `'boolean'`).
+
+### C. Output Escaping, `v-html` Ban & AI Markdown Sanitization
+- **Strict Ban on Raw `v-html`**: In Vue components, rendering user input via `v-html` is strictly prohibited.
+- **AI Markdown Rendering**: Responses from `AiTutorService` must be parsed through a strict Markdown sanitizer (stripping `<script>`, `<iframe>`, `javascript:` URIs) before DOM injection.
+
+### D. File Upload Validation & Storage Isolation
+- When handling past-paper PDFs or payment receipts:
+  ```php
+  $request->validate([
+      'receipt' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'],
+  ]);
+  ```
+- Verify MIME magic bytes via `finfo_file()` on the temporary file before moving to permanent disk.
+- Store uploaded receipts in an unindexed, non-executable storage bucket with randomized UUID filenames (`Str::uuid() . '.' . $ext`).
+
+### E. Rate Limiting Hierarchy
+Every public and candidate endpoint must enforce rate limiting at 3 distinct boundaries:
+1. **Per-User**: `throttle:60,1` (keyed by `$request->user()->id`).
+2. **Per-IP**: `throttle:120,1` (for public endpoints).
+3. **Per-Domain / Resource**: `throttle:15,1` for resource-intensive AI tutoring SSE requests (`/api/domains/{domainSlug}/ai-tutor/ask`).
+
+### F. HMAC Verification & Timing-Safe Comparison
+All incoming webhooks (EasyPaisa, JazzCash) must verify signatures using `hash_equals`:
+```php
+$expected = hash_hmac('sha256', $request->getContent(), config('services.easypaisa.secret'));
+if (! hash_equals($expected, $request->header('X-Signature', ''))) {
+    abort(401, 'Invalid webhook signature.');
+}
+```
+
+### G. SSRF Defense & Secrets Hygiene
+- External fetch operations (e.g. PDF previews from Google Drive) must validate target URLs against an explicit domain whitelist. Never fetch arbitrary user-supplied URLs.
+- **Secrets Hygiene**: Never call `env()` outside `config/` files. Never pass `config('services.openai.api_key')` to Inertia frontend properties.
+
+---
+
+## 11. Performance & Scalability Patterns
+
+### A. Indexing Discipline
+1. **Composite Index Left-Column Rule**: Place the highest cardinality or equality-filtered column first (`domain_id, is_active, created_at`).
+2. **Partial Indexes for Active Records**:
+   ```sql
+   CREATE INDEX idx_active_modules ON content_modules (domain_id, sort_order) WHERE is_active = true;
+   ```
+3. **PostgreSQL Extensions**:
+   - `ltree`: Indexed using GiST (`USING gist (path)`).
+   - `pgvector`: Indexed using HNSW cosine distance (`USING hnsw (embedding vector_cosine_ops)`).
+
+### B. Pagination & Mutation Memory Limits
+- Candidate-visible lists exceeding 100 rows must use `cursorPaginate()` to prevent PostgreSQL offset scanning degradation.
+- When mutating bulk datasets, always use `chunkById(100)` instead of `chunk(100)` to prevent duplicate or skipped records during primary key re-indexing.
+
+### C. Redis Namespacing & Thundering Herd Defense
+- All Redis cache keys must follow the structured namespace:
+  `pak:{domainSlug}:{entity}:{id}`
+- Set randomized jittered TTLs (e.g. `3600 + rand(0, 300)`) on high-traffic keys to prevent simultaneous cache expiry.
+- Use `Cache::lock("lock:pak:sdui:{$domain}", 10)->get(...)` when re-compiling heavy SDUI page trees.
+
+### D. Preloading Filament Relationships
+In Filament table resources, never let repeaters or columns execute lazy-loaded queries. Always eager-load:
+```php
+public static function table(Table $table): Table
+{
+    return $table->modifyQueryUsing(fn ($query) => $query->with(['domain', 'questions']));
+}
+```
+
+---
+
+## 12. Reliability Patterns
+
+### A. Outbound HTTP Retries & Exponential Backoff
+All outbound HTTP client requests to AI providers or payment gateways must specify retry logic with jitter:
+```php
+Http::timeout(5)
+    ->retry(3, 100, throw: false)
+    ->post($endpoint, $payload);
+```
+
+### B. Dead-Letter Queue & Mandatory `failed()` Hook
+Every queued Job in `app/Jobs` MUST implement the `failed()` callback to record telemetry and avoid silent data loss:
+```php
+public function failed(?Throwable $exception): void
+{
+    Log::error('Queue job failed permanently', [
+        'job' => static::class,
+        'user_id' => $this->userId,
+        'error' => $exception?->getMessage(),
+    ]);
+}
+```
+
+### C. Outbox Pattern for Transactional Notifications
+Never invoke external notification APIs directly inside database transactions. Write a record to a `notification_outbox` table within the transaction, and let an asynchronous queue worker read and dispatch notifications.
+
+---
+
+## 13. Testing Rigor & Verification Standards
+
+### A. Boundary Condition Testing
+Every feature test for timed tests or grading must test 3 critical points:
+1. **0 Seconds**: Immediately after start.
+2. **Exactly $N$ Seconds**: The exact deadline boundary.
+3. **$N + 1$ Seconds**: 1 second past deadline (must be rejected or auto-submitted).
+
+### B. Concurrency & Security Testing
+- Write tests simulating concurrent double-submissions to verify transaction locks and idempotency.
+- Write tests verifying cross-domain access attempts return 404/403.
+- Use `Carbon::setTestNow()` or Pest `travel()` to verify subscription expiration and exam timeout edge cases.
+
+### C. Faked Externals
+- In test environments, never make real network calls. All tests must verify `Http::fake()` setups and assert mock payloads:
+  ```php
+  Http::fake([
+      'api.openai.com/*' => Http::response(['choices' => [...]], 200),
+  ]);
+  ```
+
+---
+
+## 14. Code Hygiene, Maintainability & Craftsmanship
+
+### A. Strict Typing & Class Sizing
+- `declare(strict_types=1);` must head every newly created PHP file.
+- **Method Length Target**: Maximum 20 lines. Refactor longer methods into dedicated private helper functions or Action classes.
+- **Class Length Target**: Maximum 200 lines.
+- **TypeScript Hygiene**: In any client-side JavaScript/TypeScript code, `any` is strictly prohibited without an inline architectural justification comment.
+
+### B. Clean Naming & Comments
+- Explicit model naming: `Domain` (never `Dom`), `UserSubscription` (never `Sub`), `QuestionBank` (never `QB`).
+- Collections must always be plural (`$questions`, `$modules`).
+- **Comments**: Write comments explaining **WHY** an unconventional decision was made, never describing **WHAT** obvious code does.
+- Zero dead code: Zero commented-out blocks, zero `dump()`, zero `dd()`, and zero untracked `TODO`s.
+

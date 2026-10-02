@@ -205,3 +205,238 @@ This architecture is governed by 13 detailed sub-architectural specifications lo
 | [`.agents/rules/sdui_blueprints.md`](file:///.agents/rules/sdui_blueprints.md) | SDUI JSON schema definitions, component registry contracts, server-side layout compilation. |
 | [`.agents/rules/mistakes_and_descriptions.md`](file:///.agents/rules/mistakes_and_descriptions.md) | Catalog of known engineering pitfalls and historical traps to avoid. |
 
+---
+
+## 7. Critical Path Data Flow Diagrams
+
+### A. MCQ Submission, Server-Side Grading & Progress Mutation
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Candidate as Candidate Browser (Vue 3 McqPlayer)
+    participant Ctrl as McqExecutionController
+    participant Guard as SubscriptionManager
+    participant Svc as ExamGradingService
+    participant DB as PostgreSQL (Supabase)
+    participant Redis as Redis Cache
+
+    Candidate->>Ctrl: POST /api/modules/{module}/submit (question_id, option_idx, time_spent)
+    Ctrl->>Guard: hasActiveAccess(user, domain)
+    alt Unsubscribed
+        Guard-->>Ctrl: false
+        Ctrl-->>Candidate: 403 Forbidden
+    else Subscribed
+        Guard-->>Ctrl: true
+        Ctrl->>Svc: gradeSubmission(user, module, payload)
+        activate Svc
+        Note over Svc,DB: DB::transaction (< 200ms lock boundary)
+        Svc->>DB: SELECT payload->'correct_option_index' FROM question_bank WHERE id = ?
+        Svc->>DB: INSERT INTO exam_attempts (user_id, module_id, score, is_correct, created_at)
+        Svc->>DB: UPDATE domain_progress SET score = score + ?, updated_at = NOW()
+        Svc->>Redis: DEL pak:{domain}:progress:{user_id}
+        Svc-->>Ctrl: GradingResultDTO (score, is_correct, explanation)
+        deactivate Svc
+        Ctrl-->>Candidate: 200 OK (GradingResultDTO - Answer key excluded)
+    end
+```
+
+### B. Socratic AI Tutor SSE Streaming & RAG Pipeline
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Candidate as Candidate Browser (AiTutorWidget)
+    participant SSE as AiTutorController
+    participant Svc as AiTutorService
+    participant Vec as KnowledgeVectorizationService (pgvector)
+    participant LLM as OpenAI (gpt-4o-mini) / Gemini Flash
+
+    Candidate->>SSE: POST /api/domains/{domainSlug}/ai-tutor/ask (Stream Request)
+    SSE->>Svc: streamSocraticResponse(user, domain, context)
+    activate Svc
+    Svc-->>Candidate: event: tool_start {"tool": "search_domain_knowledge"}
+    Svc->>Vec: Cosine search (1536-dim embedding <=> query_embedding, limit: 3)
+    Vec-->>Svc: Top 3 Syllabus / Past-Paper Chunks
+    Svc-->>Candidate: event: tool_end {"tool": "search_domain_knowledge", "status": "success"}
+    Note over Svc,LLM: Injects System Prompt + Hidden Answer Key + RAG Chunks
+    Svc->>LLM: Stream completion (max 2 tool rounds, temp: 0.4)
+    activate LLM
+    loop Token Generation
+        LLM-->>Svc: Partial Markdown tokens
+        Svc-->>Candidate: event: chunk {"text": "..."}
+    end
+    deactivate LLM
+    Svc->>SSE: Persist chat turn (DomainChatMessage)
+    Svc-->>Candidate: event: done {}
+    deactivate Svc
+```
+
+### C. Manual & Webhook Proof-of-Payment Verification Pipeline
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Gateway as EasyPaisa / JazzCash IPN Gateway
+    participant Webhook as PaymentWebhookController
+    participant Guard as SignatureVerifier
+    participant Idem as WebhookEvents Table
+    participant Mgr as SubscriptionManager
+    participant Queue as Redis Queue (notifications)
+    participant WA as WhatsAppNotificationJob
+
+    Gateway->>Webhook: POST /api/webhooks/easypaisa (payload + X-Signature)
+    Webhook->>Guard: hash_equals(hash_hmac('sha256', payload, secret), signature)
+    alt Invalid Signature
+        Guard-->>Webhook: false
+        Webhook-->>Gateway: 401 Unauthorized (Audit Alert Logged)
+    else Valid Signature
+        Guard-->>Webhook: true
+        Note over Webhook,Mgr: DB::transaction
+        Webhook->>Idem: INSERT INTO webhook_events (idempotency_key, payload) ON CONFLICT DO NOTHING
+        alt Duplicate Key Detected
+            Webhook-->>Gateway: 200 OK (Duplicate Ignored)
+        else Fresh Event
+            Webhook->>Mgr: activateSubscription(userId, domainId, trxId, 'easypaisa')
+            Mgr->>Queue: Dispatch SendWhatsAppNotificationJob(user_id, domain_id)
+            Webhook-->>Gateway: 200 OK (Processed)
+            Queue->>WA: Execute worker
+            WA->>Gateway: POST graph.facebook.com/v19.0/messages (WhatsApp Template)
+        end
+    end
+```
+
+### D. SDUI Page Compilation, Caching & Reactive Rendering
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Browser as Candidate Browser
+    participant Ctrl as DomainDashboardController
+    participant Redis as Redis Cache
+    participant Engine as SduiPayloadTransformer
+    participant DB as PostgreSQL (ltree & modules)
+
+    Browser->>Ctrl: GET /d/{domainSlug}
+    Ctrl->>Redis: GET pak:{domainSlug}:sdui_tree
+    alt Cache Hit (< 5ms)
+        Redis-->>Ctrl: Serialized SDUI Node Tree
+    else Cache Miss
+        Ctrl->>DB: Fetch Domain + ltree hierarchy + active ContentModules
+        Ctrl->>Engine: compileLayout(domain, user)
+        Engine-->>Ctrl: Validated SDUI JSON Node Tree
+        Ctrl->>Redis: SETEX pak:{domainSlug}:sdui_tree 3600 (Payload)
+    end
+    Ctrl-->>Browser: Inertia::render('Domain/Dashboard', { sdui: tree })
+    Note over Browser: SduiRenderer.vue resolves layout components reactively
+```
+
+---
+
+## 8. Caching Layers & Invalidation Contract
+
+To guarantee sub-10ms UI renders and protect remote PostgreSQL connection limits, the application enforces a strict multi-tier caching hierarchy:
+
+| Cache Item | Storage Driver | Cache Key Pattern | TTL | Invalidation Trigger | Concurrency / Stampede Defense |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Compiled SDUI Layouts** | Redis | `pak:{domainSlug}:sdui:v1` | 3,600s (1 hr) | `ContentModule::saved()`, `DomainFlow::saved()` via `CachesTableData` | Redis atomic lock `lock:sdui:{domainSlug}` (10s lock) |
+| **Domain Category Tree** | Redis | `pak:domain_tree:hierarchy` | 86,400s (24 hr)| `Domain::created()`, `Domain::updated()`, `Domain::deleted()` | Pre-warmed on deployment via `VectorizeKnowledgeCommand` |
+| **User Active Subscriptions**| Redis | `pak:user:{userId}:subs` | 1,800s (30 min)| `SubscriptionManager::activate()`, `expire()`, `reject()` | Direct cache bust (`Cache::forget()`) inside mutation transaction |
+| **Candidate Exam Progress** | Redis | `pak:{domainSlug}:prog:{userId}`| 600s (10 min) | `ExamGradingService::gradeSubmission()` completion | Direct cache bust on grading transaction commit |
+| **Embeddings Count / Meta** | Redis | `pak:domain:{domainId}:emb_meta`| 3,600s (1 hr) | `KnowledgeVectorizationService::indexQuestion()` | Atomic counter increment (`Redis::incr()`) |
+| **Bulk Import Batch Pointers**| Redis | `import_batch:{uuid}` | 1,800s (30 min)| Filament modal confirm or modal cancel | Cache pointer destroyed upon successful database persistence |
+
+---
+
+## 9. Asynchronous Queue Architecture & Worker Pools
+
+To prevent high-latency operations (RAG embedding generation, AI distractor drafting, external WhatsApp calls) from blocking critical candidate-facing workflows, workers are partitioned across dedicated queues:
+
+```
+[ RabbitMQ / Redis Driver ]
+       ├── Queue: high_priority (MCQ evaluation, Auth tokens, Passkey verification)
+       ├── Queue: receipts       (Manual payment slip processing & OCR triage)
+       ├── Queue: notifications  (WhatsApp Cloud API & transactional SMS)
+       ├── Queue: mcq_generation (AI Distractor generation & bulk file ingestion)
+       └── Queue: rag_indexing   (pgvector 1536-dim embedding generation & sync)
+```
+
+| Queue Name | Priority | Concurrency / Workers | Retry Policy | Backoff Strategy | DLQ Destination | Poison-Pill Handling |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **`high_priority`** | 1 (Max) | 4 Dedicated Workers | 3 Tries | Exponential: 2s, 5s, 10s | `failed_jobs` table | Discard after 3 attempts; log emergency Sentry event |
+| **`receipts`** | 2 | 2 Dedicated Workers | 3 Tries | Exponential: 5s, 15s, 30s | `receipts_dlq` | Mark subscription `review_required`, alert admin in Filament |
+| **`notifications`** | 3 | 2 Dedicated Workers | 5 Tries | Jittered: 5s, 30s, 120s, 300s | `notifications_dlq` | Fall back to transactional email if WhatsApp fails after 5 tries |
+| **`mcq_generation`** | 4 | 2 Dedicated Workers | 2 Tries | Linear: 10s, 30s | `generation_dlq` | Store partial progress; notify author with `unparsed_lines` |
+| **`rag_indexing`** | 5 (Low) | 1 Dedicated Worker | 3 Tries | Exponential: 10s, 60s, 180s | `indexing_dlq` | Mark record `vectorization_failed`; re-run via nocturnal cron |
+
+**Mandatory Isolation Rule**: AI RAG embeddings and WhatsApp notifications MUST NEVER share a queue with candidate exam scoring. A spike in batch past-paper imports must never introduce a 1-second delay into candidate test submissions.
+
+---
+
+## 10. External Integration Resilience & Circuit Breakers
+
+Every outbound third-party call is guarded by strict timeouts, retries, and circuit breakers:
+
+| External Provider | Scope / Endpoint | HTTP Timeout | Retries | Circuit Breaker Threshold | Fallback Behavior | Failure Telemetry |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **OpenAI / Gemini** | Chat completions & SSE (`POST /chat/completions`) | 15s (Connect: 2s) | 2 Tries | 5 consecutive failures in 60s $\rightarrow$ Open 5m | Degrade to Socratic static hint bank or rule-based hints | Emit `ai.provider_down` to Datadog/Sentry; increment failure metric |
+| **Meta WhatsApp Cloud**| Candidate notifications (`POST /v19.0/{phone_id}/messages`)| 4s (Connect: 1s) | 3 Tries | 10 failures in 120s $\rightarrow$ Open 10m | Queue email notification via standard SMTP | Log `notification.whatsapp_failed` with provider response code |
+| **EasyPaisa IPN** | Merchant payment verification (`POST /ipn`) | 5s (Connect: 2s) | 3 Tries | 5 failures in 60s $\rightarrow$ Open 5m | Mark transaction `pending_manual_verification` in Filament | Alert on-call via Slack webhook: `payment.gateway_unreachable` |
+| **JazzCash IPN** | Merchant payment verification (`POST /ipn`) | 5s (Connect: 2s) | 3 Tries | 5 failures in 60s $\rightarrow$ Open 5m | Mark transaction `pending_manual_verification` in Filament | Alert on-call via Slack webhook: `payment.gateway_unreachable` |
+| **Google Drive PDF** | Document preview & embedding iframe | 5s (Connect: 2s) | 1 Try | 5 failures in 60s $\rightarrow$ Open 5m | Serve locally cached PDF from `/storage` disk directly | Log `storage.drive_preview_failed` |
+
+---
+
+## 11. Security Architecture & Boundary Isolation
+
+### A. Attack-Surface Map & Route Segregation
+1. **Public Attack Surface** (`/`, `/#exams`, `/login`, `/register`, `/api/health`):
+   - Strict rate limiting: `throttle:60,1` per IP.
+   - Zero access to exam questions, answer keys, or candidate data.
+2. **Candidate Portal (`/d/{domainSlug}`, `/api/modules/...`)**:
+   - Gated by `auth:sanctum` or Fortify session + `EnsureActiveSubscription` middleware.
+   - IDOR Defense: Direct parameter lookups forbidden. All resources resolved via `user->subscribedDomains()`.
+3. **Administrative Surface (`/admin`)**:
+   - Scoped to Filament admin guard. Requires multi-tenant membership check (`EnsureTeamMembership`).
+   - 2FA and passkey hardware token enforcement for staff accounts.
+4. **Ingestion & Webhook Surface (`/api/webhooks/...`)**:
+   - Signature-verified via `hash_hmac('sha256', ...)`. Rejects untrusted payloads before Laravel request routing.
+
+### B. Session & Token Lifecycle
+- **Session Expiry**: 120 minutes of inactivity; hard session regeneration on privilege escalation or team switch.
+- **Passkey & 2FA Recovery**: WebAuthn challenge TTL capped at 60 seconds; recovery codes stored as bcrypt hashes.
+- **Password Reset Tokens**: Strict 15-minute TTL enforced in `config/auth.php`.
+
+### C. Tenant & Domain Isolation Guarantee
+- **PostgreSQL `ltree` Domain Hierarchies**: Candidate access to a parent domain (e.g. `armed_forces.army.pma`) cascades strictly downwards; sibling domains (e.g. `civil_services.css`) are strictly partitioned.
+- **Answer Key Zero-Knowledge Principle**: The Vue frontend bundle, Inertia props, and network payloads NEVER receive `correct_option_index` or answer letters during an active test session. Answers are evaluated strictly inside backend transaction memory.
+
+---
+
+## 12. Scalability Roadmap & Breakpoint Thresholds
+
+| Concurrent Candidate Takers | System Bottleneck / Breakpoint | Mandated Escape Hatch / Architecture Shift |
+| :--- | :--- | :--- |
+| **1 – 500** | Supabase connection pooling (port 6543 PgBouncer limits). | Current architecture: Single monolith + PgBouncer + Redis caching. |
+| **500 – 2,500** | Database read contention on `question_bank` and SDUI layout fetches. | Deploy PostgreSQL read replica for SDUI layout fetches & question reads; write transactions remain on primary. |
+| **2,500 – 10,000** | SSE connection exhaustion on PHP-FPM web workers. | Extract Socratic AI SSE streaming to standalone Node.js / Go lightweight gateway or Laravel Octane (Swoole). |
+| **10,000 – 50,000**| Vector search latency degradation on monolithic table. | Partition `domain_knowledge_embeddings` table by `domain_id` using PostgreSQL declarative table partitioning. |
+| **50,000+** | Simultaneous nationwide exam submission spikes (e.g. MDCAT / PMA mock test release). | Decouple grading: Submissions write raw JSON payload to Kafka / Amazon SQS; asynchronous grading workers drain queue. |
+
+---
+
+## 13. Data Lifecycle, Retention & Compliance
+
+### A. Retention Policies
+- **Domain Chat Messages (`domain_chat_messages`)**: Retained for 90 days following candidate exam completion; purged via automated nocturnal job (`PurgeOldChatMessagesCommand`).
+- **Payment Verification Receipts (`user_subscriptions.receipt_url`)**: Retained for 365 days on encrypted private S3/local disk for tax audit compliance; soft-deleted thereafter.
+- **Exam Attempt Records (`exam_attempts`)**: Retained indefinitely in aggregated format; question-by-question response breakdown pruned to compressed JSON after 180 days.
+- **Vector Embeddings (`domain_knowledge_embeddings`)**: Re-indexed whenever underlying syllabus nodes are updated; orphaned embeddings purged immediately on parent module deletion.
+
+### B. Soft-Delete vs Hard-Delete Decisions
+- **`User` / `UserSubscription`**: **Strict Soft Deletes** (`SoftDeletes` trait). Financial auditing, payment tracing, and exam certification validity prohibit physical record deletion.
+- **`QuestionBank`**: **Soft Deletes**. Questions referenced by past exam attempts must retain historical referential integrity.
+- **`DomainChatMessage`**: **Hard Deletes**. Chat turns contain transient learning interactions; physical deletion enforces candidate privacy minimization.
+
+### C. PII Classification & Minimization
+- **High-Risk PII**: Passwords (argon2id), Passkey WebAuthn Public Keys, CNIC numbers (encrypted with `Crypt::encryptString`).
+- **Operational PII**: Mobile phone numbers, candidate full names, transaction receipt images. Restricted to admin Filament tenant roles.
+- **Anonymized Data**: Performance metrics, question difficulty stats, topic accuracy scores. Stripped of user identifiers for institutional reporting.
+
+
