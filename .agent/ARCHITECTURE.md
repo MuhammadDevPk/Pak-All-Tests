@@ -72,7 +72,8 @@ app/
 │   └── TeamRole.php              # Owner, Admin, Member
 ├── Filament/                     # Filament Admin Panel v5
 │   ├── Pages/
-│   │   └── SduiSchemaGuide.php   # Internal documentation for SDUI schema nodes
+│   │   ├── SduiSchemaGuide.php   # Internal documentation for SDUI schema nodes
+│   │   └── ImportQuestions.php   # Bulk JSON question import (nav group "Question Bank")
 │   ├── Resources/
 │   │   ├── ContentModules/       # ModuleResource, Form, Table, HandlesModuleFiles trait
 │   │   ├── DomainFlows/          # DomainFlowResource, Form, Table
@@ -106,8 +107,9 @@ app/
 │       └── Concerns/RedirectsToCurrentTeam.php # Safe team-agnostic URL resolver
 ├── Actions/
 │   └── QuestionBank/
-│       └── StoreGeneratedQuestionsAction.php # Atomic bulk question persistence & multi-domain linking
+│       └── StoreGeneratedQuestionsAction.php # Atomic bulk question persistence, mcq/short_answer types, dry-run preview
 ├── Jobs/
+│   ├── ImportQuestionsJob.php            # Queued bulk question import: per-subject modules, batched inserts, cached report
 │   └── VectorizeDomainKnowledgeJob.php   # Queued vectorization for pgvector embeddings
 ├── Models/                               # Eloquent Models (detailed in section 3)
 ├── Policies/
@@ -329,6 +331,35 @@ sequenceDiagram
 ```
 
 ---
+
+### E. Bulk Question Import Pipeline (Filament Admin)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Admin (Filament)
+    participant Page as ImportQuestions Page
+    participant Job as ImportQuestionsJob (queued)
+    participant Act as StoreGeneratedQuestionsAction
+    participant DB as PostgreSQL (Supabase)
+    participant Cache as Cache (report)
+
+    Admin->>Page: Upload JSON + Start Import (dry_run?)
+    Page->>Page: validatePayload (subjects map + questions array)
+    alt Dry Run
+        Page->>Job: dispatchSync
+        Job->>Act: execute(dryRun: true) per 50-item subject batch
+        Note over Act,DB: Read-only hash dedup against question_bank;<br/>no writes, no pivot attach, no vectorization
+        Job->>Cache: PUT question_import_report_{uuid} (600s TTL)
+        Page-->>Admin: Preview notification + per-subject report table
+    else Live Run
+        Page->>Job: dispatch (async)
+        Job->>DB: firstOrCreate parent + per-subject preparation modules
+        Job->>Act: execute() per 50-item subject batch
+        Note over Act,DB: DB::transaction (< 200ms lock boundary);<br/>bulk insert + insertOrIgnore pivots
+        Job->>Cache: PUT question_import_report_{uuid} (600s TTL)
+        Job-->>Admin: Filament database notification (inserted / skipped / invalid)
+    end
+```
 
 ## 8. Caching Layers & Invalidation Contract
 

@@ -13,7 +13,12 @@ class StoreGeneratedQuestionsAction
     /**
      * Atomically persist parsed/generated questions and attach them across target domains.
      *
-     * @param  array<int, array{question_text: string, options: array<int, string>, correct_option_index: int, explanation: ?string, difficulty_level: string, code: ?string}>  $questions
+     * Supports `mcq` items (options + correct_option_index) and `short_answer`
+     * items (model answer). When $dryRun is true, no rows are written: text
+     * hashes are still resolved against existing records so the returned
+     * inserted/reused counts preview exactly what a real run would do.
+     *
+     * @param  array<int, array{question_text: string, question_type?: string, options?: array<int, string>, correct_option_index?: int, answer?: string, explanation: ?string, difficulty_level: string, code: ?string}>  $questions
      * @param  array<int, int>  $targetDomainIds
      * @param  array<int, int>  $existingModuleIds
      * @return array{inserted: int, reused: int, total: int, module_ids: array<int, int>}
@@ -23,7 +28,8 @@ class StoreGeneratedQuestionsAction
         array $targetDomainIds = [],
         string $moduleStrategy = 'pool',
         ?string $newModuleTitle = null,
-        array $existingModuleIds = []
+        array $existingModuleIds = [],
+        bool $dryRun = false
     ): array {
         if (empty($questions)) {
             return ['inserted' => 0, 'reused' => 0, 'total' => 0, 'module_ids' => []];
@@ -40,6 +46,7 @@ class StoreGeneratedQuestionsAction
             $moduleStrategy,
             $newModuleTitle,
             $existingModuleIds,
+            $dryRun,
             &$allQuestionIds,
             &$insertedCount,
             &$reusedCount,
@@ -67,8 +74,10 @@ class StoreGeneratedQuestionsAction
 
                 if (isset($existingMap[$hash])) {
                     // Reuse existing QuestionBank record
-                    $allQuestionIds[] = $existingMap[$hash];
                     $reusedCount++;
+                    if (! $dryRun) {
+                        $allQuestionIds[] = $existingMap[$hash];
+                    }
                 } else {
                     // Create new QuestionBank record quietly (prevents vectorization before pivot attachment)
                     $rawCode = filled($q['code'] ?? null) ? trim((string) $q['code']) : null;
@@ -80,29 +89,35 @@ class StoreGeneratedQuestionsAction
                         }
                     }
 
-                    $record = QuestionBank::createQuietly([
-                        'question_type' => 'mcq',
-                        'code' => $code,
-                        'question_text' => $rawText,
-                        'payload' => [
-                            'options' => array_values($q['options']),
-                            'correct_option_index' => (int) $q['correct_option_index'],
-                        ],
-                        'difficulty_level' => in_array($q['difficulty_level'], ['easy', 'medium', 'hard'], true)
-                            ? $q['difficulty_level']
-                            : 'medium',
-                        'explanation' => filled($q['explanation'] ?? null) ? trim((string) $q['explanation']) : null,
-                        'is_active' => true,
-                    ]);
+                    $questionType = ($q['question_type'] ?? 'mcq') === 'short_answer' ? 'short_answer' : 'mcq';
 
-                    $allQuestionIds[] = $record->id;
-                    $existingMap[$hash] = $record->id;
+                    if ($dryRun) {
+                        // Reserve the hash so intra-batch duplicates are still
+                        // detected, without writing anything to the database.
+                        $existingMap[$hash] = -1;
+                    } else {
+                        $record = QuestionBank::createQuietly([
+                            'question_type' => $questionType,
+                            'code' => $code,
+                            'question_text' => $rawText,
+                            'payload' => $this->buildPayload($questionType, $q),
+                            'difficulty_level' => in_array($q['difficulty_level'], ['easy', 'medium', 'hard'], true)
+                                ? $q['difficulty_level']
+                                : 'medium',
+                            'explanation' => filled($q['explanation'] ?? null) ? trim((string) $q['explanation']) : null,
+                            'is_active' => true,
+                        ]);
+
+                        $allQuestionIds[] = $record->id;
+                        $existingMap[$hash] = $record->id;
+                    }
+
                     $insertedCount++;
                 }
             }
 
             // 3. Bulk attach questions to target modules using insertOrIgnore (sub-200ms lock)
-            if (! empty($allQuestionIds) && ! empty($targetModuleIds)) {
+            if (! $dryRun && ! empty($allQuestionIds) && ! empty($targetModuleIds)) {
                 $pivotRows = [];
                 foreach ($allQuestionIds as $qId) {
                     foreach ($targetModuleIds as $mId) {
@@ -120,7 +135,7 @@ class StoreGeneratedQuestionsAction
         });
 
         // 4. Safely dispatch background vectorization now that all domain pivots exist
-        if (config('ai.auto_vectorize', true)) {
+        if (! $dryRun && config('ai.auto_vectorize', true)) {
             foreach ($allQuestionIds as $questionId) {
                 VectorizeDomainKnowledgeJob::dispatch(questionId: $questionId);
             }
@@ -131,6 +146,24 @@ class StoreGeneratedQuestionsAction
             'reused' => $reusedCount,
             'total' => count($allQuestionIds),
             'module_ids' => $targetModuleIds,
+        ];
+    }
+
+    /**
+     * Build the JSONB payload for a question based on its type.
+     *
+     * @param  array<string, mixed>  $question
+     * @return array<string, mixed>
+     */
+    protected function buildPayload(string $questionType, array $question): array
+    {
+        if ($questionType === 'short_answer') {
+            return ['model_answer' => trim((string) ($question['answer'] ?? ''))];
+        }
+
+        return [
+            'options' => array_values($question['options']),
+            'correct_option_index' => (int) $question['correct_option_index'],
         ];
     }
 

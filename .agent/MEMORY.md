@@ -1,7 +1,7 @@
 # MEMORY.md — Rolling Project Memory & Operational Knowledge
 
 > **Status**: ACTIVE ROLLING RECORD  
-> **Last Updated**: 2026-09-19  
+> **Last Updated**: 2026-10-03  
 > **Repository**: Pak-All-Tests (Laravel 13 • Vue 3 / Inertia 3 • PostgreSQL 16+ Supabase)
 
 ---
@@ -9,6 +9,14 @@
 ## 📜 Active Rolling Memory Log (Top 10 Baseline Entries)
 
 This log records the 10 most critical architectural decisions, infrastructure fixes, and operational milestones shaping the active codebase.
+
+### Entry 15 — 2026-10-03: Filament Bulk Question Import Page (PMA Academic)
+- **Action**: Added a Filament "Import Questions" admin page (`app/Filament/Pages/ImportQuestions.php`, nav group "Question Bank") with domain select, parent-module mode (use existing / create new, default "Academic"), JSON upload (10MB, local disk) and a dry-run toggle (default on); submissions validate the payload and dispatch `ImportQuestionsJob`, which find-or-creates one `preparation` ContentModule per subject key and inserts questions in batches of 50 via `StoreGeneratedQuestionsAction` (extended with per-item `question_type` + `dryRun` preview mode; `short_answer` items persist `payload: ['model_answer' => ...]`). Dry runs execute synchronously and render a per-subject report (inserted / duplicates_skipped / invalid) from cache (`question_import_report_{uuid}`, 10-min TTL); live runs are queued and notify the admin via a Filament database notification. Added Pest coverage (`tests/Feature/QuestionImportTest.php`).
+- **Impact**: Enables no-SSH bulk import of the 1,462-question PMA Academic pack (166 MCQs + 1,296 short answers across 5 subjects) directly from the admin panel; hash-dedup guarantees re-runs never create duplicates; invalid items are skipped and reported instead of failing the batch.
+- **Files Changed**: `app/Filament/Pages/ImportQuestions.php`, `app/Jobs/ImportQuestionsJob.php`, `resources/views/filament/pages/import-questions.blade.php`, `tests/Feature/QuestionImportTest.php`, `app/Actions/QuestionBank/StoreGeneratedQuestionsAction.php`, `.agent/MEMORY.md`, `.agent/ARCHITECTURE.md`.
+- **Blast Radius**: `StoreGeneratedQuestionsAction` (new optional params only — existing callers unaffected), new Filament page + job.
+- **Rollback Path**: `git revert` the feature branch merge commit, or `git checkout <base> -- app/Actions/QuestionBank/StoreGeneratedQuestionsAction.php` to restore the action.
+- **Lessons**: Filament pages are the correct "thin" layer for admin workflows (form-schema validation replaces FormRequest); dry-run accuracy requires the preview path to share the exact dedup code as the write path; ContentModule has no `parent_id` — subject modules are siblings in the domain, not children.
 
 ### Entry 14 — 2026-10-03: AI Exam Mentor Conciseness Calibration, Markdown Hash Sanitization & Resizable UI
 - **Action**: Calibrated `AiTutorService` system prompt to mandate extreme brevity (2–3 lines / single compact paragraph by default, key terms in bold, strictly no markdown heading hashes, and adherence to user-specified line constraints); updated `AiTutorWidget.vue` `formatContent` to strip raw `#`/`##`/`###` hashtags and format clean headings; and implemented smooth mouse-drag and touch-swipe resize handles (top, left, corner) with pointer capture plus a header maximize/restore toggle.
