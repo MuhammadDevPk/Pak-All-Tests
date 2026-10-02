@@ -62,9 +62,6 @@ function runImportJobForTest(array $payload, Domain $domain, bool $dryRun, strin
     (new ImportQuestionsJob(
         filePath: 'imports/'.$reportKey.'.json',
         domainId: $domain->id,
-        parentMode: 'create_new',
-        parentModuleId: null,
-        parentTitle: 'Academic',
         dryRun: $dryRun,
         adminUserId: null,
         reportKey: $reportKey,
@@ -130,8 +127,8 @@ it('inserts mcqs and short answers into their correct subject modules', function
     expect($history)->not->toBeNull()
         ->and($history->questions()->count())->toBe(1);
 
-    // The "Academic" parent module is created alongside the subjects.
-    expect(ContentModule::where('domain_id', $domain->id)->where('title', 'Academic')->exists())->toBeTrue();
+    // Exactly the two subject modules exist directly under the domain (flat — no parent).
+    expect(ContentModule::where('domain_id', $domain->id)->count())->toBe(2);
 
     Queue::assertPushed(VectorizeDomainKnowledgeJob::class);
 

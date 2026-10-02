@@ -353,7 +353,7 @@ sequenceDiagram
         Page-->>Admin: Preview notification + per-subject report table
     else Live Run
         Page->>Job: dispatch (async)
-        Job->>DB: firstOrCreate parent + per-subject preparation modules
+        Job->>DB: firstOrCreate per-subject preparation modules (flat, under domain)
         Job->>Act: execute() per 50-item subject batch
         Note over Act,DB: DB::transaction (< 200ms lock boundary);<br/>bulk insert + insertOrIgnore pivots
         Job->>Cache: PUT question_import_report_{uuid} (600s TTL)

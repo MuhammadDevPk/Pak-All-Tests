@@ -21,8 +21,9 @@ use Illuminate\Support\Str;
  * Bulk question import from an uploaded JSON file.
  *
  * For every subject in the file's `subjects` map the job finds-or-creates a
- * ContentModule in the chosen domain, then inserts that subject's questions in
- * batches of 50 through StoreGeneratedQuestionsAction (hash dedup + code
+ * `preparation` ContentModule directly under the chosen domain (modules are
+ * flat — ContentModule has no parent_id), then inserts that subject's questions
+ * in batches of 50 through StoreGeneratedQuestionsAction (hash dedup + code
  * uniqueness are inherited). Supports `mcq` and `short_answer` items.
  *
  * In dry-run mode nothing is written: module creation, question inserts,
@@ -44,9 +45,6 @@ class ImportQuestionsJob implements ShouldQueue
     public function __construct(
         public string $filePath,
         public int $domainId,
-        public string $parentMode,
-        public ?int $parentModuleId,
-        public string $parentTitle,
         public bool $dryRun,
         public ?int $adminUserId,
         public string $reportKey,
@@ -200,27 +198,6 @@ class ImportQuestionsJob implements ShouldQueue
             $this->finish($report);
 
             return;
-        }
-
-        if ($this->parentMode === 'existing') {
-            $parent = ContentModule::where('id', $this->parentModuleId)
-                ->where('domain_id', $domain->id)
-                ->first();
-            if (! $parent) {
-                $report['errors'][] = 'The selected parent module was not found in this domain.';
-                $this->finish($report);
-
-                return;
-            }
-        } elseif (! $this->dryRun) {
-            ContentModule::firstOrCreate(
-                ['domain_id' => $domain->id, 'slug' => Str::slug($this->parentTitle)."-{$domain->id}"],
-                [
-                    'title' => $this->parentTitle,
-                    'module_type' => 'preparation',
-                    'is_active' => true,
-                ]
-            );
         }
 
         foreach ($validation['subjects'] as $subjectKey => $subjectTitle) {

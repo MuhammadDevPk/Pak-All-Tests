@@ -3,18 +3,14 @@
 namespace App\Filament\Pages;
 
 use App\Jobs\ImportQuestionsJob;
-use App\Models\ContentModule;
 use App\Models\Domain;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
@@ -53,7 +49,7 @@ class ImportQuestions extends Page implements HasSchemas
         return $schema
             ->components([
                 Section::make('Import Target')
-                    ->description('Choose the exam domain and where the imported subject modules should live.')
+                    ->description('Choose the exam domain. One preparation module is created per subject directly under it.')
                     ->icon(Heroicon::OutlinedCircleStack)
                     ->schema([
                         Select::make('domain_id')
@@ -62,36 +58,9 @@ class ImportQuestions extends Page implements HasSchemas
                                 ->orderBy('name')
                                 ->pluck('name', 'id')
                                 ->all())
+                            ->default(fn (): ?int => Domain::where('code', 'PMA_INITIAL')->value('id'))
                             ->searchable()
-                            ->required()
-                            ->live(),
-                        Radio::make('parent_mode')
-                            ->label('Subject Modules')
-                            ->options([
-                                'create_new' => 'Create new parent module',
-                                'existing' => 'Use existing module\u2019s domain',
-                            ])
-                            ->default('create_new')
-                            ->inline()
-                            ->live()
                             ->required(),
-                        TextInput::make('parent_title')
-                            ->label('New Parent Module Title')
-                            ->default('Academic')
-                            ->maxLength(120)
-                            ->required()
-                            ->visible(fn (Get $get): bool => $get('parent_mode') === 'create_new'),
-                        Select::make('parent_module_id')
-                            ->label('Existing Module')
-                            ->options(fn (Get $get): array => $get('domain_id')
-                                ? ContentModule::where('domain_id', $get('domain_id'))
-                                    ->orderBy('sort_order')
-                                    ->pluck('title', 'id')
-                                    ->all()
-                                : [])
-                            ->searchable()
-                            ->required()
-                            ->visible(fn (Get $get): bool => $get('parent_mode') === 'existing'),
                     ]),
                 Section::make('Question File')
                     ->description('Upload the JSON payload. Run a dry run first to preview what would be imported.')
@@ -170,9 +139,6 @@ class ImportQuestions extends Page implements HasSchemas
         $job = new ImportQuestionsJob(
             filePath: $data['json_file'],
             domainId: (int) $data['domain_id'],
-            parentMode: $data['parent_mode'],
-            parentModuleId: isset($data['parent_module_id']) ? (int) $data['parent_module_id'] : null,
-            parentTitle: trim((string) ($data['parent_title'] ?? 'Academic')) ?: 'Academic',
             dryRun: (bool) $data['dry_run'],
             adminUserId: auth()->id(),
             reportKey: $this->reportKey,
