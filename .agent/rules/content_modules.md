@@ -1,5 +1,9 @@
 # 📦 Content Modules & Course Resources
 
+> **Status**: ACTIVE ARCHITECTURAL STANDARD  
+> **Domain**: Course Units, Modules & Material Storage  
+> **Location**: `.agent/rules/content_modules.md`
+
 This standard documents the database schema, business rules, and API integrations for **Content Modules** (lessons, tests, downloads).
 
 ---
@@ -45,7 +49,7 @@ if (!$module->is_active || !$module->domain()->where('is_active', true)->exists(
     abort(404, 'This module is not currently available.');
 }
 ```
-* **Subscription Gating**: Rejects attempts if the authenticated candidate does not hold an active, non-expired subscription for the module's parent domain.
+* **Subscription Gating**: Rejects attempts if the authenticated candidate does not hold an active, non-expired subscription for the module's parent domain. (See `.agent/rules/security_gating.md § 2`).
 
 ---
 

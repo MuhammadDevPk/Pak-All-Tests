@@ -1,11 +1,14 @@
 # .agent/PATTERNS.md — Engineering Patterns & Architectural Standards
 
 > **Status**: STRICT IMPLEMENTATION CONTRACT  
-> **Applicability**: All backend feature development, frontend components, and refactors
+> **Applicability**: All backend feature development, frontend components, and refactors  
+> **Location**: `.agent/PATTERNS.md`
 
 ---
 
 ## 1. The Standardized Laravel Feature Lifecycle
+
+> Cross-cutting principles: Thin Controllers, Dedicated FormRequests, Atomic Transactions — see [`.agent/SYSTEM_RULES.md § 4`](file:///.agent/SYSTEM_RULES.md).
 
 Every new feature, mutation, or API endpoint must strictly traverse the following 5-phase lifecycle:
 
@@ -130,32 +133,27 @@ Every new feature, mutation, or API endpoint must strictly traverse the followin
 
 ---
 
-## 2. The "No Dead Clicks" E2E Verification Rule
+## 2. Interactive UI Affordances & Anti-Patterns
 
-1. **Zero Fake Affordances**: Every interactive visual element (button, icon, tab, link, card action) MUST be backed by a functional implementation.
-2. **Banned Patterns**:
-   - `href="#"` or `href="javascript:void(0)"`
-   - Empty click handlers: `@click=""` or `@click="() => {}"`
-   - Unhandled toast placeholders: `@click="alert('Coming soon')"`
-3. **Completeness Standard**:
-   - If a feature is scheduled for a later sprint, **do not render the button**.
-   - If a button exists, it must either trigger a functional modal, initiate a real API call, or route to an active Inertia view.
+> Canonical rule: No dead clicks — see [`.agent/rules/ui_design.md § 1`](file:///.agent/rules/ui_design.md).
 
-### A. Production Anti-Pattern Catalog (10 Cardinal Sins)
+### Production Anti-Pattern Catalog (10 Cardinal Sins)
 1. **Unread Source Additions**: Adding or altering rules in any governance file without reading the entire file first.
 2. **Silent Catch-and-Log**: Catching an exception and logging it without re-throwing, degrading gracefully, or presenting explicit feedback.
 3. **`env()` Outside `config/`**: Calling `env()` in controllers, models, or services; breaks silently whenever `config:cache` is compiled.
-4. **DDL Drops in Tests**: Running `migrate:fresh` or DDL drops against remote database connections; strictly enforce `DatabaseTransactions`.
+4. **DDL Drops in Tests**: Running `migrate:fresh` or DDL drops against remote database connections; strictly enforce `DatabaseTransactions` (see `.agent/rules/testing_validation.md § 1`).
 5. **Database Queries in Presentation**: Querying models or relations inside a Blade directive or Vue computed property.
 6. **Filament N+1 Lazy Loading**: Defining table columns that traverse relations without `$table->modifyQueryUsing(fn ($q) => $q->with([...]))`.
 7. **Unparameterized `DB::raw()`**: Concatenating variables into raw SQL strings instead of using parameter bindings (`?` or `:binding`).
-8. **Livewire Mass Hydration**: Passing collections or arrays with $>20$ items directly to Livewire component state; use the Cache-Pointer pattern (see §5).
+8. **Livewire Mass Hydration**: Passing collections or arrays with $>20$ items directly to Livewire component state; use the Cache-Pointer pattern (see `.agent/rules/database_performance.md § 4`).
 9. **Client-Trusted Time**: Trusting client timestamps for exam timers or session expiry; server UTC is the sole clock.
 10. **File Extension Naivety**: Validating uploaded documents solely by client extension (`$file->getClientOriginalExtension()`) without verifying MIME magic bytes (`finfo`).
 
 ---
 
 ## 3. Computational Limits & Loop Architecture
+
+> Canonical rule: Zero N+1 / eager-loading discipline — see [`.agent/rules/database_performance.md § 1`](file:///.agent/rules/database_performance.md).
 
 To guarantee sub-millisecond execution and memory-light operation across thousands of concurrent test takers:
 
@@ -182,10 +180,9 @@ return $domains
 ```
 
 ### B. Ban Inner $O(N^2)$ Scans
-* **Never execute database queries inside a loop** (the classic $N+1$ problem).
-* **Never execute in-memory collection searches inside a loop** (e.g. `$items->firstWhere('id', $id)` inside a `foreach`).
-* **The Associative Map Lookup Standard ($O(1)$)**:
-  Always index collections by key before looping:
+* Never execute database queries inside a loop.
+* Never execute in-memory collection searches inside a loop (e.g. `$items->firstWhere('id', $id)` inside a `foreach`).
+* **The Associative Map Lookup Standard ($O(1)$)**: Always index collections by key before looping:
   ```php
   // ❌ BANNED: O(N * M) quadratic scan
   foreach ($questions as $question) {
@@ -201,39 +198,25 @@ return $domains
 
 ---
 
-## 4. Remote Database & Connection Pooling Transaction Laws (Sub-200ms Mandate)
+## 4. Remote Database & Connection Pooling Transaction Laws
 
-This application connects to remote PostgreSQL infrastructure (Supabase PgBouncer on port `6543`). WAN query latency averages 50–80ms per round-trip.
+> Canonical rule: Sub-200ms transaction law — see [`.agent/rules/database_performance.md § 2`](file:///.agent/rules/database_performance.md).
 
-1. **The Sub-200ms Transaction Rule**: Database transactions (`DB::transaction(...)`) must NEVER hold locks for longer than 200 milliseconds.
-2. **Ban Sequential Loop Inserts**: Never execute `$model->save()` or `$relation->attach()` inside a `foreach` loop within a transaction.
-3. **Multi-Row Bulk Execution**:
-   - Collect rows into an array in memory.
-   - Execute a single multi-row `Model::insert($data)` or `DB::table(...)->insertOrIgnore($pivotData)` to collapse 100 queries into 1 round-trip.
-   - For mass association, use `syncWithoutDetaching()` or `insertOrIgnore` to prevent primary/foreign key conflict crashes.
+All multi-record insertions and pivot attachments must use bulk `insert()` or `insertOrIgnore()` to guarantee all transaction locks complete in under 200ms across remote Supabase connections.
 
 ---
 
-## 5. Filament & Livewire State Hydration Protection (Cache-Pointer Pattern)
+## 5. Filament & Livewire State Hydration Protection
 
-Livewire serializes its entire component state into JSON on every network round-trip. Storing collections or large arrays (>20 items) inside component properties causes payload bloat (100KB+), UI freezes, and `CorruptComponentPayloadException`.
+> Canonical pattern: Cache-Pointer pattern — see [`.agent/rules/database_performance.md § 4`](file:///.agent/rules/database_performance.md).
 
-1. **The Cache-Pointer Standard**:
-   When previewing, generating, or processing multi-record datasets:
-   - Store the heavy array in temporary cache:
-     ```php
-     $batchId = (string) Str::uuid();
-     Cache::put("import_batch_{$batchId}", $heavyData, now()->addMinutes(30));
-     ```
-   - In Livewire/Filament form state, store **ONLY the 36-byte UUID `$batchId`**.
-   - Read or paginate from the cache on demand.
-2. **Modal Memory Discipline**: Modals must never render more than 10–15 items in a single view window without pagination or virtual windowing.
+Always store heavy datasets in Redis under a UUID key and pass only the 36-byte UUID `$batchId` into Livewire form state.
 
 ---
 
 ## 6. PostgreSQL Constraint Integrity & Nullable Column Safety
 
-PostgreSQL enforces strict standard SQL constraint evaluations.
+PostgreSQL enforces strict standard SQL constraint evaluations:
 
 1. **The Empty String vs NULL Law**:
    - In PostgreSQL, multiple `NULL` values in a `UNIQUE` column are allowed.
@@ -424,6 +407,8 @@ Never invoke external notification APIs directly inside database transactions. W
 
 ## 13. Testing Rigor & Verification Standards
 
+> Canonical rule: Pest test transaction rule — see [`.agent/rules/testing_validation.md § 1`](file:///.agent/rules/testing_validation.md).
+
 ### A. Boundary Condition Testing
 Every feature test for timed tests or grading must test 3 critical points:
 1. **0 Seconds**: Immediately after start.
@@ -447,15 +432,5 @@ Every feature test for timed tests or grading must test 3 critical points:
 
 ## 14. Code Hygiene, Maintainability & Craftsmanship
 
-### A. Strict Typing & Class Sizing
-- `declare(strict_types=1);` must head every newly created PHP file.
-- **Method Length Target**: Maximum 20 lines. Refactor longer methods into dedicated private helper functions or Action classes.
-- **Class Length Target**: Maximum 200 lines.
-- **TypeScript Hygiene**: In any client-side JavaScript/TypeScript code, `any` is strictly prohibited without an inline architectural justification comment.
-
-### B. Clean Naming & Comments
-- Explicit model naming: `Domain` (never `Dom`), `UserSubscription` (never `Sub`), `QuestionBank` (never `QB`).
-- Collections must always be plural (`$questions`, `$modules`).
-- **Comments**: Write comments explaining **WHY** an unconventional decision was made, never describing **WHAT** obvious code does.
-- Zero dead code: Zero commented-out blocks, zero `dump()`, zero `dd()`, and zero untracked `TODO`s.
-
+> Canonical principles: Clean Code, Strict Equality, and Zero Dynamic Properties — see [`.agent/SYSTEM_RULES.md § 4`](file:///.agent/SYSTEM_RULES.md).  
+> Canonical principle: Frontend language contract (Pure JavaScript in Vue) — see [`.agent/SYSTEM_RULES.md § 6`](file:///.agent/SYSTEM_RULES.md).

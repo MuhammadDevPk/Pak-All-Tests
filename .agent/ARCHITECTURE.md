@@ -185,25 +185,26 @@ app/
 
 ---
 
-## 6. Sub-Architectural Rule Index (`.agents/rules/`)
+## 6. Sub-Architectural Rule Index (`.agent/rules/`)
 
-This architecture is governed by 13 detailed sub-architectural specifications located in [`.agents/rules/`](file:///.agents/rules/):
+This architecture is governed by cross-cutting principles in [`.agent/SYSTEM_RULES.md`](file:///.agent/SYSTEM_RULES.md), visual rules in [`.agent/UI_REFERENCE.md`](file:///.agent/UI_REFERENCE.md), and 12 detailed sub-architectural specifications located in [`.agent/rules/`](file:///.agent/rules/):
 
 | Rule File | Scope & Mandatory Standards |
 | :--- | :--- |
-| [`.agents/rules/senior_architect_principles.md`](file:///.agents/rules/senior_architect_principles.md) | Radical simplicity (YAGNI), pure JavaScript in Vue (`<script setup>`), zero assumptions, sub-second execution. |
-| [`.agents/rules/ui_design_guidelines.md`](file:///.agents/rules/ui_design_guidelines.md) | Academic Rigor & Military Precision tone, Anti-AI visual laws, mathematical nested radius formula ($R_{\text{inner}} = \max(0, R_{\text{outer}} - P)$). |
-| [`.agents/rules/agent_architecture_guidelines.md`](file:///.agents/rules/agent_architecture_guidelines.md) | Socratic AI Tutor SSE streaming, intent routing, tool calling limits (max 2 rounds), zero correct answer leakage, PMA/ISSB/CSS/MDCAT institutional knowledge. |
-| [`.agents/rules/user_subscriptions.md`](file:///.agents/rules/user_subscriptions.md) | EasyPaisa / JazzCash / Bank Transfer payment state machine (`pending` $\rightarrow$ `active`/`rejected`/`expired`), WhatsApp Cloud API notifications. |
-| [`.agents/rules/domains.md`](file:///.agents/rules/domains.md) | PostgreSQL `ltree` path format, GiST index, sub-millisecond tree updates, Redis caching hooks. |
-| [`.agents/rules/domain_flows.md`](file:///.agents/rules/domain_flows.md) | Multi-phase exam workflows, prerequisites dependency evaluation, SDUI phase stepper synthesis. |
-| [`.agents/rules/content_modules.md`](file:///.agents/rules/content_modules.md) | Content module polymorphic types (`mcq_test`, `pdf_resource`, `subjective_prompt`), resource linkage, file handling. |
-| [`.agents/rules/question_bank.md`](file:///.agents/rules/question_bank.md) | Question schema, JSONB options, answer key security, pgvector semantic search embedding storage. |
-| [`.agents/rules/database_performance.md`](file:///.agents/rules/database_performance.md) | Sub-millisecond queries, single round-trip query batching, indexing strategies, zero N+1. |
-| [`.agents/rules/security_gating.md`](file:///.agents/rules/security_gating.md) | Controller-level `SubscriptionManager` gating, Fortify auth, tenant isolation, CSRF protection. |
-| [`.agents/rules/testing_validation.md`](file:///.agents/rules/testing_validation.md) | Pest test suite execution, `DatabaseTransactions` (banning `migrate:fresh` in tests), zero dynamic properties. |
-| [`.agents/rules/sdui_blueprints.md`](file:///.agents/rules/sdui_blueprints.md) | SDUI JSON schema definitions, component registry contracts, server-side layout compilation. |
-| [`.agents/rules/mistakes_and_descriptions.md`](file:///.agents/rules/mistakes_and_descriptions.md) | Catalog of known engineering pitfalls and historical traps to avoid. |
+| [`.agent/SYSTEM_RULES.md`](file:///.agent/SYSTEM_RULES.md) | Persona, Radical simplicity (YAGNI), zero assumptions, clean code hygiene, battle-scarred reflexes, pure JavaScript in Vue (`<script setup>`). |
+| [`.agent/UI_REFERENCE.md`](file:///.agent/UI_REFERENCE.md) | Design token memory, provisional palettes, typography, and reference screenshot registry. |
+| [`.agent/rules/ui_design.md`](file:///.agent/rules/ui_design.md) | Academic Rigor & Military Precision tone, Anti-AI visual laws, no dead clicks, mathematical nested radius formula ($R_{\text{inner}} = \max(0, R_{\text{outer}} - P)$). |
+| [`.agent/rules/ai_tutor.md`](file:///.agent/rules/ai_tutor.md) | Socratic AI Tutor SSE streaming, intent routing, tool calling limits (max 2 rounds), zero correct answer leakage, PMA/ISSB/CSS/MDCAT institutional domain standards. |
+| [`.agent/rules/user_subscriptions.md`](file:///.agent/rules/user_subscriptions.md) | EasyPaisa / JazzCash / Bank Transfer payment state machine (`pending` $\rightarrow$ `active`/`rejected`/`expired`), WhatsApp Cloud API notifications. |
+| [`.agent/rules/domains.md`](file:///.agent/rules/domains.md) | PostgreSQL `ltree` path format, GiST index, sub-millisecond tree updates, Redis caching hooks. |
+| [`.agent/rules/domain_flows.md`](file:///.agent/rules/domain_flows.md) | Multi-phase exam workflows, prerequisites dependency evaluation, SDUI phase stepper synthesis. |
+| [`.agent/rules/content_modules.md`](file:///.agent/rules/content_modules.md) | Content module polymorphic types (`mcq_test`, `pdf_resource`, `subjective_prompt`), resource linkage, file handling. |
+| [`.agent/rules/question_bank.md`](file:///.agent/rules/question_bank.md) | Question schema, JSONB options, answer-key scrubbing, pgvector semantic search embedding storage. |
+| [`.agent/rules/database_performance.md`](file:///.agent/rules/database_performance.md) | Sub-millisecond queries, single round-trip query batching, indexing strategies, zero N+1, Sub-200ms transaction law, Cache-Pointer pattern. |
+| [`.agent/rules/security_gating.md`](file:///.agent/rules/security_gating.md) | Controller-level `SubscriptionManager` gating, Fortify auth, tenant isolation, CSRF protection. |
+| [`.agent/rules/testing_validation.md`](file:///.agent/rules/testing_validation.md) | Pest test suite execution, `DatabaseTransactions` (banning `migrate:fresh` in tests), zero dynamic properties. |
+| [`.agent/rules/sdui_blueprints.md`](file:///.agent/rules/sdui_blueprints.md) | SDUI JSON schema definitions, component registry contracts, server-side layout compilation. |
+| [`.agent/rules/mistakes.md`](file:///.agent/rules/mistakes.md) | Catalog of 11 known engineering pitfalls and historical root-cause analyses (RCA). |
 
 ---
 

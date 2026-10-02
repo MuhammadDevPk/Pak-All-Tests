@@ -10,6 +10,14 @@
 
 This log records the 10 most critical architectural decisions, infrastructure fixes, and operational milestones shaping the active codebase.
 
+### Entry 12 — 2026-10-03: Governance Layer Consolidation & Deduplication Refactor
+- **Action**: Consolidated dual governance directories (`.agents/` into canonical `.agent/`), eliminated 12 cross-cutting duplicate rules via single canonical homes, created `SYSTEM_RULES.md` and `UI_REFERENCE.md`, migrated all 12 rule files to `.agent/rules/`, and established the 4-tier Load-Tier reading system in root `AGENTS.md`.
+- **Impact**: Slashes per-turn agent token consumption from 40–60k to tier-based reads, eliminates rule contradiction risks, and hardens the pure JavaScript Vue standard and version pins while preserving 100% of scar tissue (all 11 RCAs).
+- **Files Changed**: `AGENTS.md`, `.agent/AGENT.md`, `.agent/ARCHITECTURE.md`, `.agent/PATTERNS.md`, `.agent/MEMORY.md`, `.agent/SYSTEM_RULES.md`, `.agent/UI_REFERENCE.md`, `.agent/rules/*.md`.
+- **Blast Radius**: Autonomous agents, subagent prompt injection, governance rules, and context loading budgets.
+- **Rollback Path**: Revert governance refactor via `git checkout HEAD~1 -- AGENTS.md .agent/`.
+- **Lessons**: A split directory structure (`.agent/` vs `.agents/`) causes rule divergence; centralized load-tiered governance ensures deterministic senior architect behavior on every turn.
+
 ### Entry 11 — 2026-10-03: Governance Hardening & Engineering Resilience Protocol
 - **Action**: Codified exhaustive production failure mode mitigations, 12-point Pre-Conclusion Gate, concurrency/locking contracts, OWASP security protections, queue worker isolation, and data lifecycle compliance across the governance layer.
 - **Impact**: Eliminates high-severity race conditions (double submissions, duplicate webhook processing), prevents PgBouncer statement crashes and FastCGI buffer overflow, enforces sub-200ms transaction boundaries, and guarantees zero PII/answer-key leakage.
@@ -65,7 +73,7 @@ This log records the 10 most critical architectural decisions, infrastructure fi
 
 ### 1. Remote Database Latency & Test Execution Strategy
 - **Quirk**: The primary PostgreSQL database is hosted on remote Supabase infrastructure. Round-trip network latency can reach 50–150ms per query.
-- **Rule**: `tests/Pest.php` strictly utilizes `Illuminate\Foundation\Testing\DatabaseTransactions` instead of `RefreshDatabase`. **Never run `php artisan migrate:fresh` inside tests**, as full DDL drops over remote connections will cause tests to take 10+ minutes or hit connection timeouts.
+- **Rule**: `tests/Pest.php` strictly utilizes `Illuminate\Foundation\Testing\DatabaseTransactions` instead of `RefreshDatabase`. **Never run `php artisan migrate:fresh` inside tests**, as full DDL drops over remote connections will cause tests to take 10+ minutes or hit connection timeouts. (Canonical rule: Pest test transaction rule — see [`.agent/rules/testing_validation.md § 1`](file:///.agent/rules/testing_validation.md)).
 
 ### 2. Supabase PgBouncer & Emulated Prepared Statements
 - **Quirk**: Supabase port `6543` operates in transaction pooling mode. PgBouncer destroys server-side named prepared statements (`pdo_stmt_XXXXX`) when pooling worker connections.
@@ -97,11 +105,11 @@ This log records the 10 most critical architectural decisions, infrastructure fi
 
 ### 7. Livewire Modal Payload Size & Cache-Pointer Architecture
 - **Quirk**: Livewire serializes component properties on every client-server exchange. Passing large datasets (>20 items) into Filament modal state degrades UI responsiveness and risks payload corruption.
-- **Requirement**: Always store temporary bulk records in cache and pass only the UUID `batch_id` into Livewire form state.
+- **Requirement**: Always store temporary bulk records in cache and pass only the UUID `batch_id` into Livewire form state. (Canonical pattern: Cache-Pointer pattern — see [`.agent/rules/database_performance.md § 4`](file:///.agent/rules/database_performance.md)).
 
 ### 8. Remote PostgreSQL PgBouncer Bulk Insert Performance
 - **Quirk**: Supabase PgBouncer (port 6543) incurs 50–80ms round-trip latency per query. Executing loops of individual `INSERT`s or pivot `attach()` calls inside a transaction causes long-lived locks (>10s) and pool exhaustion.
-- **Requirement**: Multi-record mutations must strictly use multi-row bulk `insert` and `insertOrIgnore` to guarantee all transaction locks complete in under 200 milliseconds.
+- **Requirement**: Multi-record mutations must strictly use multi-row bulk `insert` and `insertOrIgnore` to guarantee all transaction locks complete in under 200 milliseconds. (Canonical rule: Sub-200ms transaction law — see [`.agent/rules/database_performance.md § 2`](file:///.agent/rules/database_performance.md)).
 
 ---
 

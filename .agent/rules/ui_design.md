@@ -1,10 +1,31 @@
 # 🎨 Senior UI/UX Design Guidelines & Anti-AI Fingerprint Standards
 
+> **Status**: ACTIVE ARCHITECTURAL STANDARD  
+> **Domain**: Visual System, Responsive Ergonomics & Component Patterns  
+> **Location**: `.agent/rules/ui_design.md`
+
 This document establishes the mandatory visual, architectural, and responsive design guidelines for all frontend code, Vue 3 components, and Server-Driven UI (SDUI) templates in **Pak-All-Tests**.
 
 ---
 
-## 1. 🚫 Eradicate the "AI Visual Fingerprint" (Known AI UI Symptoms)
+## 1. 🚫 Anti-AI Visual Laws & Eradicating the "AI Visual Fingerprint"
+
+### A. The 4 Anti-AI Visual Laws (Canonical Rules)
+
+1. **No Generic Violet Gradients**: Ban saturated violet-to-cyan mesh gradients (`bg-gradient-to-r from-purple-600 to-indigo-600`) that scream generic template code. Use deliberate, high-contrast, purpose-built palettes (emerald, deep zinc, slate, amber, military olive).
+2. **No Cardification of Plain Text**: Do NOT wrap every isolated paragraph or sentence in an elevated white card with heavy drop shadows. Group related functional items into disciplined semantic containers with subtle border strokes (`border border-border/60`).
+3. **Exactly One Solid Action CTA per View**: Every screen, section, or modal must have exactly **ONE** primary solid button. Secondary actions must be ghost, outline, or text links. Prevent visual decision paralysis.
+4. **Zero Dead Clicks (Canonical Rule)**:
+   - Every interactive visual element (button, navigation item, icon, tab, link, card action) MUST be backed by a functional implementation.
+   - **Banned Patterns**:
+     - `href="#"` or `href="javascript:void(0)"`
+     - Empty click handlers: `@click=""` or `@click="() => {}"`
+     - Unhandled placeholders: `@click="alert('Coming soon')"`
+   - **Completeness Standard**:
+     - If a feature is scheduled for a later sprint, **do not render the button**.
+     - If a button exists, it must either trigger a functional modal, initiate a real API call, or route to an active Inertia view.
+
+### B. Known AI Visual Symptoms & Senior Standards
 
 AI models have developed a recognizable, generic visual fingerprint due to training on average web templates. **Every UI component in this repository must actively reject these tropes:**
 
@@ -81,7 +102,7 @@ Every layout, SDUI renderer, player, and administrative page **MUST be completel
 
 ### Critical Mobile & Responsive Rules:
 1. **Touch Targets**: All buttons, question navigation pills, radio choices, and tab selectors must maintain a minimum hit area of **$44\times44\text{px}$** or adequate spacing (`gap-2` to `gap-3`) on touch devices.
-2. **Horizontal Overflow Ergonomics**: When rendering multi-phase tabs or steppers on small screens, enable horizontal smooth scrolling with hidden ugly scrollbars:
+2. **Horizontal Overflow Ergonomics**: When rendering multi-phase tabs or steppers on small screens, enable horizontal smooth scrolling with hidden scrollbars:
    ```html
    <div class="flex overflow-x-auto scrollbar-none pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
    ```
@@ -132,3 +153,8 @@ When writing or reviewing any frontend component, follow this sequential 3-pass 
    - Test mobile viewport (375px) and ultra-wide viewport (1920px).
    - Add hover, focus-visible ring, and active scale states (`transition-all duration-150 active:scale-[0.99]`).
    - Verify keyboard accessibility and clear visual focus rings (`focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none`).
+
+---
+
+## 7. Frontend Language Contract
+- All Vue components must use **Pure JavaScript** in `<script setup>`. No TypeScript. (See `.agent/SYSTEM_RULES.md § 6`).

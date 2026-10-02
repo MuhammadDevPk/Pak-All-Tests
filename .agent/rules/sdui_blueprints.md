@@ -1,5 +1,11 @@
 # Server-Driven UI (SDUI) & Dynamic Blueprint Standards
 
+> **Status**: ACTIVE ARCHITECTURAL STANDARD  
+> **Domain**: Dynamic Schema Blueprinting & Component Synthesis  
+> **Location**: `.agent/rules/sdui_blueprints.md`
+
+---
+
 ## 1. Core Architecture
 We use a **hybrid SDUI layout system**. The visual layout, structure, tabs, and columns of the candidate dashboard are defined as a JSON schema in the `domain_flows` database table, while the individual interactive items (tests, practice sets, documents) are fetched dynamically from the `content_modules` table.
 

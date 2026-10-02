@@ -1,5 +1,9 @@
 # 💳 User Subscriptions & Payment Gating
 
+> **Status**: ACTIVE ARCHITECTURAL STANDARD  
+> **Domain**: Access Entitlements, Manual Verification & Payment Workflows  
+> **Location**: `.agent/rules/user_subscriptions.md`
+
 This standard documents the database schema, subscription state machine, access gating workflows, and future commercial integrations for candidate course access.
 
 ---
@@ -28,6 +32,9 @@ All subscription transitions are handled by [`app/Services/SubscriptionManager.p
 ---
 
 ## 3. Access Gating Architecture
+
+> Canonical pattern: Subscription gating pattern — see `.agent/rules/security_gating.md § 2`.
+
 Gating is enforced at the controller level via `SubscriptionManager`:
 * **Domain Dashboard** (`GET /d/{domainSlug}`): Redirects to `Subscription/PendingOrInactive` if not active.
 * **Content Module Fetch** (`GET /api/modules/{module}`): Returns 403 Forbidden if not active.

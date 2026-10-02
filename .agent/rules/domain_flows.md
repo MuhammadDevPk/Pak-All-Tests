@@ -1,5 +1,9 @@
 # ⚙️ Domain Flows & SDUI Templates
 
+> **Status**: ACTIVE ARCHITECTURAL STANDARD  
+> **Domain**: Server-Driven UI (SDUI) Templates & Flow Pipelines  
+> **Location**: `.agent/rules/domain_flows.md`
+
 This standard documents the database schema, business rules, and template structures for **Domain Flows** (Server-Driven UI configurations).
 
 ---
@@ -20,7 +24,7 @@ The `DomainFlow`'s `ui_schema` holds the layout component configuration. When a 
 1. The server loads the active `DomainFlow` and its `ui_schema`.
 2. The `SduiPayloadTransformer` scans the layout tree recursively.
 3. For any node containing a `moduleId` or `moduleQuery`, the transformer queries the database for corresponding active content modules.
-4. The transformer injects the database attributes (title, slug, action labels, PDF file metadata) directly into the layout payload before delivering it to the Vue frontend.
+4. The transformer injects the database attributes (title, slug, action labels, PDF file metadata) directly into the layout payload before delivering it to the Vue frontend. (See `.agent/rules/sdui_blueprints.md` for merging contracts).
 
 ---
 

@@ -1,5 +1,11 @@
 # Security Gating & Route Protection Standards
 
+> **Status**: ACTIVE ARCHITECTURAL STANDARD  
+> **Domain**: Route Protection, Authorization & Access Gating  
+> **Location**: `.agent/rules/security_gating.md`
+
+---
+
 ## 1. Active Status Validation (Gating)
 We implement two-tier gating checks to protect inactive resource routes from bypass attempts:
 1. **Frontend Hydration**: The SDUI payload hydrator only queries and populates modules where `is_active = true`.
@@ -13,7 +19,8 @@ if (!$module->is_active || !$module->domain()->where('is_active', true)->exists(
 
 ---
 
-## 2. Subscription Restrictions
+## 2. Subscription Restrictions (Canonical Pattern)
+
 Any route displaying premium content or serving resource files must verify subscription states against:
 * **Active Status**: `status = 'active'`
 * **Expiration Gating**: Checks that `expires_at` is either null (lifetime access) or in the future:
@@ -25,6 +32,7 @@ $user->subscriptions()
         $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
     });
 ```
+* **IDOR Protection**: Never trust a client-supplied `domain_id` or `module_id`. Re-resolve active access server-side via `SubscriptionManager::hasActiveAccess($user, $domain)`. If unauthorized, return HTTP 404 (or redirect to `/d/{domainSlug}` which renders `Subscription/PendingOrInactive.vue`) rather than exposing resource enumeration endpoints.
 
 ---
 

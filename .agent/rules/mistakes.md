@@ -1,5 +1,9 @@
 # ⚠️ Known Architectural Mistakes, Anti-Patterns & Root Causes
 
+> **Status**: IMMUTABLE HISTORICAL SCAR TISSUE  
+> **Applicability**: All engineering workflows, code reviews, and autonomous agent tasks  
+> **Location**: `.agent/rules/mistakes.md`
+
 This document tracks real-world mistakes, root cause analyses (RCA), and defensive engineering rules to ensure they are **never repeated** across future tasks and agent sessions.
 
 ---
@@ -177,7 +181,7 @@ Wrapping a `foreach` loop of 50–100 individual Eloquent model creates and pivo
 
 ### ✅ The Fix & Prevention Rule
 * **Rule**: NEVER execute individual sequential insert queries inside a loop on remote databases.
-* **Bulk Multi-Row SQL Insert**: Prepare datasets in memory and execute a single multi-row `insert` or `upsert`:
+* **Bulk Multi-Row SQL Insert**: Prepare datasets in memory and execute a single multi-row `insert` or `upsert` (Canonical rule: Sub-200ms transaction law — see `.agent/rules/database_performance.md § 2`):
 ```php
 // ✅ CORRECT: Multi-row bulk insert in a single round-trip (<150ms)
 DB::transaction(function () use ($validatedRows, $targetModuleIds) {
@@ -206,7 +210,7 @@ Livewire serializes its entire component state on every single network round-tri
 
 ### ✅ The Fix & Prevention Rule
 * **Rule**: Never store large multi-record datasets directly in Livewire form/modal state.
-* **The Cache-Pointer Pattern**: Store the heavy payload in a short-lived cache (Redis/Database), passing only a 36-character UUID `batch_id` to the Livewire component:
+* **The Cache-Pointer Pattern**: Store the heavy payload in a short-lived cache (Redis/Database), passing only a 36-character UUID `batch_id` to the Livewire component (Canonical pattern: Cache-Pointer pattern — see `.agent/rules/database_performance.md § 4`):
 ```php
 // ✅ CORRECT: Store in cache, pass pointer to Livewire
 $batchId = (string) Str::uuid();
@@ -269,4 +273,3 @@ $question = QuestionBank::createQuietly($data);
 $question->modules()->attach($moduleIds);
 VectorizeDomainKnowledgeJob::dispatch(questionId: $question->id);
 ```
-

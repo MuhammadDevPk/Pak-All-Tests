@@ -1,5 +1,9 @@
 # 📂 Domains & Categories Reference
 
+> **Status**: ACTIVE ARCHITECTURAL STANDARD  
+> **Domain**: Category Hierarchies & Syllabus Trees (PostgreSQL `ltree`)  
+> **Location**: `.agent/rules/domains.md`
+
 This standard documents the database schema, business rules, and hierarchical logic for **Domains** in the application.
 
 ---
@@ -7,10 +11,10 @@ This standard documents the database schema, business rules, and hierarchical lo
 ## 1. Database Schema
 * **Table**: `domains`
 * **Primary Key**: `id` (bigint, auto-increment)
-* **parent_id**: Links to self (`domains.id`) for sub-domain mapping. Restructured to set null on parent deletion.
+* **parent_id**: Links to self (`domains.id`) for sub-domain mapping. Nullable on parent deletion.
 * **name**: Human-readable title (e.g., *Armed Forces*, *PMA Long Course Initial*).
 * **slug**: Unique string identifier used for clean routing (e.g. `pma-initial-course`).
-* **code**: Unique shorthand developer identifier (e.g. `PMA_INITIAL`).
+* **code**: Unique shorthand developer identifier (e.g. `PMA_INITIAL`). Sanitized to `null` if empty.
 * **is_active**: Boolean flag to enable/disable candidate visibility (default: `true`, indexed).
 * **path**: PostgreSQL `ltree` column representing the full ancestral hierarchy (e.g. `1.12.124`).
 
@@ -35,4 +39,4 @@ AND    id != ?
 ## 3. Cache & Performance Optimization
 * **CachesTableData Trait**: The `Domain` model implements local Redis caching. 
 * **Invalidation Policy**: Any CRUD operation (`created`, `updated`, `deleted`, `saved`) automatically flushes the cache key to guarantee subsequent request payloads receive fresh data immediately.
-* **Avoid N+1 Queries**: Eager-load or batch queries when rendering hierarchies in admin lists.
+* **Avoid N+1 Queries**: Eager-load or batch queries when rendering hierarchies in admin lists. (See `.agent/rules/database_performance.md § 1`).

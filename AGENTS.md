@@ -2,68 +2,68 @@
 
 > **Status**: MANDATORY PRODUCTION CONTRACT — ALWAYS ACTIVE  
 > **Applicability**: All AI coding agents, pair programmers, and autonomous subagents  
-> **Workspace**: Pak-All-Tests (Laravel 13+ • Vue 3 / Inertia 3 • PostgreSQL 16+ with pgvector & ltree)
+> **Workspace**: Pak-All-Tests (Laravel 13 • Inertia 3 • Vue 3.5 • PostgreSQL 16+ with pgvector & ltree)
 
 ---
 
 ## ⚡ SYSTEM INITIALIZATION PROTOCOL (Mandatory Step 0)
 
-Before executing ANY file edit, running modifying terminal commands, generating new features, or presenting solutions to the user, you MUST silently inspect and read the governance files located in `.agent/` and `.agents/rules/`:
+Before executing ANY file edit, running modifying terminal commands, generating new features, or presenting solutions to the user, you MUST consult the governance files according to the **Load Tiers** below.
 
 ### 1. Core Operational Governance (`.agent/`)
-1. [`.agent/AGENT.md`](file:///.agent/AGENT.md) — Detected technology stack, Pakistani market & exam standards, anti-AI design laws, and the mandatory auto-update protocol.
+1. [`.agent/AGENT.md`](file:///.agent/AGENT.md) — Detected technology stack, runtime specs, and mandatory auto-update protocol.
 2. [`.agent/ARCHITECTURE.md`](file:///.agent/ARCHITECTURE.md) — Complete reverse-engineered architectural blueprint of this codebase (directories, models, services, controllers, Filament resources, jobs).
-3. [`.agent/PATTERNS.md`](file:///.agent/PATTERNS.md) — Standardized Laravel Feature Lifecycle (FormRequest → Thin Controller → Service/Transaction → Inertia/SDUI → Pest Test), loop limits, and the "No Dead Clicks" law.
-4. [`.agent/MEMORY.md`](file:///.agent/MEMORY.md) — Active rolling memory log of project decisions, known environment quirks, and technical debt.
+3. [`.agent/PATTERNS.md`](file:///.agent/PATTERNS.md) — Standardized Laravel Feature Lifecycle (FormRequest → Thin Controller → Service/Transaction → Inertia/SDUI → Pest Test), loop limits, and anti-patterns.
+4. [`.agent/MEMORY.md`](file:///.agent/MEMORY.md) — Active rolling memory log of project decisions, known environment quirks, and hardening directives.
+5. [`.agent/SYSTEM_RULES.md`](file:///.agent/SYSTEM_RULES.md) — Cross-cutting engineering principles, senior architect mandate, YAGNI, zero assumptions, and clean code standards.
+6. [`.agent/UI_REFERENCE.md`](file:///.agent/UI_REFERENCE.md) — Persistent visual memory, design tokens, typography, and reference screenshot registry.
 
-### 2. Domain & Sub-Architectural Rulebook (`.agents/rules/`)
-* [`.agents/rules/senior_architect_principles.md`](file:///.agents/rules/senior_architect_principles.md) — Radical simplicity, Pure JavaScript Vue mandate, zero assumptions.
-* [`.agents/rules/ui_design_guidelines.md`](file:///.agents/rules/ui_design_guidelines.md) — Academic Rigor & Military Precision, anti-AI visual fingerprint, mathematical nested radius.
-* [`.agents/rules/agent_architecture_guidelines.md`](file:///.agents/rules/agent_architecture_guidelines.md) — Socratic AI Tutor, SSE streaming protocol, intent routing, PMA/ISSB/CSS/MDCAT institutional knowledge.
-* [`.agents/rules/user_subscriptions.md`](file:///.agents/rules/user_subscriptions.md) — EasyPaisa / JazzCash payment gating, TRX verification queue, WhatsApp Cloud API notifications.
-* [`.agents/rules/domains.md`](file:///.agents/rules/domains.md) & [`.agents/rules/domain_flows.md`](file:///.agents/rules/domain_flows.md) — PostgreSQL `ltree` hierarchies, SDUI page layout compilation.
-* [`.agents/rules/content_modules.md`](file:///.agents/rules/content_modules.md) & [`.agents/rules/question_bank.md`](file:///.agents/rules/question_bank.md) — Content nodes, MCQ players, test session state machines.
-* [`.agents/rules/database_performance.md`](file:///.agents/rules/database_performance.md) — Sub-millisecond queries, indexing strategies, zero N+1.
-* [`.agents/rules/security_gating.md`](file:///.agents/rules/security_gating.md) & [`.agents/rules/testing_validation.md`](file:///.agents/rules/testing_validation.md) — Route guards, Pest `DatabaseTransactions`.
-* [`.agents/rules/mistakes_and_descriptions.md`](file:///.agents/rules/mistakes_and_descriptions.md) — Anti-patterns and known historical traps.
-
-Failure to review these files before writing code constitutes an immediate governance breach.
-
+### 2. Domain & Sub-Architectural Rulebook (`.agent/rules/`)
+* [`.agent/rules/domains.md`](file:///.agent/rules/domains.md) & [`.agent/rules/domain_flows.md`](file:///.agent/rules/domain_flows.md) — PostgreSQL `ltree` hierarchies, SDUI page layout compilation.
+* [`.agent/rules/content_modules.md`](file:///.agent/rules/content_modules.md) & [`.agent/rules/question_bank.md`](file:///.agent/rules/question_bank.md) — Content nodes, MCQ players, test session state machines, answer-key scrubbing.
+* [`.agent/rules/user_subscriptions.md`](file:///.agent/rules/user_subscriptions.md) & [`.agent/rules/security_gating.md`](file:///.agent/rules/security_gating.md) — EasyPaisa / JazzCash payment gating, TRX verification queue, route guards.
+* [`.agent/rules/database_performance.md`](file:///.agent/rules/database_performance.md) — Sub-millisecond queries, indexing strategies, zero N+1, Sub-200ms transaction law, Cache-Pointer pattern.
+* [`.agent/rules/testing_validation.md`](file:///.agent/rules/testing_validation.md) — Pest test execution, `DatabaseTransactions`, zero dynamic properties.
+* [`.agent/rules/ai_tutor.md`](file:///.agent/rules/ai_tutor.md) — Socratic AI Tutor, SSE streaming protocol, intent routing, PMA/ISSB/CSS/MDCAT institutional domain standards.
+* [`.agent/rules/ui_design.md`](file:///.agent/rules/ui_design.md) — Academic Rigor & Military Precision, anti-AI visual fingerprint, nested radius, no dead clicks.
+* [`.agent/rules/mistakes.md`](file:///.agent/rules/mistakes.md) — Anti-patterns and 11 historical root-cause analyses (RCA).
 
 ---
 
-## 🏛️ Senior Laravel Full-Stack Architect Persona
+## 📚 Load Tiers (Read Discipline)
 
-In every code change, migration drafting, model definition, refactor, or test creation, operate strictly as a **Seasoned Senior Lead Architect & Principal Engineer** adhering to:
+Not every governance file is read on every turn. Load only what the task requires to conserve context and prevent rule confusion.
 
-### 1. Modern Laravel Clean Architecture
-* **Thin Controllers**: Controllers must never execute direct raw database queries, complex mutations, or multi-step business logic. Controllers only orchestrate: validate via dedicated `FormRequest`, delegate to a dedicated `Service` or `Action`, and return an Inertia/JSON response.
-* **Dedicated FormRequests**: All input validation must reside in dedicated `App\Http\Requests` classes. No inline `$request->validate()` in controllers.
-* **Dedicated Service Layer**: Complex business workflows (SDUI generation, subscriptions, AI streaming, question vectorization) belong in `App\Services` with strict return types.
-* **Database Transactions**: Any state mutation spanning more than a single model update MUST be wrapped in `DB::transaction(...)` to guarantee atomicity.
-* **Early Returns & Bouncer Pattern**: Eliminate nested `if/else` ladders. Validate and guard preconditions early using early returns, `abort_if()`, or dedicated policies.
+**Tier 1 — ALWAYS loaded on every turn:**
+- `AGENTS.md` (this file)
 
-### 2. Strict Coding Hygiene & Zero-Debt Standard
-* **Strict Equality**: Always use strict comparison (`===`, `!==`). Never use loose comparisons (`==`, `!=`).
-* **Zero Unread / Unused Variables**: Never declare unused imports, variables, arguments, or orphaned mock objects.
-* **Zero Dynamic Properties in Tests**: In Pest/PHPUnit tests, never assign dynamic `$this->variable` properties that trigger PHP 8.2+ deprecation notices. Use typed helper functions, closures, or class properties.
-* **Radical Simplicity**: Write the minimum amount of idiomatic, clean code required to solve the problem. Avoid speculative over-engineering, unneeded abstractions, or 4x boilerplate.
+**Tier 2 — Loaded when the task involves writing, reviewing, or refactoring code:**
+- `.agent/SYSTEM_RULES.md`
+- `.agent/PATTERNS.md`
+- `.agent/rules/mistakes.md`
 
-### 3. Battle-Scarred Senior Reflexes (Hardening Addendum)
+**Tier 3 — Loaded only when the task touches the corresponding subsystem:**
+- Touching `ltree` or domain hierarchy → `.agent/rules/domains.md`
+- Touching SDUI layout or `ui_schema` → `.agent/rules/domain_flows.md` + `.agent/rules/sdui_blueprints.md`
+- Touching content modules or uploads → `.agent/rules/content_modules.md`
+- Touching MCQ banks, attempts, or grading → `.agent/rules/question_bank.md`
+- Touching payments, subscriptions, or receipts → `.agent/rules/user_subscriptions.md`
+- Touching route guards, `is_active` gating, or `SubscriptionManager` → `.agent/rules/security_gating.md`
+- Touching queries, indexes, or migrations → `.agent/rules/database_performance.md`
+- Writing or modifying tests → `.agent/rules/testing_validation.md`
+- Touching AI tutor, LLM calls, or SSE → `.agent/rules/ai_tutor.md`
+- Touching Vue/SDUI components or visual design → `.agent/rules/ui_design.md` + `.agent/UI_REFERENCE.md`
 
-The above persona is necessary but not sufficient. The following reflexes are the difference between a mid-level engineer and one who has been paged at 3 AM for a bug they wrote. Every one of them is mandatory.
+**Tier 4 — On-demand reference only (never loaded proactively):**
+- `.agent/ARCHITECTURE.md` (system blueprint — read when you need the full picture)
+- `.agent/MEMORY.md` (rolling log — read when checking known quirks before touching an affected subsystem)
+- `.agent/AGENT.md` (stack + runtime specs — read when onboarding a new subsystem)
 
-* **Server is the Clock, Client is a Hint**: Exam timers, subscription expiry, and 2FA TTL are server-authoritative. The client clock is never trusted for correctness — only for display.
-* **Every Retryable Write is Idempotent**: Any operation that can be retried (webhook delivery, job dispatch, notification send, subscription activation, MCQ submission) MUST have a persisted idempotency key with a unique constraint.
-* **Every External Call Has a Timeout, Retry, and Circuit Breaker**: OpenAI, WhatsApp Cloud API, EasyPaisa, JazzCash, Google Drive — no exceptions.
-* **Every Queued Job Has a `failed()` Method and DLQ Destination**: A job that fails silently is data loss waiting to be discovered by a candidate.
-* **Every Input Is Hostile, Every Output Is a Boundary**: Validate on ingress, escape on egress. Never trust a client-supplied `domain_id`, `module_id`, or `user_id` — re-resolve server-side through `SubscriptionManager` or a policy.
-* **Money Is Never a Float, Time Is Never Local**: All PKR amounts stored as integer paisa. All timestamps stored UTC, displayed PKT.
-* **Logs Are Public in the Worst Way**: Structured logs may never contain PII, secrets, TRX IDs, MCQ correct-answer indices, or full request bodies.
-* **Every Migration Ships With a Rollback Path and Zero-Downtime Strategy**: Additive columns first, backfill jobs second, code removal and column drops in a *later* release.
-* **Every List > 100 Rows Uses Cursor Pagination**: Offset pagination is a lie after page 3 and a performance cliff after page 100.
-* **Two Indentations Is a Smell, Three Is a Bug**: Refactor with early returns, guard clauses, or collection pipelines.
+If you are unsure which tier a file belongs to, err on the side of loading fewer files, not more.
 
+---
+
+> Persona, radical simplicity, zero assumptions, and clean code hygiene — see [`.agent/SYSTEM_RULES.md`](file:///.agent/SYSTEM_RULES.md).
 
 ---
 
@@ -96,7 +96,7 @@ Before marking any task as complete or returning the final response to the user,
 
 The 4-step checklist above is the minimum bar. Before declaring ANY task done, you MUST also confirm the following 12 points, printing each with ✅/❌ and the evidence (command output summary or file path). If any line fails, continue working — do not conclude.
 
-1. **Compilation Integrity** — `vue-tsc --noEmit`, `pint --parallel --test`, and `phpstan analyse` all pass.
+1. **Compilation Integrity** — `pint --parallel --test`, and `phpstan analyse` pass.
 2. **Full CI Chain** — `composer test` passes fully (config clear → Pint → PHPStan → Pest).
 3. **Bundle Integrity** — `npm run build` passes; if SSR is in scope, `npm run build:ssr` passes.
 4. **Query Plan Sanity** — No new N+1 queries on changed endpoints (verify via query log). No new unindexed `WHERE` / `ORDER BY`.
@@ -108,7 +108,6 @@ The 4-step checklist above is the minimum bar. Before declaring ANY task done, y
 10. **HTTP Hygiene** — Every external call has a timeout and a retry policy.
 11. **Blast Radius Declared** — If the change touches `SubscriptionManager`, `AiTutorService`, `SduiPayloadTransformer`, or the Fortify pipeline, a Blast Radius block is present in the response.
 12. **Memory Updated** — MEMORY.md has a new rolling entry in the mandated format (Action / Impact / Files / Blast Radius / Rollback Path / Lessons).
-
 
 ---
 
@@ -143,7 +142,6 @@ Before editing ANY file that touches a critical subsystem, you MUST emit a **Bla
 
 If you cannot fill a row, write `none` — do not omit the row. An empty row is information; a missing row is a governance breach.
 
-
 ---
 
 ## 🔁 Regression Reflex
@@ -156,7 +154,6 @@ Any edit touching a file already referenced in `MEMORY.md` entries 1–10 (or th
 - If the edit touches **Fortify pipeline or session lifecycle**: re-run the full `composer test` chain, plus manual 2FA / passkey / password-reset smoke test.
 
 You may not "skip" the Regression Reflex because the diff "looks small." Small diffs to critical subsystems are the highest-risk category of change.
-
 
 ---
 
@@ -174,7 +171,6 @@ Every operation in the following categories MUST design and document an idempote
 | Domain knowledge embedding | `content_hash` of source text | `domain_knowledge_embeddings.content_hash` |
 
 If the idempotency key already exists on receipt, the operation returns the **previous result** — it does not re-execute side effects, does not re-send notifications, and does not double-activate subscriptions.
-
 
 ---
 
@@ -194,7 +190,6 @@ The following failure modes are known to occur on this exact stack. Detection an
 | 8 | SSE connection drops on mobile networks | Abrupt `text/event-stream` terminations | Client-side auto-reconnect with `Last-Event-ID` resume |
 | 9 | Client clock drift during exam | Timer mismatch reports | Server-authoritative timer, client displays server delta only |
 | 10 | Urdu / RTL text truncation in DB writes | Garbled strings in question bank | `utf8mb4_unicode_ci` fallback + length-safe truncation (see MEMORY §4) |
-
 
 ---
 
@@ -224,7 +219,6 @@ Every new endpoint, job, and webhook handler MUST emit at least one structured l
 
 Every SSE endpoint must additionally log: connection open, connection close, disconnect reason, and bytes streamed. Every queue worker must expose a metrics endpoint or emit a heartbeat log every 60 seconds.
 
-
 ---
 
 ## 🚀 Deploy & Rollback Safety
@@ -237,7 +231,6 @@ Every migration and every deployment-affecting change MUST satisfy the following
 4. **Rollback Command Mandatory** — Every migration ships with a `down()` method that actually reverses the change, or an explicit `// irreversible: <reason>` comment. No silent no-op `down()` methods.
 5. **Smoke Test After Deploy** — After every production deploy: hit `/up` (health), submit one MCQ on a test account, dispatch one vectorization job, verify one webhook signature against a replay fixture.
 6. **Cache Clear Discipline** — After deploy: `php artisan config:clear && php artisan route:clear && php artisan view:clear`. Never `cache:clear` in production without a warm-up plan — it stampedes the DB.
-
 
 ---
 
@@ -259,14 +252,13 @@ When updating [`.agent/MEMORY.md`](file:///.agent/MEMORY.md), every new rolling 
 
 **Rolling window:** once the log exceeds 10 active entries, older entries may be archived to `.agent/MEMORY_ARCHIVE.md` — never deleted, never edited.
 
-
 ---
 
 ## 🔗 Cross-File Coherence Rule
 
 When adding a new rule to any governance file:
 
-1. **Check first, write second** — Re-read the target file (and its siblings in `.agent/` and `.agents/rules/`) to confirm the rule doesn't already exist.
+1. **Check first, write second** — Re-read the target file (and its siblings in `.agent/` and `.agent/rules/`) to confirm the rule doesn't already exist.
 2. **Cross-reference, don't duplicate** — If a rule belongs in two places, write it in one and reference it from the other (`see .agent/PATTERNS.md §4`).
 3. **No contradictions** — A new rule may not soften, weaken, or contradict an existing rule. If it appears to, either the existing rule is wrong (flag it, don't silently override) or the new rule is wrong.
 4. **Additions are append-only at the section level** — You may append subsections under existing headings. You may not renumber, rename, or reorder existing sections.
@@ -274,7 +266,6 @@ When adding a new rule to any governance file:
 6. **Tone discipline** — Match the existing voice: authoritative, disciplined, declarative. No motivational filler. No generic SaaS-speak.
 
 If you are unsure whether an addition clashes with existing content, **stop and re-read the source file** before writing. Silent contradictions are the worst possible failure mode for this governance layer.
-
 
 ---
 
