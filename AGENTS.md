@@ -92,9 +92,9 @@ Before marking any task as complete or returning the final response to the user,
   - [`.agent/ARCHITECTURE.md`](file:///.agent/ARCHITECTURE.md)
   - [`.agent/MEMORY.md`](file:///.agent/MEMORY.md)
 
-### Extended Pre-Conclusion Gate (12-Point Self-Audit)
+### Extended Pre-Conclusion Gate (13-Point Self-Audit)
 
-The 4-step checklist above is the minimum bar. Before declaring ANY task done, you MUST also confirm the following 12 points, printing each with ✅/❌ and the evidence (command output summary or file path). If any line fails, continue working — do not conclude.
+The 4-step checklist above is the minimum bar. Before declaring ANY task done, you MUST also confirm the following 13 points, printing each with ✅/❌ and the evidence (command output summary or file path). If any line fails, continue working — do not conclude.
 
 1. **Compilation Integrity** — `pint --parallel --test`, and `phpstan analyse` pass.
 2. **Full CI Chain** — `composer test` passes fully (config clear → Pint → PHPStan → Pest).
@@ -108,6 +108,7 @@ The 4-step checklist above is the minimum bar. Before declaring ANY task done, y
 10. **HTTP Hygiene** — Every external call has a timeout and a retry policy.
 11. **Blast Radius Declared** — If the change touches `SubscriptionManager`, `AiTutorService`, `SduiPayloadTransformer`, or the Fortify pipeline, a Blast Radius block is present in the response.
 12. **Memory Updated** — MEMORY.md has a new rolling entry in the mandated format (Action / Impact / Files / Blast Radius / Rollback Path / Lessons).
+13. **Forensic Real-User Code QA** — Confirmed that passing unit tests have not masked silent bugs, loose PHP type juggling (e.g. `(int) 'string' === 0`), client-server reactive event disconnects, or third-party API schema limits (Gemini alternating turns / 100-item batch limits). Verified against unexpected/malicious inputs (see `.agent/rules/testing_validation.md § 4`).
 
 ---
 

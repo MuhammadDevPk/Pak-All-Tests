@@ -230,7 +230,7 @@ class AiTutorService
         } elseif (! empty($context['active_question_id'])) {
             $question = QuestionBank::find($context['active_question_id']);
             if ($question instanceof QuestionBank) {
-                $promptText = strip_tags($question->question_text);
+                $promptText = strip_tags((string) ($question->question_text ?? ''));
                 $lines[] = '';
                 $lines[] = "CURRENT ACTIVE QUESTION [{$question->code}]: {$promptText}";
                 if (! empty($question->payload['options'])) {

@@ -160,6 +160,10 @@ class AiCompletionService
                 'stream' => true,
             ]);
 
+        if (! $response->successful()) {
+            throw new RuntimeException("OpenAI completion API error ({$response->status()}): {$response->body()}");
+        }
+
         $body = $response->toPsrResponse()->getBody();
         $buffer = '';
 
@@ -192,6 +196,7 @@ class AiCompletionService
 
     /**
      * Stream response from Google Gemini API.
+     * Sanitizes conversation history to strictly enforce Gemini's alternating role requirements.
      *
      * @param  array<int, array{role: string, content: string}>  $messages
      * @param  callable(string): void  $onToken
@@ -206,18 +211,42 @@ class AiCompletionService
             throw new RuntimeException('Gemini API key is missing. Set GEMINI_API_KEY in your .env file.');
         }
 
-        $contents = [];
+        $rawContents = [];
         $systemInstruction = null;
 
         foreach ($messages as $msg) {
             if ($msg['role'] === 'system') {
                 $systemInstruction = ['parts' => [['text' => $msg['content']]]];
             } else {
-                $contents[] = [
+                $rawContents[] = [
                     'role' => $msg['role'] === 'assistant' ? 'model' : 'user',
                     'parts' => [['text' => $msg['content']]],
                 ];
             }
+        }
+
+        // Gemini enforces:
+        // 1. First turn must be 'user' (drop leading 'model' turns if history was truncated)
+        while (! empty($rawContents) && $rawContents[0]['role'] === 'model') {
+            array_shift($rawContents);
+        }
+
+        // 2. Strict alternating turns (merge consecutive turns of the same role)
+        $contents = [];
+        foreach ($rawContents as $turn) {
+            $lastIndex = count($contents) - 1;
+            if ($lastIndex >= 0 && $contents[$lastIndex]['role'] === $turn['role']) {
+                $contents[$lastIndex]['parts'][] = $turn['parts'][0];
+            } else {
+                $contents[] = $turn;
+            }
+        }
+
+        if (empty($contents)) {
+            $contents[] = [
+                'role' => 'user',
+                'parts' => [['text' => 'Hello']],
+            ];
         }
 
         $payload = [

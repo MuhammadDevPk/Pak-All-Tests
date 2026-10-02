@@ -22,6 +22,9 @@ const currentQuestionIndex = ref(0);
 const selectedAnswers = ref({});
 const showExplanations = ref({});
 const isSubmitted = ref(false);
+const isSubmitting = ref(false);
+const serverSummary = ref(null);
+const serverResults = ref({});
 const remainingTimeSeconds = ref(
     (props.module?.content_meta?.duration_minutes || 20) * 60,
 );
@@ -40,14 +43,47 @@ const isTimeLow = computed(
 );
 const answeredCount = computed(() => Object.keys(selectedAnswers.value).length);
 
+const emitQuestionChange = () => {
+    if (!currentQuestion.value) {
+        emit('question-change', null);
+        return;
+    }
+
+    const q = currentQuestion.value;
+    const selectedIdx = selectedAnswers.value[q.id];
+    let userSelectedText = null;
+
+    if (selectedIdx !== undefined && selectedIdx !== null) {
+        const letter = String.fromCharCode(65 + Number(selectedIdx));
+        const opts = q.payload?.options || [];
+        const rawOpt = opts[selectedIdx];
+        const text =
+            typeof rawOpt === 'object' ? rawOpt?.text || '' : String(rawOpt ?? '');
+        userSelectedText = `${letter}) ${text}`;
+    }
+
+    emit('question-change', {
+        ...q,
+        user_selected: userSelectedText,
+        user_selected_index: selectedIdx ?? null,
+        attempts_made: selectedIdx !== undefined && selectedIdx !== null ? 1 : 0,
+    });
+};
+
 const scoreSummary = computed(() => {
     if (!isSubmitted.value) {
         return null;
     }
 
+    if (serverSummary.value) {
+        return serverSummary.value;
+    }
+
     let correctCount = 0;
     props.questions.forEach((q) => {
-        const correctIndex = q.payload?.correct_option_index;
+        const correctIndex =
+            serverResults.value[q.id]?.correct_index ??
+            q.payload?.correct_option_index;
 
         if (
             correctIndex !== undefined &&
@@ -75,30 +111,74 @@ const selectOption = (optionIndex) => {
     }
 
     selectedAnswers.value[currentQuestion.value.id] = optionIndex;
+    emitQuestionChange();
 };
+
 const goToQuestion = (index) => {
     if (index >= 0 && index < props.questions.length) {
         currentQuestionIndex.value = index;
     }
 };
+
 const nextQuestion = () => {
     if (currentQuestionIndex.value < props.questions.length - 1) {
         currentQuestionIndex.value++;
     }
 };
+
 const prevQuestion = () => {
     if (currentQuestionIndex.value > 0) {
         currentQuestionIndex.value--;
     }
 };
+
 const toggleExplanation = (questionId) => {
     showExplanations.value[questionId] = !showExplanations.value[questionId];
 };
-const submitTest = () => {
+
+const submitTest = async () => {
     isSubmitted.value = true;
 
     if (timerInterval) {
         clearInterval(timerInterval);
+    }
+
+    if (!props.module?.id) return;
+
+    isSubmitting.value = true;
+    try {
+        const response = await fetch(`/api/modules/${props.module.id}/submit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN':
+                    document
+                        .querySelector('meta[name="csrf-token"]')
+                        ?.getAttribute('content') || '',
+            },
+            body: JSON.stringify({
+                answers: selectedAnswers.value,
+            }),
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.status === 'success') {
+                serverSummary.value = {
+                    total: data.summary.total_questions,
+                    answered: data.summary.answered_count,
+                    correct: data.summary.correct_count,
+                    percentage: data.summary.percentage,
+                    isPassed: data.summary.is_passed,
+                };
+                serverResults.value = data.questions || {};
+            }
+        }
+    } catch (err) {
+        console.error('Error submitting test responses:', err);
+    } finally {
+        isSubmitting.value = false;
     }
 };
 
@@ -113,10 +193,11 @@ onMounted(() => {
         }, 1000);
     }
 });
+
 watch(
     currentQuestion,
-    (newQ) => {
-        emit('question-change', newQ);
+    () => {
+        emitQuestionChange();
     },
     { immediate: true },
 );
@@ -277,9 +358,18 @@ onUnmounted(() => {
                     :disabled="isSubmitted"
                     :class="[
                         'flex items-center justify-between rounded-xl border p-4 text-left text-sm transition-all',
-                        selectedAnswers[currentQuestion.id] === idx
-                            ? 'border-primary bg-primary/10 font-semibold text-primary shadow-xs'
-                            : 'border-sidebar-border/70 bg-sidebar/20 text-foreground hover:border-sidebar-border',
+                        isSubmitted &&
+                        (serverResults[currentQuestion.id]?.correct_index === idx ||
+                            (!serverResults[currentQuestion.id] &&
+                                currentQuestion.payload?.correct_option_index === idx))
+                            ? 'border-emerald-500 bg-emerald-500/10 font-semibold text-emerald-700 dark:text-emerald-400'
+                            : selectedAnswers[currentQuestion.id] === idx
+                              ? isSubmitted &&
+                                serverResults[currentQuestion.id] &&
+                                !serverResults[currentQuestion.id]?.correct
+                                  ? 'border-destructive bg-destructive/10 font-semibold text-destructive'
+                                  : 'border-primary bg-primary/10 font-semibold text-primary shadow-xs'
+                              : 'border-sidebar-border/70 bg-sidebar/20 text-foreground hover:border-sidebar-border',
                     ]"
                 >
                     <div class="flex items-center gap-3">
@@ -297,8 +387,15 @@ onUnmounted(() => {
                 </button>
             </div>
 
-            <!-- Practice Mode Explanation Toggle -->
-            <div v-if="mode === 'practice' || isSubmitted" class="mt-2">
+            <!-- Practice Mode Explanation Toggle or Post-Submission Review -->
+            <div
+                v-if="
+                    mode === 'practice' ||
+                    isSubmitted ||
+                    serverResults[currentQuestion.id]?.explanation
+                "
+                class="mt-2"
+            >
                 <button
                     type="button"
                     @click="toggleExplanation(currentQuestion.id)"
@@ -314,12 +411,16 @@ onUnmounted(() => {
                 <div
                     v-if="
                         showExplanations[currentQuestion.id] &&
-                        currentQuestion.explanation
+                        (serverResults[currentQuestion.id]?.explanation ||
+                            currentQuestion.explanation)
                     "
                     class="mt-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs leading-relaxed text-foreground"
                 >
                     <strong class="text-primary">Explanation:</strong>
-                    {{ currentQuestion.explanation }}
+                    {{
+                        serverResults[currentQuestion.id]?.explanation ||
+                        currentQuestion.explanation
+                    }}
                 </div>
             </div>
         </div>

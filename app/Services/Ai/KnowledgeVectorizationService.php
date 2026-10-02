@@ -289,7 +289,7 @@ class KnowledgeVectorizationService
      */
     protected function formatQuestionText(QuestionBank $question): string
     {
-        $prompt = trim(strip_tags($question->question_text));
+        $prompt = trim(strip_tags((string) ($question->question_text ?? '')));
         $lines = ["[QUESTION] {$prompt}"];
 
         $payload = $question->payload ?? [];
@@ -299,12 +299,13 @@ class KnowledgeVectorizationService
             foreach ($payload['options'] as $idx => $opt) {
                 $letter = chr(65 + (int) $idx);
                 $optText = is_array($opt) ? ($opt['text'] ?? '') : (string) $opt;
-                $lines[] = "  {$letter}: {$optText}";
+                $optClean = trim(strip_tags((string) $optText));
+                $lines[] = "  {$letter}: {$optClean}";
             }
         }
 
         if (! empty($question->explanation)) {
-            $explanation = trim(strip_tags($question->explanation));
+            $explanation = trim(strip_tags((string) $question->explanation));
             $lines[] = "Explanation: {$explanation}";
         }
 

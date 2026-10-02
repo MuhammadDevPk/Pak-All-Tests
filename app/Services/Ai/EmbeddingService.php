@@ -120,6 +120,7 @@ class EmbeddingService
 
     /**
      * Generate embeddings using OpenAI's API.
+     * Chunks input in batches of up to 500 to prevent request payload overflows.
      *
      * @param  array<int, string>  $texts
      * @return array<int, array<int, float>>
@@ -134,27 +135,39 @@ class EmbeddingService
             throw new RuntimeException('OpenAI API key is missing. Set OPENAI_API_KEY in your .env file.');
         }
 
-        $response = Http::withToken($apiKey)
-            ->timeout(30)
-            ->retry(2, 500)
-            ->post("{$baseUrl}/embeddings", [
-                'input' => $texts,
-                'model' => $model,
-                'dimensions' => $this->dimension,
-            ]);
+        // Sanitize empty strings to avoid OpenAI 400 errors
+        $sanitized = array_map(fn ($t) => trim((string) $t) === '' ? ' ' : $t, $texts);
+        $chunks = array_chunk($sanitized, 500);
+        $allEmbeddings = [];
 
-        if (! $response->successful()) {
-            throw new RuntimeException("OpenAI embeddings API error ({$response->status()}): {$response->body()}");
+        foreach ($chunks as $chunk) {
+            $response = Http::withToken($apiKey)
+                ->timeout(30)
+                ->retry(2, 500)
+                ->post("{$baseUrl}/embeddings", [
+                    'input' => array_values($chunk),
+                    'model' => $model,
+                    'dimensions' => $this->dimension,
+                ]);
+
+            if (! $response->successful()) {
+                throw new RuntimeException("OpenAI embeddings API error ({$response->status()}): {$response->body()}");
+            }
+
+            $data = $response->json('data', []);
+            usort($data, fn ($a, $b) => ($a['index'] ?? 0) <=> ($b['index'] ?? 0));
+
+            foreach ($data as $item) {
+                $allEmbeddings[] = $item['embedding'];
+            }
         }
 
-        $data = $response->json('data', []);
-        usort($data, fn ($a, $b) => ($a['index'] ?? 0) <=> ($b['index'] ?? 0));
-
-        return array_map(fn ($item) => $item['embedding'], $data);
+        return $allEmbeddings;
     }
 
     /**
      * Generate embeddings using Google Gemini's API.
+     * Chunks requests into batches of at most 100 (Gemini batchEmbedContents limit).
      *
      * @param  array<int, string>  $texts
      * @return array<int, array<int, float>>
@@ -169,24 +182,34 @@ class EmbeddingService
             throw new RuntimeException('Gemini API key is missing. Set GEMINI_API_KEY in your .env file.');
         }
 
-        $requests = array_map(fn ($text) => [
-            'model' => "models/{$model}",
-            'content' => ['parts' => [['text' => $text]]],
-            'outputDimensionality' => $this->dimension,
-        ], $texts);
+        $sanitized = array_map(fn ($t) => trim((string) $t) === '' ? ' ' : $t, $texts);
+        // Gemini batchEmbedContents accepts at most 100 requests per batch
+        $chunks = array_chunk($sanitized, 100);
+        $allEmbeddings = [];
 
-        $response = Http::timeout(30)
-            ->retry(2, 500)
-            ->post("{$baseUrl}/models/{$model}:batchEmbedContents?key={$apiKey}", [
-                'requests' => $requests,
-            ]);
+        foreach ($chunks as $chunk) {
+            $requests = array_map(fn ($text) => [
+                'model' => "models/{$model}",
+                'content' => ['parts' => [['text' => $text]]],
+                'outputDimensionality' => $this->dimension,
+            ], $chunk);
 
-        if (! $response->successful()) {
-            throw new RuntimeException("Gemini embeddings API error ({$response->status()}): {$response->body()}");
+            $response = Http::timeout(30)
+                ->retry(2, 500)
+                ->post("{$baseUrl}/models/{$model}:batchEmbedContents?key={$apiKey}", [
+                    'requests' => $requests,
+                ]);
+
+            if (! $response->successful()) {
+                throw new RuntimeException("Gemini embeddings API error ({$response->status()}): {$response->body()}");
+            }
+
+            $embeddings = $response->json('embeddings', []);
+            foreach ($embeddings as $item) {
+                $allEmbeddings[] = $item['values'] ?? [];
+            }
         }
 
-        $embeddings = $response->json('embeddings', []);
-
-        return array_map(fn ($item) => $item['values'] ?? [], $embeddings);
+        return $allEmbeddings;
     }
 }

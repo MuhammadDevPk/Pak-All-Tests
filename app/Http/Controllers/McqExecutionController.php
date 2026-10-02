@@ -35,7 +35,7 @@ class McqExecutionController extends Controller
         }
 
         $request->validate([
-            'answers' => ['required', 'array'],
+            'answers' => ['present', 'array'],
         ]);
 
         $userAnswers = $request->input('answers');
@@ -54,9 +54,13 @@ class McqExecutionController extends Controller
             $correctOptionIndex = $question->payload['correct_option_index'] ?? null;
 
             $isCorrect = false;
-            if ($userOptionIndex !== null) {
+            if ($userOptionIndex !== null && is_numeric($userOptionIndex)) {
                 $answeredCount++;
-                if ($correctOptionIndex !== null && (int) $userOptionIndex === (int) $correctOptionIndex) {
+                if (
+                    $correctOptionIndex !== null &&
+                    is_numeric($correctOptionIndex) &&
+                    (int) $userOptionIndex === (int) $correctOptionIndex
+                ) {
                     $correctCount++;
                     $isCorrect = true;
                 }
@@ -64,7 +68,7 @@ class McqExecutionController extends Controller
 
             $results[$questionId] = [
                 'correct' => $isCorrect,
-                'correct_index' => $correctOptionIndex,
+                'correct_index' => is_numeric($correctOptionIndex) ? (int) $correctOptionIndex : null,
                 'explanation' => $question->explanation,
             ];
         }

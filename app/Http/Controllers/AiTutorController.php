@@ -7,6 +7,7 @@ use App\Services\Ai\AiTutorService;
 use App\Services\SubscriptionManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AiTutorController extends Controller
@@ -80,23 +81,37 @@ class AiTutorController extends Controller
                     }
                 }
 
-                $this->aiTutorService->ask(
-                    $user,
-                    $domain,
-                    $message,
-                    $context,
-                    function (string $token) {
-                        echo "event: chunk\n";
-                        echo 'data: '.json_encode(['token' => $token, 'text' => $token])."\n\n";
-                        if (! app()->runningUnitTests()) {
-                            flush();
+                try {
+                    $this->aiTutorService->ask(
+                        $user,
+                        $domain,
+                        $message,
+                        $context,
+                        function (string $token) {
+                            echo "event: chunk\n";
+                            echo 'data: '.json_encode(['token' => $token, 'text' => $token])."\n\n";
+                            if (! app()->runningUnitTests()) {
+                                flush();
+                            }
                         }
-                    }
-                );
+                    );
 
-                echo "event: done\n";
-                echo "data: {}\n\n";
-                echo "data: [DONE]\n\n";
+                    echo "event: done\n";
+                    echo "data: {}\n\n";
+                    echo "data: [DONE]\n\n";
+                } catch (\Throwable $e) {
+                    Log::error('AI Tutor stream failed: '.$e->getMessage(), [
+                        'user_id' => $user->id,
+                        'domain_id' => $domain->id,
+                        'exception' => $e,
+                    ]);
+
+                    echo "event: error\n";
+                    echo 'data: '.json_encode(['message' => 'The AI Exam Mentor is temporarily unavailable. Please try again.'])."\n\n";
+                    echo "event: done\n";
+                    echo "data: [DONE]\n\n";
+                }
+
                 if (! app()->runningUnitTests()) {
                     flush();
                 }

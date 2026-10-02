@@ -92,6 +92,7 @@ These reflexes are the operational difference between junior speculation and pro
 11. **Sub-200ms Transaction Law**: Database transactions must NEVER hold locks for longer than 200 milliseconds. (See `.agent/rules/database_performance.md § 2`).
 12. **Zero N+1 Database Queries**: Always eager-load relations (`with([...])`) when querying collections. (See `.agent/rules/database_performance.md § 1`).
 13. **Cache-Pointer Pattern**: In Livewire and interactive modals, store large datasets (>20 items) in Redis under a UUID key and pass only the 36-byte UUID in state. (See `.agent/rules/database_performance.md § 4`).
+14. **Never Blindly Trust Passing Unit Tests Alone (Forensic Real-User QA Law)**: Passing unit tests with fake drivers and clean mock fixtures easily conceal type-juggling vulnerabilities (`(int) 'string' === 0`), client-server state disconnects, and third-party schema rejections. Always inspect active code line-by-line, test unexpected/malicious inputs (empty arrays, non-numeric strings, HTML tags), and verify end-to-end user workflows. (See `.agent/rules/testing_validation.md § 4`).
 
 ---
 

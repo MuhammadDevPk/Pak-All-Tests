@@ -126,11 +126,14 @@ const sendMessage = async (presetText = null) => {
               options: Array.isArray(props.activeQuestion.payload?.options)
                   ? props.activeQuestion.payload.options.map((opt, idx) => {
                         const letter = String.fromCharCode(65 + idx);
-                        const text =
+                        const rawText =
                             typeof opt === 'object'
-                                ? opt.text || ''
-                                : String(opt);
-                        return `${letter}) ${text}`;
+                                ? opt?.text || ''
+                                : String(opt ?? '');
+                        const cleanText = rawText
+                            .replace(/<[^>]*>?/gm, '')
+                            .trim();
+                        return `${letter}) ${cleanText}`;
                     })
                   : [],
               user_selected: props.activeQuestion.user_selected || null,
@@ -565,6 +568,7 @@ const formatContent = (text) => {
                         ref="inputRef"
                         v-model="inputMessage"
                         :disabled="isStreaming"
+                        maxlength="3000"
                         rows="1"
                         placeholder="Ask a question or request a hint..."
                         @keydown.enter.exact.prevent="sendMessage()"

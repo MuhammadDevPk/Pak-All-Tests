@@ -40,6 +40,8 @@ class ContentModuleController extends Controller
             $query->where('is_active', true);
         }]);
 
+        $isMockTest = $module->module_type === 'mock_test';
+
         return response()->json([
             'status' => 'success',
             'module' => [
@@ -48,13 +50,32 @@ class ContentModuleController extends Controller
                 'module_type' => $module->module_type,
                 'content_meta' => $module->content_meta,
             ],
-            'questions' => $module->questions->map(fn ($q) => [
-                'id' => $q->id,
-                'question_text' => $q->question_text,
-                'question_type' => $q->question_type,
-                'payload' => $q->payload,
-                'explanation' => $q->explanation,
-            ]),
+            'questions' => $module->questions->map(function ($q) use ($isMockTest) {
+                $payload = $q->payload ?? [];
+
+                // Scrub correct answer index and is_correct flags from active candidate payloads
+                unset($payload['correct_option_index']);
+
+                if (isset($payload['options']) && is_array($payload['options'])) {
+                    $payload['options'] = array_map(function ($option) {
+                        if (is_array($option)) {
+                            unset($option['is_correct']);
+
+                            return $option['text'] ?? '';
+                        }
+
+                        return (string) $option;
+                    }, $payload['options']);
+                }
+
+                return [
+                    'id' => $q->id,
+                    'question_text' => $q->question_text,
+                    'question_type' => $q->question_type,
+                    'payload' => $payload,
+                    'explanation' => $isMockTest ? null : $q->explanation,
+                ];
+            }),
         ]);
     }
 }
