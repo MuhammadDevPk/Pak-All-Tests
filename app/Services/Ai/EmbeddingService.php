@@ -145,7 +145,7 @@ class EmbeddingService
                 ->timeout(30)
                 ->retry(2, 500)
                 ->post("{$baseUrl}/embeddings", [
-                    'input' => array_values($chunk),
+                    'input' => $chunk,
                     'model' => $model,
                     'dimensions' => $this->dimension,
                 ]);

@@ -25,6 +25,20 @@ const currentStreamingMessage = ref('');
 const messagesContainer = ref(null);
 const inputRef = ref(null);
 
+// Resizable Chat Drawer State
+const drawerWidth = ref(440);
+const drawerHeight = ref(620);
+const isResizing = ref(false);
+const isMaximized = ref(false);
+const savedDimensions = ref({ width: 440, height: 620 });
+
+// Pointer drag tracking
+let dragType = null; // 'top' | 'left' | 'corner'
+let startPointerX = 0;
+let startPointerY = 0;
+let startW = 440;
+let startH = 620;
+
 const domainSlug = computed(() => props.domain?.slug || '');
 
 const quickChips = [
@@ -63,6 +77,7 @@ const fetchHistory = async () => {
 const toggleOpen = () => {
     isOpen.value = !isOpen.value;
     if (isOpen.value) {
+        initDrawerDimensions();
         if (messages.value.length === 0) {
             fetchHistory();
         } else {
@@ -304,6 +319,93 @@ const sendMessage = async (presetText = null) => {
     }
 };
 
+// Resize and Drag Logic (Mouse cursor & Touch swipe)
+const initDrawerDimensions = () => {
+    if (typeof window === 'undefined') return;
+    const maxW = Math.min(880, window.innerWidth - 24);
+    const maxH = window.innerHeight - 110;
+
+    drawerWidth.value = Math.min(440, maxW);
+    drawerHeight.value = Math.min(620, Math.max(380, Math.floor(window.innerHeight * 0.78)));
+};
+
+const handleWindowResize = () => {
+    if (typeof window === 'undefined') return;
+    const maxW = Math.min(880, window.innerWidth - 24);
+    const maxH = window.innerHeight - 110;
+    if (drawerWidth.value > maxW) drawerWidth.value = maxW;
+    if (drawerHeight.value > maxH) drawerHeight.value = maxH;
+};
+
+const startResize = (type, event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    dragType = type;
+    startPointerX = event.clientX;
+    startPointerY = event.clientY;
+    startW = drawerWidth.value;
+    startH = drawerHeight.value;
+    isResizing.value = true;
+
+    if (event.target && event.target.setPointerCapture) {
+        try {
+            event.target.setPointerCapture(event.pointerId);
+        } catch {
+            // pointer capture fallback
+        }
+    }
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+};
+
+const onPointerMove = (event) => {
+    if (!isResizing.value || !dragType) return;
+
+    const minW = Math.min(320, window.innerWidth - 24);
+    const maxW = Math.min(900, window.innerWidth - 24);
+    const minH = 350;
+    const maxH = window.innerHeight - 100;
+
+    // deltaY: dragging UP (decreasing clientY) increases drawer height
+    if (dragType === 'top' || dragType === 'corner') {
+        const deltaY = startPointerY - event.clientY;
+        const newH = Math.max(minH, Math.min(maxH, startH + deltaY));
+        drawerHeight.value = Math.round(newH);
+    }
+
+    // deltaX: dragging LEFT (decreasing clientX) increases drawer width
+    if (dragType === 'left' || dragType === 'corner') {
+        const deltaX = startPointerX - event.clientX;
+        const newW = Math.max(minW, Math.min(maxW, startW + deltaX));
+        drawerWidth.value = Math.round(newW);
+    }
+};
+
+const onPointerUp = (event) => {
+    if (!isResizing.value) return;
+    isResizing.value = false;
+    dragType = null;
+
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', onPointerUp);
+    window.removeEventListener('pointercancel', onPointerUp);
+};
+
+const toggleMaximize = () => {
+    isMaximized.value = !isMaximized.value;
+    if (isMaximized.value) {
+        savedDimensions.value = { width: drawerWidth.value, height: drawerHeight.value };
+        drawerWidth.value = Math.min(860, window.innerWidth - 24);
+        drawerHeight.value = window.innerHeight - 105;
+    } else {
+        drawerWidth.value = savedDimensions.value.width;
+        drawerHeight.value = savedDimensions.value.height;
+    }
+};
+
 // Keyboard shortcut (Escape to close)
 const onKeydown = (e) => {
     if (e.key === 'Escape' && isOpen.value) {
@@ -312,14 +414,20 @@ const onKeydown = (e) => {
 };
 
 onMounted(() => {
+    initDrawerDimensions();
     window.addEventListener('keydown', onKeydown);
+    window.addEventListener('resize', handleWindowResize);
 });
 
 onUnmounted(() => {
     window.removeEventListener('keydown', onKeydown);
+    window.removeEventListener('resize', handleWindowResize);
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', onPointerUp);
+    window.removeEventListener('pointercancel', onPointerUp);
 });
 
-// Format markdown bold, lists, inline code, and line breaks
+// Format markdown headings, bold, lists, inline code, and line breaks
 const formatContent = (text) => {
     if (!text) return '';
     let html = text
@@ -333,6 +441,15 @@ const formatContent = (text) => {
     // Bold **text**
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>');
 
+    // Headings (H1 to H4) - strip raw hash symbols and format as clean, elegant typography
+    html = html.replace(/^\s*####\s+(.*)$/gm, '<h5 class="font-bold text-xs uppercase tracking-wide text-foreground mt-2 mb-0.5">$1</h5>');
+    html = html.replace(/^\s*###\s+(.*)$/gm, '<h4 class="font-bold text-sm text-foreground mt-2 mb-0.5">$1</h4>');
+    html = html.replace(/^\s*##\s+(.*)$/gm, '<h3 class="font-bold text-sm text-foreground mt-2.5 mb-1">$1</h3>');
+    html = html.replace(/^\s*#\s+(.*)$/gm, '<h2 class="font-bold text-base text-foreground mt-3 mb-1">$1</h2>');
+
+    // Strip any accidental remaining leading hashes (e.g. ### without space)
+    html = html.replace(/^\s*#{1,6}\s*/gm, '');
+
     // Numbered lists e.g. "1. Step"
     html = html.replace(/^\s*(\d+)\.\s+(.*)$/gm, '<li class="ml-4 list-decimal" value="$1">$2</li>');
 
@@ -341,6 +458,11 @@ const formatContent = (text) => {
 
     // Line breaks
     html = html.replace(/\n/g, '<br />');
+
+    // Clean up excessive <br /> around headings and list items
+    html = html.replace(/(<\/h[2-5]>)(<br \/>)+/g, '$1');
+    html = html.replace(/(<br \/>)+(<h[2-5])/g, '$2');
+    html = html.replace(/(<\/li>)(<br \/>)+/g, '$1');
 
     return html;
 };
@@ -407,53 +529,104 @@ const formatContent = (text) => {
     >
         <div
             v-if="isOpen"
-            class="fixed bottom-24 right-4 z-50 flex h-[620px] max-h-[82vh] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-sidebar-border bg-card/98 shadow-2xl backdrop-blur-xl sm:right-6 sm:w-[440px] dark:border-zinc-800 dark:bg-zinc-950/98"
+            :style="{
+                width: `${drawerWidth}px`,
+                height: `${drawerHeight}px`,
+                maxWidth: 'calc(100vw - 1.25rem)',
+                maxHeight: 'calc(100vh - 6.5rem)',
+            }"
+            :class="{ 'transition-none select-none': isResizing }"
+            class="fixed bottom-24 right-3 sm:right-6 z-50 flex flex-col rounded-2xl border border-sidebar-border bg-card/98 shadow-2xl backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-950/98"
         >
-            <!-- Mentor Header -->
+            <!-- Top Resize & Swipe Handle (Mouse drag + Touch swipe) -->
             <div
-                class="flex items-center justify-between border-b border-sidebar-border/70 px-4 py-3 dark:border-zinc-800/80"
+                @pointerdown="startResize('top', $event)"
+                @dblclick="toggleMaximize"
+                class="group absolute -top-2 left-4 right-4 h-5 cursor-ns-resize z-30 touch-none flex items-center justify-center"
+                title="Drag or swipe vertically to resize height (Double-click to toggle maximize)"
             >
-                <div class="flex items-center gap-2.5">
-                    <div
-                        class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                    >
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-bold tracking-tight text-foreground">
-                            {{ domain.name }} Mentor
-                        </h3>
-                        <p class="text-[11px] font-mono text-muted-foreground">
-                            Socratic Guidance &bull; pgvector RAG
-                        </p>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-1">
-                    <button
-                        type="button"
-                        @click="clearHistory"
-                        title="Clear Conversation"
-                        class="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                    >
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                        </svg>
-                    </button>
-                    <button
-                        type="button"
-                        @click="isOpen = false"
-                        title="Close Drawer"
-                        class="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                    >
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
+                <div class="h-1 w-12 rounded-full bg-muted-foreground/35 group-hover:bg-emerald-500/80 group-active:bg-emerald-500 transition-colors"></div>
             </div>
+
+            <!-- Left Resize & Swipe Handle (Mouse drag + Touch swipe) -->
+            <div
+                @pointerdown="startResize('left', $event)"
+                class="group absolute top-4 bottom-4 -left-2 w-4 cursor-ew-resize z-30 touch-none flex items-center justify-center"
+                title="Drag or swipe horizontally to resize width"
+            >
+                <div class="w-1 h-12 rounded-full bg-muted-foreground/25 group-hover:bg-emerald-500/80 group-active:bg-emerald-500 transition-colors opacity-0 group-hover:opacity-100"></div>
+            </div>
+
+            <!-- Top-Left Corner Resize Handle -->
+            <div
+                @pointerdown="startResize('corner', $event)"
+                class="group absolute -top-2 -left-2 h-6 w-6 cursor-nwse-resize z-40 touch-none flex items-center justify-center"
+                title="Drag or swipe diagonally to resize height and width"
+            >
+                <div class="h-2.5 w-2.5 rounded-tl-sm border-t-2 border-l-2 border-muted-foreground/40 group-hover:border-emerald-500 group-active:border-emerald-500 transition-colors"></div>
+            </div>
+
+            <!-- Main Inner Content Wrapper -->
+            <div class="flex h-full w-full flex-col overflow-hidden rounded-2xl">
+                <!-- Mentor Header -->
+                <div
+                    class="flex items-center justify-between border-b border-sidebar-border/70 px-4 py-3 dark:border-zinc-800/80"
+                >
+                    <div class="flex items-center gap-2.5">
+                        <div
+                            class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        >
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold tracking-tight text-foreground">
+                                {{ domain.name }} Mentor
+                            </h3>
+                            <p class="text-[11px] font-mono text-muted-foreground">
+                                Socratic Guidance &bull; pgvector RAG
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-1">
+                        <!-- Maximize / Restore Toggle -->
+                        <button
+                            type="button"
+                            @click="toggleMaximize"
+                            :title="isMaximized ? 'Restore Default Size' : 'Expand / Maximize Drawer'"
+                            class="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                        >
+                            <svg v-if="!isMaximized" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                            </svg>
+                            <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                            </svg>
+                        </button>
+                        <button
+                            type="button"
+                            @click="clearHistory"
+                            title="Clear Conversation"
+                            class="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                        >
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                            </svg>
+                        </button>
+                        <button
+                            type="button"
+                            @click="isOpen = false"
+                            title="Close Drawer"
+                            class="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                        >
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
 
             <!-- Active Test Context Ribbon -->
             <div
@@ -591,6 +764,7 @@ const formatContent = (text) => {
                     <span class="font-mono">Socratic Mode</span>
                 </div>
             </form>
+            </div>
         </div>
     </transition>
 </template>
