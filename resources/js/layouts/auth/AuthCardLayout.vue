@@ -18,29 +18,34 @@ defineProps<{
 
 <template>
     <div
-        class="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10"
+        class="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-brand-canvas p-6 md:p-10 text-brand-body overflow-hidden"
     >
+        <!-- Ambient SenseLab Lighting Mesh -->
+        <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+            <div class="absolute -top-32 -left-32 mesh-aura-cyan"></div>
+            <div class="absolute -bottom-32 -right-32 mesh-aura-warm"></div>
+        </div>
+
         <div class="flex w-full max-w-md flex-col gap-6">
             <Link
                 :href="home()"
-                class="flex items-center gap-2 self-center font-medium"
+                class="flex items-center gap-2 self-center font-medium group"
             >
-                <div class="flex h-9 w-9 items-center justify-center">
-                    <AppLogoIcon
-                        class="size-9 fill-current text-black dark:text-white"
-                    />
+                <div class="flex h-10 w-10 items-center justify-center transition-transform group-hover:scale-105">
+                    <AppLogoIcon class="h-9 w-9" />
                 </div>
+                <span class="text-base font-bold text-brand-heading">Pak-All-Tests</span>
             </Link>
 
             <div class="flex flex-col gap-6">
-                <Card class="rounded-xl">
-                    <CardHeader class="px-10 pt-8 pb-0 text-center">
-                        <CardTitle class="text-xl">{{ title }}</CardTitle>
-                        <CardDescription>
+                <Card class="rounded-3xl border border-zinc-200/80 bg-white/90 shadow-xl backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-900/90">
+                    <CardHeader class="px-8 pt-8 pb-0 text-center">
+                        <CardTitle class="text-xl font-bold tracking-tight text-brand-heading">{{ title }}</CardTitle>
+                        <CardDescription class="text-xs text-brand-muted mt-1.5">
                             {{ description }}
                         </CardDescription>
                     </CardHeader>
-                    <CardContent class="px-10 py-8">
+                    <CardContent class="px-8 py-8">
                         <slot />
                     </CardContent>
                 </Card>

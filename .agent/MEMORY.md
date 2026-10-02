@@ -10,6 +10,22 @@
 
 This log records the 10 most critical architectural decisions, infrastructure fixes, and operational milestones shaping the active codebase.
 
+### Entry 16 — 2026-10-03: Tailwind v4 Canonical Classes Token Mapping & AppLogoIcon Component Cleanliness
+- **Action**: Mapped global CSS variable tokens to Tailwind v4 theme colors in `@theme inline` (`--color-brand-*`), added mesh-aura utility classes (`.mesh-aura-cyan`, `.mesh-aura-warm`), updated `Welcome.vue`, `AuthSimpleLayout.vue`, and `AuthCardLayout.vue` to use canonical Tailwind classes (`text-brand-heading`, `text-brand-muted`, `bg-brand-canvas`, `bg-brand-dark`), and wired `AppLogoIcon` across all layouts.
+- **Impact**: Completely eliminates all VS Code Tailwind CSS language server warnings (`suggestCanonicalClasses`), removes TypeScript/ESLint orphan import warnings (`ts-plugin(6133)` for unused `AppLogoIcon`), and guarantees single-source-of-truth logo rendering while preserving dynamic CSS custom property theming.
+- **Files Changed**: `resources/css/app.css`, `resources/js/components/AppLogoIcon.vue`, `resources/js/layouts/auth/AuthSimpleLayout.vue`, `resources/js/layouts/auth/AuthCardLayout.vue`, `resources/js/pages/Welcome.vue`, `.agent/MEMORY.md`.
+- **Blast Radius**: Frontend layouts, landing page, and global design token mapping.
+- **Rollback Path**: `git checkout HEAD~1 -- resources/css/app.css resources/js/components/AppLogoIcon.vue resources/js/layouts/auth/ resources/js/pages/Welcome.vue`.
+- **Lessons**: When using CSS custom properties with Tailwind v4, expose them via `@theme inline` as first-class colors (`--color-brand-*: var(--brand-*);`) so the language server suggests and recognizes canonical utility classes rather than arbitrary bracket syntax `text-[var(...)]`.
+
+### Entry 15 — 2026-10-03: SenseLab UI/UX Transformation & Global CSS Variable Tokens
+- **Action**: Completely restructured and elevated the platform UI/UX matching the luxury SenseLab design language across all 5 screenshot specifications; established global CSS variable tokens in `:root` and `.dark` (`--brand-primary-blue`, `--brand-primary-orange`, `--brand-gradient`, `--brand-card-bg`, etc.) allowing instantaneous one-variable color updates across the entire site; redesigned `Welcome.vue` with ambient radial lighting meshes, 3-card metric window with 3 overlapping floating cards, 6-card bento grid, deep obsidian dark laser stage, 6-node architecture hub with central glowing core, and orbital arch pricing tiers; and updated authentication layouts with matching rounded-3xl cards and ribbon glyphs.
+- **Impact**: Elevates the platform visual standard from a standard portal to an international-grade modern AI startup aesthetic, with zero hardcoded ad-hoc color fragments and total centralized theme configurability through pure CSS variables.
+- **Files Changed**: `resources/css/app.css`, `resources/js/pages/Welcome.vue`, `resources/js/layouts/auth/AuthCardLayout.vue`, `resources/js/layouts/auth/AuthSimpleLayout.vue`, `.agent/MEMORY.md`.
+- **Blast Radius**: Frontend landing page, authentication layouts, global stylesheet, and CSS token architecture.
+- **Rollback Path**: `git checkout HEAD~1 -- resources/css/app.css resources/js/pages/Welcome.vue resources/js/layouts/auth/`.
+- **Lessons**: Global CSS variables (`var(--brand-...)`) must be configured at the root CSS layer before updating view templates, ensuring single-source-of-truth style cascades.
+
 ### Entry 14 — 2026-10-03: AI Exam Mentor Conciseness Calibration, Markdown Hash Sanitization & Resizable UI
 - **Action**: Calibrated `AiTutorService` system prompt to mandate extreme brevity (2–3 lines / single compact paragraph by default, key terms in bold, strictly no markdown heading hashes, and adherence to user-specified line constraints); updated `AiTutorWidget.vue` `formatContent` to strip raw `#`/`##`/`###` hashtags and format clean headings; and implemented smooth mouse-drag and touch-swipe resize handles (top, left, corner) with pointer capture plus a header maximize/restore toggle.
 - **Impact**: Eliminates massive, overwhelming walls of text and raw `###` heading artifacts in candidate chat; provides mobile and desktop users tactile control to swipe or drag the chat drawer to any preferred height and width or toggle full-height with one tap.

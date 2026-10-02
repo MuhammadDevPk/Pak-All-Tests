@@ -59,6 +59,23 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+
+    --color-brand-canvas: var(--brand-canvas);
+    --color-brand-card: var(--brand-card-bg);
+    --color-brand-heading: var(--brand-text-heading);
+    --color-brand-body: var(--brand-text-body);
+    --color-brand-muted: var(--brand-text-muted);
+    --color-brand-subtle: var(--brand-text-subtle);
+    --color-brand-blue: var(--brand-primary-blue);
+    --color-brand-cyan: var(--brand-primary-cyan);
+    --color-brand-orange: var(--brand-primary-orange);
+    --color-brand-amber: var(--brand-primary-amber);
+    --color-brand-coral: var(--brand-accent-coral);
+    --color-brand-violet: var(--brand-accent-violet);
+    --color-brand-pink: var(--brand-accent-pink);
+    --color-brand-emerald: var(--brand-accent-emerald);
+    --color-brand-dark: var(--brand-dark-surface);
+    --color-brand-border: var(--brand-card-border);
 }
 
 /*
@@ -124,6 +141,59 @@
     --sidebar-border: hsl(0 0% 91%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(0 0% 98%);
+
+    /* ═════════════════════════════════════════════════════════════════════════
+       SENSELAB LUXURY DESIGN SYSTEM TOKENS (GLOBAL CSS VARIABLES)
+       Update any single variable here to instantly restyle the entire portal!
+       ═════════════════════════════════════════════════════════════════════════ */
+    --brand-canvas: #ffffff;
+    --brand-card-bg: #ffffff;
+    --brand-card-border: rgba(226, 232, 240, 0.85);
+    --brand-card-hover-border: rgba(203, 213, 225, 1);
+
+    /* Typography Palette */
+    --brand-text-heading: #090d16;
+    --brand-text-body: #475569;
+    --brand-text-muted: #64748b;
+    --brand-text-subtle: #94a3b8;
+
+    /* Core Brand Accents (Exact SenseLab Palette) */
+    --brand-primary-blue: #0284c7;        /* Sky 600 */
+    --brand-primary-cyan: #0ea5e9;        /* Sky 500 */
+    --brand-primary-orange: #ea580c;      /* Orange 600 */
+    --brand-primary-amber: #f97316;       /* Orange 500 */
+    --brand-accent-coral: #fb923c;        /* Coral / Peach */
+    --brand-accent-violet: #8b5cf6;       /* Violet 500 */
+    --brand-accent-pink: #ec4899;         /* Pink 500 */
+    --brand-accent-emerald: #10b981;      /* Emerald 500 */
+
+    /* Gradients */
+    --brand-gradient: linear-gradient(135deg, var(--brand-primary-blue) 0%, var(--brand-primary-orange) 100%);
+    --brand-gradient-hover: linear-gradient(135deg, #0369a1 0%, #c2410c 100%);
+    --brand-gradient-glow: linear-gradient(135deg, rgba(2, 132, 199, 0.45) 0%, rgba(234, 88, 12, 0.45) 100%);
+    --brand-gradient-soft: linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(249, 115, 22, 0.08) 100%);
+    --brand-gradient-border: linear-gradient(135deg, #38bdf8 0%, #f97316 100%);
+
+    /* Pill Badges & Buttons */
+    --brand-pill-bg: #f3f4f6;
+    --brand-pill-border: rgba(229, 231, 235, 0.9);
+    --brand-pill-text: #1f2937;
+    --brand-pill-hover: #e5e7eb;
+
+    /* Dark Stage Surfaces (Screenshot 3 Video Container) */
+    --brand-dark-surface: #090d16;
+    --brand-dark-surface-border: rgba(255, 255, 255, 0.1);
+    --brand-dark-laser-cyan: #38bdf8;
+    --brand-dark-laser-blue: #2563eb;
+
+    /* Atmosphere Lighting / Mesh Gradients */
+    --brand-mesh-cyan: rgba(56, 189, 248, 0.12);
+    --brand-mesh-warm: rgba(251, 146, 60, 0.08);
+
+    /* Elevation & Box Shadows */
+    --brand-shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    --brand-shadow-elevated: 0 20px 45px -10px rgba(0, 0, 0, 0.07), 0 8px 12px -4px rgba(0, 0, 0, 0.02);
+    --brand-shadow-glow: 0 15px 35px -8px rgba(2, 132, 199, 0.25);
 }
 
 .dark {
@@ -160,6 +230,22 @@
     --sidebar-border: hsl(0 0% 15.9%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(240 5.9% 10%);
+
+    /* Dark Mode SenseLab Tokens */
+    --brand-canvas: #090d16;
+    --brand-card-bg: #0f172a;
+    --brand-card-border: rgba(30, 41, 59, 0.9);
+    --brand-card-hover-border: rgba(51, 65, 85, 1);
+    --brand-pill-bg: #1e293b;
+    --brand-pill-border: rgba(51, 65, 85, 0.9);
+    --brand-pill-text: #f1f5f9;
+    --brand-pill-hover: #334155;
+    --brand-text-heading: #f8fafc;
+    --brand-text-body: #94a3b8;
+    --brand-text-muted: #64748b;
+    --brand-text-subtle: #475569;
+    --brand-mesh-cyan: rgba(56, 189, 248, 0.06);
+    --brand-mesh-warm: rgba(251, 146, 60, 0.04);
 }
 
 @layer base {
@@ -168,5 +254,63 @@
     }
     body {
         @apply bg-background text-foreground;
+    }
+}
+
+@layer utilities {
+    .bg-senselab-gradient {
+        background: var(--brand-gradient);
+    }
+    .bg-senselab-gradient:hover {
+        background: var(--brand-gradient-hover);
+    }
+    .bg-senselab-card {
+        background: var(--brand-card-bg);
+    }
+    .border-senselab-card {
+        border-color: var(--brand-card-border);
+    }
+    .text-senselab-heading {
+        color: var(--brand-text-heading);
+    }
+    .text-senselab-body {
+        color: var(--brand-text-body);
+    }
+    .shadow-senselab-card {
+        box-shadow: var(--brand-shadow-card);
+    }
+    .shadow-senselab-elevated {
+        box-shadow: var(--brand-shadow-elevated);
+    }
+    .shadow-senselab-glow {
+        box-shadow: var(--brand-shadow-glow);
+    }
+    .mesh-aura-cyan {
+        width: 500px;
+        height: 500px;
+        border-radius: 9999px;
+        background: radial-gradient(circle at center, var(--brand-mesh-cyan) 0%, transparent 70%);
+        filter: blur(48px);
+    }
+    .mesh-aura-warm {
+        width: 500px;
+        height: 500px;
+        border-radius: 9999px;
+        background: radial-gradient(circle at center, var(--brand-mesh-warm) 0%, transparent 70%);
+        filter: blur(48px);
+    }
+    .mesh-aura-cyan-lg {
+        width: 600px;
+        height: 600px;
+        border-radius: 9999px;
+        background: radial-gradient(circle at center, var(--brand-mesh-cyan) 0%, transparent 70%);
+        filter: blur(48px);
+    }
+    .mesh-aura-warm-lg {
+        width: 650px;
+        height: 650px;
+        border-radius: 9999px;
+        background: radial-gradient(circle at center, var(--brand-mesh-warm) 0%, transparent 70%);
+        filter: blur(48px);
     }
 }

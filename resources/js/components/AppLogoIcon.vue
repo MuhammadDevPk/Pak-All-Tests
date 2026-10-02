@@ -14,16 +14,23 @@ defineProps<Props>();
 
 <template>
     <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 40 42"
+        viewBox="0 0 40 40"
+        fill="none"
         :class="className"
         v-bind="$attrs"
     >
-        <path
-            fill="currentColor"
-            fill-rule="evenodd"
-            clip-rule="evenodd"
-            d="M17.2 5.633 8.6.855 0 5.633v26.51l16.2 9 16.2-9v-8.442l7.6-4.223V9.856l-8.6-4.777-8.6 4.777V18.3l-5.6 3.111V5.633ZM38 18.301l-5.6 3.11v-6.157l5.6-3.11V18.3Zm-1.06-7.856-5.54 3.078-5.54-3.079 5.54-3.078 5.54 3.079ZM24.8 18.3v-6.157l5.6 3.111v6.158L24.8 18.3Zm-1 1.732 5.54 3.078-13.14 7.302-5.54-3.078 13.14-7.3v-.002Zm-16.2 7.89 7.6 4.222V38.3L2 30.966V7.92l5.6 3.111v16.892ZM8.6 9.3 3.06 6.222 8.6 3.143l5.54 3.08L8.6 9.3Zm21.8 15.51-13.2 7.334V38.3l13.2-7.334v-6.156ZM9.6 11.034l5.6-3.11v14.6l-5.6 3.11v-14.6Z"
-        />
+        <defs>
+            <linearGradient id="appRibbonGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#0284c7" />
+                <stop offset="50%" stop-color="#38bdf8" />
+                <stop offset="100%" stop-color="#ea580c" />
+            </linearGradient>
+            <linearGradient id="appRibbonGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#f97316" />
+                <stop offset="100%" stop-color="#8b5cf6" />
+            </linearGradient>
+        </defs>
+        <path d="M12 28C8.686 28 6 25.314 6 22C6 17.5 10 14 15 14L25 14C29.418 14 33 17.582 33 22C33 26.418 29.418 30 25 30L15 30" stroke="url(#appRibbonGrad1)" stroke-width="4.5" stroke-linecap="round" />
+        <path d="M28 12C31.314 12 34 14.686 34 18C34 22.5 30 26 25 26L15 26C10.582 26 7 22.418 7 18C7 13.582 10.582 10 15 10L25 10" stroke="url(#appRibbonGrad2)" stroke-width="4.5" stroke-linecap="round" />
     </svg>
 </template>

@@ -11,27 +11,30 @@ defineProps<{
 
 <template>
     <div
-        class="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10"
+        class="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-brand-canvas p-6 md:p-10 text-brand-body overflow-hidden"
     >
-        <div class="w-full max-w-sm">
-            <div class="flex flex-col gap-8">
+        <!-- Ambient SenseLab Lighting Mesh -->
+        <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+            <div class="absolute -top-32 -left-32 mesh-aura-cyan"></div>
+            <div class="absolute -bottom-32 -right-32 mesh-aura-warm"></div>
+        </div>
+
+        <div class="w-full max-w-sm rounded-3xl border border-zinc-200/80 bg-white/90 p-8 shadow-xl backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-900/90">
+            <div class="flex flex-col gap-6">
                 <div class="flex flex-col items-center gap-4">
                     <Link
                         :href="home()"
-                        class="flex flex-col items-center gap-2 font-medium"
+                        class="flex flex-col items-center gap-2 font-medium group"
                     >
-                        <div
-                            class="mb-1 flex h-9 w-9 items-center justify-center rounded-md"
-                        >
-                            <AppLogoIcon
-                                class="size-9 fill-current text-[var(--foreground)] dark:text-white"
-                            />
+                        <!-- SenseLab Ribbon Logo Glyph -->
+                        <div class="flex h-10 w-10 items-center justify-center transition-transform group-hover:scale-105">
+                            <AppLogoIcon class="h-9 w-9" />
                         </div>
-                        <span class="sr-only">{{ title }}</span>
+                        <span class="text-sm font-bold text-brand-heading">Pak-All-Tests</span>
                     </Link>
-                    <div class="space-y-2 text-center">
-                        <h1 class="text-xl font-medium">{{ title }}</h1>
-                        <p class="text-center text-sm text-muted-foreground">
+                    <div class="space-y-1.5 text-center">
+                        <h1 class="text-xl font-bold tracking-tight text-brand-heading">{{ title }}</h1>
+                        <p class="text-center text-xs text-brand-muted">
                             {{ description }}
                         </p>
                     </div>
