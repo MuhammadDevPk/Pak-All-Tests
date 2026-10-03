@@ -1,7 +1,7 @@
 # MEMORY.md — Rolling Project Memory & Operational Knowledge
 
-> **Status**: ACTIVE ROLLING RECORD  
-> **Last Updated**: 2026-09-19  
+> **Status**: ACTIVE ROLLING RECORD
+> **Last Updated**: 2026-10-03
 > **Repository**: Pak-All-Tests (Laravel 13 • Vue 3 / Inertia 3 • PostgreSQL 16+ Supabase)
 
 ---
@@ -25,6 +25,21 @@ This log records the 10 most critical architectural decisions, infrastructure fi
 - **Blast Radius**: Frontend landing page, authentication layouts, global stylesheet, and CSS token architecture.
 - **Rollback Path**: `git checkout HEAD~1 -- resources/css/app.css resources/js/pages/Welcome.vue resources/js/layouts/auth/`.
 - **Lessons**: Global CSS variables (`var(--brand-...)`) must be configured at the root CSS layer before updating view templates, ensuring single-source-of-truth style cascades.
+### Entry 16 — 2026-10-03: Forensic QA & Hardening of Bulk Question Import Pipeline
+- **Action**: Conducted forensic real-user code QA and fixed 5 critical issues in PR #3: (1) resolved unknown-subject drop bug by refactoring `ImportQuestionsJob` from nested per-subject filtering into an $O(N)$ single-pass validation loop tracking `unmapped_invalid`, (2) fixed fatal `dispatchSync($job)` / `dispatch($job)` runtime crash in `ImportQuestions.php` by passing named constructor arguments directly, (3) added `failed()` method in `ImportQuestionsJob` adhering to Job Hygiene Rule 9 with danger notifications, (4) enforced dry-run integrity in `StoreGeneratedQuestionsAction` to prevent module creation and accurately return processed totals in preview mode, and (5) added Filament dark mode CSS and `wire:poll.3s` live feedback in `import-questions.blade.php`.
+- **Impact**: Eliminates silent question loss on unknown subjects, prevents 500 fatal crashes on form submission, ensures background job failures notify admins with full context, provides dark-mode fidelity in Filament, and guarantees preview accuracy before committing to the database.
+- **Files Changed**: `app/Actions/QuestionBank/StoreGeneratedQuestionsAction.php`, `app/Filament/Pages/ImportQuestions.php`, `app/Jobs/ImportQuestionsJob.php`, `resources/views/filament/pages/import-questions.blade.php`, `tests/Feature/QuestionImportTest.php`, `.agent/MEMORY.md`.
+- **Blast Radius**: `ImportQuestionsJob`, `ImportQuestions`, `StoreGeneratedQuestionsAction`, `resources/views/filament/pages/import-questions.blade.php`.
+- **Rollback Path**: `git checkout HEAD~1 -- app/Actions/QuestionBank/StoreGeneratedQuestionsAction.php app/Filament/Pages/ImportQuestions.php app/Jobs/ImportQuestionsJob.php resources/views/filament/pages/import-questions.blade.php tests/Feature/QuestionImportTest.php`.
+- **Lessons**: Passing unit tests (`$job->handle()`) can mask fatal runtime calling conventions (`Job::dispatchSync($job)`); dry-run methods must never trigger write side-effects (e.g. creating content modules) during validation passes.
+
+### Entry 15 — 2026-10-03: Filament Bulk Question Import Page (PMA Academic)
+- **Action**: Added a Filament "Import Questions" admin page (`app/Filament/Pages/ImportQuestions.php`, nav group "Question Bank") with domain select (defaults to PMA_INITIAL), JSON upload (10MB, local disk) and a dry-run toggle (default on); submissions validate the payload and dispatch `ImportQuestionsJob`, which find-or-creates one flat `preparation` ContentModule per subject key directly under the domain (no parent/child — ContentModule has no parent_id) and inserts questions in batches of 50 via `StoreGeneratedQuestionsAction` (extended with per-item `question_type` + `dryRun` preview mode; `short_answer` items persist `payload: ['model_answer' => ...]`). Dry runs execute synchronously and render a per-subject report (inserted / duplicates_skipped / invalid) from cache (`question_import_report_{uuid}`, 10-min TTL); live runs are queued and notify the admin via a Filament database notification. A codebase-wide search confirmed the rumored "Universal Question Ingestion & Generation Engine" modal does not exist in the repo (no matches for any of its strings; ListQuestionBanks has only CreateAction), so the new page is not redundant. Added Pest coverage (`tests/Feature/QuestionImportTest.php`).
+- **Impact**: Enables no-SSH bulk import of the 1,462-question PMA Academic pack (166 MCQs + 1,296 short answers across 5 subjects) directly from the admin panel; hash-dedup guarantees re-runs never create duplicates; invalid items are skipped and reported instead of failing the batch.
+- **Files Changed**: `app/Filament/Pages/ImportQuestions.php`, `app/Jobs/ImportQuestionsJob.php`, `resources/views/filament/pages/import-questions.blade.php`, `tests/Feature/QuestionImportTest.php`, `app/Actions/QuestionBank/StoreGeneratedQuestionsAction.php`, `.agent/MEMORY.md`, `.agent/ARCHITECTURE.md`.
+- **Blast Radius**: `StoreGeneratedQuestionsAction` (new optional params only — existing callers unaffected), new Filament page + job.
+- **Rollback Path**: `git revert` the feature branch merge commit, or `git checkout <base> -- app/Actions/QuestionBank/StoreGeneratedQuestionsAction.php` to restore the action.
+- **Lessons**: Filament pages are the correct "thin" layer for admin workflows (form-schema validation replaces FormRequest); dry-run accuracy requires the preview path to share the exact dedup code as the write path; production modules are flat — subject modules are created directly under the domain, never nested; verify admin-panel intel against the actual codebase before building (the reported ingestion modal did not exist).
 
 ### Entry 14 — 2026-10-03: AI Exam Mentor Conciseness Calibration, Markdown Hash Sanitization & Resizable UI
 - **Action**: Calibrated `AiTutorService` system prompt to mandate extreme brevity (2–3 lines / single compact paragraph by default, key terms in bold, strictly no markdown heading hashes, and adherence to user-specified line constraints); updated `AiTutorWidget.vue` `formatContent` to strip raw `#`/`##`/`###` hashtags and format clean headings; and implemented smooth mouse-drag and touch-swipe resize handles (top, left, corner) with pointer capture plus a header maximize/restore toggle.

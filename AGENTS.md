@@ -28,6 +28,9 @@ Before executing ANY file edit, running modifying terminal commands, generating 
 * [`.agent/rules/ui_design.md`](file:///.agent/rules/ui_design.md) — Academic Rigor & Military Precision, anti-AI visual fingerprint, nested radius, no dead clicks.
 * [`.agent/rules/mistakes.md`](file:///.agent/rules/mistakes.md) — Anti-patterns and 11 historical root-cause analyses (RCA).
 
+### 3. Dedicated Agent Governance (MUSE)
+* [`.agent/MUSE.md`](file:///.agent/MUSE.md) — Anti-patterns, code lifecycle discipline, and architectural guardrails dedicated specifically for Muse (G U J E W E L). Must be loaded and adhered to whenever Muse writes, modifies, or reviews code in this repository.
+
 ---
 
 ## 📚 Load Tiers (Read Discipline)
@@ -36,6 +39,7 @@ Not every governance file is read on every turn. Load only what the task require
 
 **Tier 1 — ALWAYS loaded on every turn:**
 - `AGENTS.md` (this file)
+- `.agent/MUSE.md` (MANDATORY for Muse / G U J E W E L on every turn)
 
 **Tier 2 — Loaded when the task involves writing, reviewing, or refactoring code:**
 - `.agent/SYSTEM_RULES.md`
