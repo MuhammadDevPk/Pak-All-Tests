@@ -17,6 +17,7 @@ Before executing ANY file edit, running modifying terminal commands, generating 
 4. [`.agent/MEMORY.md`](file:///.agent/MEMORY.md) — Active rolling memory log of project decisions, known environment quirks, and hardening directives.
 5. [`.agent/SYSTEM_RULES.md`](file:///.agent/SYSTEM_RULES.md) — Cross-cutting engineering principles, senior architect mandate, YAGNI, zero assumptions, and clean code standards.
 6. [`.agent/UI_REFERENCE.md`](file:///.agent/UI_REFERENCE.md) — Persistent visual memory, design tokens, typography, and reference screenshot registry.
+7. [`FEATURES_BACKLOG.md`](file:///FEATURES_BACKLOG.md) — Master product feature backlog, strategic demand matrix, and architectural specifications.
 
 ### 2. Domain & Sub-Architectural Rulebook (`.agent/rules/`)
 * [`.agent/rules/domains.md`](file:///.agent/rules/domains.md) & [`.agent/rules/domain_flows.md`](file:///.agent/rules/domain_flows.md) — PostgreSQL `ltree` hierarchies, SDUI page layout compilation.
