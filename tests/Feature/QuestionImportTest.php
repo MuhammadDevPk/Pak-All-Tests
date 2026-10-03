@@ -189,7 +189,8 @@ it('rejects malformed items and reports them without inserting', function () {
     $report = Cache::get($reportKey);
     expect($report['totals']['invalid'])->toBe(4)
         ->and($report['totals']['inserted'])->toBe(1)
-        ->and($report['subjects']['islamiyat']['invalid'])->toBe(4);
+        ->and($report['subjects']['islamiyat']['invalid'])->toBe(3)
+        ->and($report['unmapped_invalid'])->toBe(1);
 });
 
 it('rejects payloads missing the subjects map or questions array', function () {

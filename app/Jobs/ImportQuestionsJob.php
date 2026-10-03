@@ -53,7 +53,6 @@ class ImportQuestionsJob implements ShouldQueue
     /**
      * Validate the decoded import payload structure (file-level, before dispatch).
      *
-     * @param  mixed  $data
      * @return array{valid: bool, errors: array<int, string>, subjects: array<string, string>, questions: array<int, mixed>}
      */
     public static function validatePayload(mixed $data): array
@@ -94,9 +93,8 @@ class ImportQuestionsJob implements ShouldQueue
     /**
      * Validate a single question item and normalize it for StoreGeneratedQuestionsAction.
      *
-     * @param  mixed  $item
      * @param  array<string, string>  $subjects
-     * @return array{valid: bool, error: ?string, normalized: ?array<string, mixed>}
+     * @return array{valid: bool, error: ?string, normalized: ?array{question_text: string, question_type: string, options?: array<int, string>, correct_option_index?: int, answer?: string, explanation: ?string, difficulty_level: string, code: ?string}}
      */
     public static function validateQuestion(mixed $item, array $subjects, int $index): array
     {
@@ -184,6 +182,13 @@ class ImportQuestionsJob implements ShouldQueue
             return;
         }
 
+        if (! is_string($raw) || trim($raw) === '') {
+            $report['errors'][] = 'The import file is empty or could not be found on disk.';
+            $this->finish($report);
+
+            return;
+        }
+
         $validation = self::validatePayload(json_decode($raw, true));
         if (! $validation['valid']) {
             $report['errors'] = $validation['errors'];
@@ -200,15 +205,52 @@ class ImportQuestionsJob implements ShouldQueue
             return;
         }
 
+        // Initialize subject tracking and item buffers
+        /** @var array<string, list<array{question_text: string, question_type?: string, options?: array<int, string>, correct_option_index?: int, answer?: string, explanation: ?string, difficulty_level: string, code: ?string}>> $itemsBySubject */
+        $itemsBySubject = [];
+        /** @var array<string, array{title: string, module_id: ?int, inserted: int, duplicates_skipped: int, invalid: int, processed: int}> $subjectsReport */
+        $subjectsReport = [];
+
         foreach ($validation['subjects'] as $subjectKey => $subjectTitle) {
-            $subjectReport = [
+            $itemsBySubject[$subjectKey] = [];
+            $subjectsReport[$subjectKey] = [
                 'title' => $subjectTitle,
                 'module_id' => null,
                 'inserted' => 0,
                 'duplicates_skipped' => 0,
                 'invalid' => 0,
+                'processed' => 0,
             ];
+        }
 
+        $unmappedInvalid = 0;
+
+        // 1. Single pass validation over all questions (O(N))
+        foreach ($validation['questions'] as $index => $rawItem) {
+            $check = self::validateQuestion($rawItem, $validation['subjects'], $index);
+            if (! $check['valid'] || ! is_array($check['normalized'])) {
+                $subj = is_array($rawItem) ? ($rawItem['subject'] ?? null) : null;
+                if (is_string($subj) && isset($subjectsReport[$subj])) {
+                    $subjectsReport[$subj]['invalid']++;
+                } else {
+                    $unmappedInvalid++;
+                }
+
+                Log::warning('Question import skipped invalid item', [
+                    'report_key' => $this->reportKey,
+                    'error' => $check['error'],
+                ]);
+
+                continue;
+            }
+
+            /** @var string $subjKey */
+            $subjKey = $rawItem['subject'];
+            $itemsBySubject[$subjKey][] = $check['normalized'];
+        }
+
+        // 2. Resolve modules and persist questions in batches per subject
+        foreach ($validation['subjects'] as $subjectKey => $subjectTitle) {
             $module = $this->dryRun
                 ? null
                 : ContentModule::firstOrCreate(
@@ -221,27 +263,9 @@ class ImportQuestionsJob implements ShouldQueue
                     ]
                 );
 
-            $subjectReport['module_id'] = $module?->id;
-
-            $items = [];
-            foreach ($validation['questions'] as $index => $rawItem) {
-                if (! is_array($rawItem) || ($rawItem['subject'] ?? null) !== $subjectKey) {
-                    continue;
-                }
-                $check = self::validateQuestion($rawItem, $validation['subjects'], $index);
-                if (! $check['valid']) {
-                    $subjectReport['invalid']++;
-                    Log::warning('Question import skipped invalid item', [
-                        'report_key' => $this->reportKey,
-                        'error' => $check['error'],
-                    ]);
-
-                    continue;
-                }
-                $items[] = $check['normalized'];
-            }
-
-            $subjectReport['processed'] = count($items);
+            $items = $itemsBySubject[$subjectKey] ?? [];
+            $inserted = 0;
+            $reused = 0;
 
             foreach (array_chunk($items, self::BATCH_SIZE) as $chunk) {
                 $result = $action->execute(
@@ -251,21 +275,62 @@ class ImportQuestionsJob implements ShouldQueue
                     existingModuleIds: $module ? [$module->id] : [],
                     dryRun: $this->dryRun,
                 );
-                $subjectReport['inserted'] += $result['inserted'];
-                $subjectReport['duplicates_skipped'] += $result['reused'];
+                $inserted += $result['inserted'];
+                $reused += $result['reused'];
             }
 
-            $report['subjects'][$subjectKey] = $subjectReport;
+            $subjectsReport[$subjectKey] = [
+                'title' => $subjectTitle,
+                'module_id' => $module?->id,
+                'inserted' => $inserted,
+                'duplicates_skipped' => $reused,
+                'invalid' => $subjectsReport[$subjectKey]['invalid'],
+                'processed' => count($items),
+            ];
         }
 
-        foreach ($report['subjects'] as $subjectReport) {
+        foreach ($subjectsReport as $subjectReport) {
             $report['totals']['processed'] += $subjectReport['processed'];
             $report['totals']['inserted'] += $subjectReport['inserted'];
             $report['totals']['duplicates_skipped'] += $subjectReport['duplicates_skipped'];
             $report['totals']['invalid'] += $subjectReport['invalid'];
         }
 
+        $report['subjects'] = $subjectsReport;
+
+        $report['totals']['invalid'] += $unmappedInvalid;
+        if ($unmappedInvalid > 0) {
+            $report['unmapped_invalid'] = $unmappedInvalid;
+        }
+
         $report['completed_at'] = now()->toIso8601String();
+        $this->finish($report);
+    }
+
+    /**
+     * Handle job failure from queue worker (Governance Rule 9).
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        Log::error('ImportQuestionsJob permanently failed', [
+            'correlation_id' => $this->reportKey,
+            'user_id' => $this->adminUserId,
+            'domain_id' => $this->domainId,
+            'event' => 'question_import.failed',
+            'error' => $exception?->getMessage(),
+        ]);
+
+        $report = Cache::get($this->reportKey, [
+            'dry_run' => $this->dryRun,
+            'domain_id' => $this->domainId,
+            'totals' => ['processed' => 0, 'inserted' => 0, 'duplicates_skipped' => 0, 'invalid' => 0],
+            'subjects' => [],
+            'errors' => [],
+        ]);
+
+        $report['errors'][] = 'Fatal background error: '.($exception?->getMessage() ?? 'Unknown error');
+        $report['completed_at'] = now()->toIso8601String();
+
         $this->finish($report);
     }
 
@@ -303,7 +368,11 @@ class ImportQuestionsJob implements ShouldQueue
         }
 
         Log::info("Question {$mode} finished", [
-            'report_key' => $this->reportKey,
+            'correlation_id' => $this->reportKey,
+            'user_id' => $this->adminUserId,
+            'domain_id' => $this->domainId,
+            'event' => 'question_import.finished',
+            'status' => $failed ? 'failure' : 'success',
             'dry_run' => $this->dryRun,
             'totals' => $report['totals'],
             'errors' => $report['errors'],

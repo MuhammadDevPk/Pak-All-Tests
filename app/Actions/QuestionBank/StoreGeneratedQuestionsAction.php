@@ -53,7 +53,7 @@ class StoreGeneratedQuestionsAction
             &$targetModuleIds
         ) {
             // 1. Resolve target ContentModules based on strategy
-            $targetModuleIds = $this->resolveTargetModules($targetDomainIds, $moduleStrategy, $newModuleTitle, $existingModuleIds);
+            $targetModuleIds = $this->resolveTargetModules($targetDomainIds, $moduleStrategy, $newModuleTitle, $existingModuleIds, $dryRun);
 
             // 2. Fetch existing questions by normalized text hash to prevent duplication
             $incomingTexts = array_values(array_unique(array_filter(array_map(
@@ -63,6 +63,15 @@ class StoreGeneratedQuestionsAction
 
             $existingMap = $this->buildExistingQuestionsMap($incomingTexts);
             $usedCodes = [];
+
+            // Pre-fetch all incoming codes in a single query to eliminate N+1 round-trips over remote WAN connection
+            $rawCodes = array_values(array_unique(array_filter(array_map(
+                static fn (array $q): ?string => filled($q['code'] ?? null) ? trim((string) $q['code']) : null,
+                $questions
+            ))));
+            $existingCodes = ! empty($rawCodes)
+                ? QuestionBank::whereIn('code', $rawCodes)->pluck('code')->flip()->all()
+                : [];
 
             foreach ($questions as $q) {
                 $rawText = trim($q['question_text']);
@@ -82,11 +91,9 @@ class StoreGeneratedQuestionsAction
                     // Create new QuestionBank record quietly (prevents vectorization before pivot attachment)
                     $rawCode = filled($q['code'] ?? null) ? trim((string) $q['code']) : null;
                     $code = null;
-                    if ($rawCode !== null) {
-                        if (! isset($usedCodes[$rawCode]) && ! QuestionBank::where('code', $rawCode)->exists()) {
-                            $code = $rawCode;
-                            $usedCodes[$rawCode] = true;
-                        }
+                    if ($rawCode !== null && ! isset($usedCodes[$rawCode]) && ! isset($existingCodes[$rawCode])) {
+                        $code = $rawCode;
+                        $usedCodes[$rawCode] = true;
                     }
 
                     $questionType = ($q['question_type'] ?? 'mcq') === 'short_answer' ? 'short_answer' : 'mcq';
@@ -144,7 +151,7 @@ class StoreGeneratedQuestionsAction
         return [
             'inserted' => $insertedCount,
             'reused' => $reusedCount,
-            'total' => count($allQuestionIds),
+            'total' => $dryRun ? ($insertedCount + $reusedCount) : count($allQuestionIds),
             'module_ids' => $targetModuleIds,
         ];
     }
@@ -162,8 +169,8 @@ class StoreGeneratedQuestionsAction
         }
 
         return [
-            'options' => array_values($question['options']),
-            'correct_option_index' => (int) $question['correct_option_index'],
+            'options' => array_values($question['options'] ?? []),
+            'correct_option_index' => (int) ($question['correct_option_index'] ?? 0),
         ];
     }
 
@@ -178,9 +185,10 @@ class StoreGeneratedQuestionsAction
         array $targetDomainIds,
         string $moduleStrategy,
         ?string $newModuleTitle,
-        array $existingModuleIds
+        array $existingModuleIds,
+        bool $dryRun = false
     ): array {
-        if ($moduleStrategy === 'pool') {
+        if ($dryRun || $moduleStrategy === 'pool') {
             return [];
         }
 

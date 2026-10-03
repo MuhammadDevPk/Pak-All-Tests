@@ -34,6 +34,15 @@
         }
         .qi-badge-dry { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
         .qi-badge-live { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+        .dark .qi-card {
+            background: #18181b;
+            border-color: #27272a;
+        }
+        .dark .qi-card h3 { color: #f4f4f5; }
+        .dark .qi-card p, .dark .qi-card li { color: #a1a1aa; }
+        .dark .qi-micro { color: #71717a; }
+        .dark .qi-table th { color: #71717a; border-bottom-color: #27272a; }
+        .dark .qi-table td { color: #e4e4e7; border-bottom-color: #27272a; }
     </style>
 
     <div class="qi-container">
@@ -131,6 +140,12 @@
                         of <span class="qi-num">{{ $report['totals']['processed'] }}</span> valid items.
                     </p>
                 @endif
+            </div>
+        @elseif ($this->reportKey)
+            <div class="qi-card" wire:poll.3s>
+                <p class="qi-micro">Background Import in Progress</p>
+                <h3>Processing questions...</h3>
+                <p>The import job is executing in the background. This card will automatically update once processing finishes.</p>
             </div>
         @endif
     </div>

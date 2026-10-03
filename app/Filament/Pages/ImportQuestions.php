@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+/**
+ * @property Schema $form
+ */
 class ImportQuestions extends Page implements HasSchemas
 {
     use InteractsWithSchemas;
@@ -35,6 +38,9 @@ class ImportQuestions extends Page implements HasSchemas
 
     protected string $view = 'filament.pages.import-questions';
 
+    /**
+     * @var array<string, mixed>|null
+     */
     public ?array $data = [];
 
     public ?string $reportKey = null;
@@ -92,6 +98,9 @@ class ImportQuestions extends Page implements HasSchemas
         ];
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getLastReport(): ?array
     {
         return $this->reportKey ? Cache::get($this->reportKey) : null;
@@ -99,6 +108,8 @@ class ImportQuestions extends Page implements HasSchemas
 
     public function startImport(): mixed
     {
+        @set_time_limit(300);
+
         $data = $this->form->getState();
 
         try {
@@ -135,18 +146,17 @@ class ImportQuestions extends Page implements HasSchemas
         }
 
         $this->reportKey = 'question_import_report_'.Str::uuid()->toString();
+        $adminUserId = auth()->id() !== null ? (int) auth()->id() : null;
 
-        $job = new ImportQuestionsJob(
-            filePath: $data['json_file'],
-            domainId: (int) $data['domain_id'],
-            dryRun: (bool) $data['dry_run'],
-            adminUserId: auth()->id(),
-            reportKey: $this->reportKey,
-        );
-
-        if ($job->dryRun) {
+        if ((bool) $data['dry_run']) {
             // Dry runs execute synchronously so the preview report is available immediately.
-            ImportQuestionsJob::dispatchSync($job);
+            ImportQuestionsJob::dispatchSync(
+                filePath: $data['json_file'],
+                domainId: (int) $data['domain_id'],
+                dryRun: true,
+                adminUserId: $adminUserId,
+                reportKey: $this->reportKey,
+            );
 
             $report = Cache::get($this->reportKey, []);
             $totals = $report['totals'] ?? ['inserted' => 0, 'duplicates_skipped' => 0, 'invalid' => 0];
@@ -162,7 +172,13 @@ class ImportQuestions extends Page implements HasSchemas
                 ->info()
                 ->send();
         } else {
-            ImportQuestionsJob::dispatch($job);
+            ImportQuestionsJob::dispatch(
+                filePath: $data['json_file'],
+                domainId: (int) $data['domain_id'],
+                dryRun: false,
+                adminUserId: $adminUserId,
+                reportKey: $this->reportKey,
+            );
 
             Notification::make()
                 ->title('Import started')
