@@ -107,9 +107,11 @@ app/
 │       └── Concerns/RedirectsToCurrentTeam.php # Safe team-agnostic URL resolver
 ├── Actions/
 │   └── QuestionBank/
-│       └── StoreGeneratedQuestionsAction.php # Atomic bulk question persistence, mcq/short_answer types, dry-run preview
+│       ├── StoreGeneratedQuestionsAction.php # Atomic bulk question persistence, mcq/short_answer types, dry-run preview
+│       └── SubjectModuleProvisioner.php  # Canonical PMA subject titles/slugs; quiet find-or-create (no vectorization)
 ├── Jobs/
 │   ├── ImportQuestionsJob.php            # Queued bulk question import: per-subject modules, batched inserts, cached report
+│   ├── LinkPmaSubjectModulesJob.php         # One-time repair: link existing PMA questions to subject modules (no vectorization)
 │   └── VectorizeDomainKnowledgeJob.php   # Queued vectorization for pgvector embeddings
 ├── Models/                               # Eloquent Models (detailed in section 3)
 ├── Policies/
@@ -331,6 +333,33 @@ sequenceDiagram
 ```
 
 ---
+
+### E1. PMA Subject-Module Link Repair (Filament Admin, one-time)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Admin (Filament)
+    participant Page as ImportQuestions Page
+    participant Job as LinkPmaSubjectModulesJob (queued)
+    participant Prov as SubjectModuleProvisioner
+    participant DB as PostgreSQL (Supabase)
+    participant Cache as Cache (report)
+
+    Admin->>Page: Link Questions to Modules (dry_run?)
+    Page->>Job: dispatchSync (dry run) / dispatch (live)
+    Job->>Job: loadMap database/data/pma_academic_subject_map.json
+    alt Dry Run
+        Note over Job,DB: 100% read-only: module exists-checks only,<br/>pivot existence checks only, zero writes
+        Job->>Cache: PUT pma_link_report_{uuid} (600s TTL)
+        Page-->>Admin: Preview notification + per-subject link table
+    else Live Run
+        Job->>Prov: findOrCreateQuietly per subject (no Eloquent events,<br/>no vectorization; explicit sort_order + cache flush)
+        Job->>DB: resolve question ids by code (1 query),<br/>text-hash fallback for missing codes (1 query)
+        Job->>DB: insertOrIgnore module_questions pivots,<br/>100-row chunks, one transaction per chunk
+        Job->>Cache: PUT pma_link_report_{uuid} (600s TTL)
+        Job-->>Admin: Filament database notification (linked / already linked / not found)
+    end
+```
 
 ### E. Bulk Question Import Pipeline (Filament Admin)
 ```mermaid
