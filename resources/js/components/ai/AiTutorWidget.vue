@@ -39,6 +39,137 @@ let startPointerY = 0;
 let startW = 440;
 let startH = 620;
 
+// Floating Action Button (FAB) Drag State
+const fabPosition = ref({ x: null, y: null });
+const isDraggingFab = ref(false);
+let fabDragStartX = 0;
+let fabDragStartY = 0;
+let fabInitialX = 0;
+let fabInitialY = 0;
+let fabHasMoved = false;
+const fabRef = ref(null);
+
+const fabStyle = computed(() => {
+    if (fabPosition.value.x === null || fabPosition.value.y === null) {
+        return {
+            bottom: '1.5rem',
+            right: '1.5rem',
+        };
+    }
+    return {
+        top: `${fabPosition.value.y}px`,
+        left: `${fabPosition.value.x}px`,
+        bottom: 'auto',
+        right: 'auto',
+    };
+});
+
+const drawerStyle = computed(() => {
+    const base = {
+        width: `${drawerWidth.value}px`,
+        height: `${drawerHeight.value}px`,
+        maxWidth: 'calc(100vw - 1.25rem)',
+        maxHeight: 'calc(100vh - 6.5rem)',
+    };
+
+    if (typeof window === 'undefined' || fabPosition.value.x === null || fabPosition.value.y === null) {
+        return {
+            ...base,
+            bottom: '6rem',
+            right: '1.5rem',
+        };
+    }
+
+    const fabY = fabPosition.value.y;
+    const fabX = fabPosition.value.x;
+
+    const style = { ...base };
+
+    if (fabY > window.innerHeight / 2) {
+        style.bottom = `${Math.max(16, window.innerHeight - fabY + 12)}px`;
+    } else {
+        style.top = `${Math.max(16, fabY + 64)}px`;
+    }
+
+    const rightOffset = window.innerWidth - (fabX + 180);
+    if (rightOffset < 16) {
+        style.right = '1rem';
+    } else if (rightOffset + drawerWidth.value > window.innerWidth) {
+        style.left = '1rem';
+    } else {
+        style.right = `${Math.max(16, rightOffset)}px`;
+    }
+
+    return style;
+});
+
+const onFabPointerDown = (e) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+
+    const fabEl = fabRef.value;
+    if (!fabEl) return;
+
+    const rect = fabEl.getBoundingClientRect();
+    fabDragStartX = e.clientX;
+    fabDragStartY = e.clientY;
+    fabInitialX = rect.left;
+    fabInitialY = rect.top;
+    fabHasMoved = false;
+    isDraggingFab.value = true;
+
+    try {
+        fabEl.setPointerCapture(e.pointerId);
+    } catch (_) {}
+};
+
+const onFabPointerMove = (e) => {
+    if (!isDraggingFab.value) return;
+
+    const deltaX = e.clientX - fabDragStartX;
+    const deltaY = e.clientY - fabDragStartY;
+
+    if (!fabHasMoved && (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4)) {
+        fabHasMoved = true;
+    }
+
+    if (fabHasMoved) {
+        const fabEl = fabRef.value;
+        const width = fabEl ? fabEl.offsetWidth : 170;
+        const height = fabEl ? fabEl.offsetHeight : 56;
+
+        let newX = fabInitialX + deltaX;
+        let newY = fabInitialY + deltaY;
+
+        const padding = 12;
+        newX = Math.max(padding, Math.min(newX, window.innerWidth - width - padding));
+        newY = Math.max(padding, Math.min(newY, window.innerHeight - height - padding));
+
+        fabPosition.value = { x: Math.round(newX), y: Math.round(newY) };
+    }
+};
+
+const onFabPointerUp = (e) => {
+    if (!isDraggingFab.value) return;
+
+    const fabEl = fabRef.value;
+    if (fabEl && fabEl.hasPointerCapture && fabEl.hasPointerCapture(e.pointerId)) {
+        try {
+            fabEl.releasePointerCapture(e.pointerId);
+        } catch (_) {}
+    }
+
+    const wasDragged = fabHasMoved;
+    isDraggingFab.value = false;
+
+    if (wasDragged) {
+        try {
+            sessionStorage.setItem('ai_tutor_fab_pos', JSON.stringify(fabPosition.value));
+        } catch (_) {}
+    } else {
+        toggleOpen();
+    }
+};
+
 const domainSlug = computed(() => props.domain?.slug || '');
 
 const quickChips = [
@@ -335,6 +466,16 @@ const handleWindowResize = () => {
     const maxH = window.innerHeight - 110;
     if (drawerWidth.value > maxW) drawerWidth.value = maxW;
     if (drawerHeight.value > maxH) drawerHeight.value = maxH;
+
+    if (fabPosition.value.x !== null && fabPosition.value.y !== null) {
+        const padding = 12;
+        const maxX = Math.max(padding, window.innerWidth - 180);
+        const maxY = Math.max(padding, window.innerHeight - 70);
+        fabPosition.value = {
+            x: Math.max(padding, Math.min(fabPosition.value.x, maxX)),
+            y: Math.max(padding, Math.min(fabPosition.value.y, maxY)),
+        };
+    }
 };
 
 const startResize = (type, event) => {
@@ -415,6 +556,21 @@ const onKeydown = (e) => {
 
 onMounted(() => {
     initDrawerDimensions();
+    try {
+        const saved = sessionStorage.getItem('ai_tutor_fab_pos');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+                const padding = 12;
+                const maxX = Math.max(padding, window.innerWidth - 180);
+                const maxY = Math.max(padding, window.innerHeight - 70);
+                fabPosition.value = {
+                    x: Math.max(padding, Math.min(parsed.x, maxX)),
+                    y: Math.max(padding, Math.min(parsed.y, maxY)),
+                };
+            }
+        }
+    } catch (_) {}
     window.addEventListener('keydown', onKeydown);
     window.addEventListener('resize', handleWindowResize);
 });
@@ -469,15 +625,39 @@ const formatContent = (text) => {
 </script>
 
 <template>
-    <!-- Floating Action Button (FAB) -->
-    <div class="fixed bottom-6 right-6 z-50">
+    <!-- Floating Action Button (FAB) — Draggable Anywhere on Screen -->
+    <div
+        ref="fabRef"
+        class="fixed z-50 touch-none select-none"
+        :style="fabStyle"
+        @pointerdown="onFabPointerDown"
+        @pointermove="onFabPointerMove"
+        @pointerup="onFabPointerUp"
+        @pointercancel="onFabPointerUp"
+    >
         <button
             type="button"
-            @click="toggleOpen"
-            class="group relative flex h-14 items-center gap-2.5 rounded-full border border-emerald-500/30 bg-card/95 px-5 py-3 text-sm font-semibold text-foreground shadow-2xl backdrop-blur-md transition-all duration-200 hover:border-emerald-500 hover:bg-card hover:shadow-emerald-500/10 active:scale-[0.97] dark:bg-zinc-900/95 dark:hover:border-emerald-400"
+            class="group relative flex h-14 items-center gap-2.5 rounded-full border border-emerald-500/30 bg-card/95 px-4 sm:px-5 py-3 text-sm font-semibold text-foreground shadow-2xl backdrop-blur-md transition-shadow duration-200 hover:border-emerald-500 hover:bg-card hover:shadow-emerald-500/10 dark:bg-zinc-900/95 dark:hover:border-emerald-400 cursor-grab active:cursor-grabbing"
             :class="{ 'ring-2 ring-emerald-500/40': isOpen }"
-            aria-label="Toggle AI Exam Mentor"
+            aria-label="Toggle AI Exam Mentor (Drag to reposition)"
+            title="Drag to reposition anywhere on screen • Click to toggle AI Exam Mentor"
         >
+            <!-- Grip Drag Indicator Dots -->
+            <span class="flex flex-col gap-0.5 opacity-40 group-hover:opacity-80 transition-opacity">
+                <span class="flex gap-0.5">
+                    <span class="h-1 w-1 rounded-full bg-current"></span>
+                    <span class="h-1 w-1 rounded-full bg-current"></span>
+                </span>
+                <span class="flex gap-0.5">
+                    <span class="h-1 w-1 rounded-full bg-current"></span>
+                    <span class="h-1 w-1 rounded-full bg-current"></span>
+                </span>
+                <span class="flex gap-0.5">
+                    <span class="h-1 w-1 rounded-full bg-current"></span>
+                    <span class="h-1 w-1 rounded-full bg-current"></span>
+                </span>
+            </span>
+
             <!-- Tactical Pulse Dot -->
             <span class="relative flex h-2.5 w-2.5">
                 <span
@@ -529,14 +709,9 @@ const formatContent = (text) => {
     >
         <div
             v-if="isOpen"
-            :style="{
-                width: `${drawerWidth}px`,
-                height: `${drawerHeight}px`,
-                maxWidth: 'calc(100vw - 1.25rem)',
-                maxHeight: 'calc(100vh - 6.5rem)',
-            }"
+            :style="drawerStyle"
             :class="{ 'transition-none select-none': isResizing }"
-            class="fixed bottom-24 right-3 sm:right-6 z-50 flex flex-col rounded-2xl border border-sidebar-border bg-card/98 shadow-2xl backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-950/98"
+            class="fixed z-50 flex flex-col rounded-2xl border border-sidebar-border bg-card/98 shadow-2xl backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-950/98"
         >
             <!-- Top Resize & Swipe Handle (Mouse drag + Touch swipe) -->
             <div

@@ -390,7 +390,8 @@ watch(currentQuestionIndex, () => {
     <div id="mcq-player-container" class="flex flex-col gap-6">
         <!-- Modern SenseLab Header Controls Bar -->
         <div
-            class="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-zinc-200/90 bg-white/95 p-4 sm:p-5 shadow-senselab-card backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/90"
+            class="relative flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-zinc-200/90 bg-white/95 p-4 sm:p-5 shadow-senselab-card backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/90 transition-all duration-150"
+            :class="isNavigatorOpen ? 'z-50' : 'z-30'"
         >
             <div class="flex items-center gap-3.5">
                 <div
@@ -472,11 +473,11 @@ watch(currentQuestionIndex, () => {
                 </div>
 
                 <!-- Clear, User-Friendly Question Palette Trigger & Navigator -->
-                <div class="relative">
+                <div class="relative z-50">
                     <button
                         type="button"
                         @click="isNavigatorOpen = !isNavigatorOpen"
-                        class="flex items-center gap-2 rounded-xl border border-sidebar-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-xs hover:border-primary/50 hover:bg-sidebar-accent transition-all"
+                        class="flex items-center gap-2 rounded-xl border border-sidebar-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-xs hover:border-primary/50 hover:bg-sidebar-accent transition-all cursor-pointer"
                         title="Open full question palette to view answered status or jump to any question"
                     >
                         <span class="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-[11px] font-bold text-primary">
@@ -492,14 +493,14 @@ watch(currentQuestionIndex, () => {
                     <!-- Backdrop to dismiss on outside click -->
                     <div
                         v-if="isNavigatorOpen"
-                        class="fixed inset-0 z-40"
+                        class="fixed inset-0 z-40 bg-black/10 backdrop-blur-xs"
                         @click="isNavigatorOpen = false"
                     />
 
                     <!-- Collapsible Question Palette Modal / Popover -->
                     <div
                         v-if="isNavigatorOpen"
-                        class="absolute right-0 top-full z-50 mt-2 w-80 sm:w-96 rounded-2xl border border-sidebar-border/90 bg-popover p-4 shadow-2xl backdrop-blur-md dark:bg-card"
+                        class="absolute right-0 top-full z-50 mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] rounded-2xl border border-zinc-200/90 bg-white/98 p-4 shadow-2xl backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-900/98"
                     >
                         <!-- Header with Title & Close -->
                         <div class="flex items-center justify-between border-b border-sidebar-border/50 pb-2.5 mb-3">
@@ -652,6 +653,18 @@ watch(currentQuestionIndex, () => {
                     <span>{{ formattedTime }}</span>
                 </div>
 
+                <!-- Focus Mode Submit Button on Top -->
+                <button
+                    v-if="viewMode === 'focus' && !isSubmitted"
+                    type="button"
+                    @click="submitTest"
+                    :disabled="isSubmitting"
+                    class="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold text-white shadow-xs transition-all duration-200 hover:shadow-md hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
+                    style="background: var(--brand-gradient);"
+                >
+                    <span>{{ isSubmitting ? 'Evaluating...' : 'Submit Test ✓' }}</span>
+                </button>
+
                 <!-- Submission Status Badge -->
                 <div
                     v-if="isSubmitted"
@@ -665,25 +678,27 @@ watch(currentQuestionIndex, () => {
         <!-- Top Page Navigation Bar (Page View Only — Directly under Subject Banner) -->
         <div
             v-if="viewMode === 'page'"
-            class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200/80 bg-white/80 p-3.5 shadow-senselab-card backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/60 transition-all"
+            class="relative z-20 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200/80 bg-white/80 p-3.5 shadow-senselab-card backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/60 transition-all"
         >
-            <!-- Left: Previous Page & Next Page Primary Navigation -->
+            <!-- Left: Previous Page & Next Page Primary Navigation (Tactile SenseLab Buttons) -->
             <div class="flex items-center gap-2">
                 <button
                     type="button"
                     @click="setPage(currentPage - 1)"
                     :disabled="currentPage === 1"
-                    class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-bold text-zinc-800 transition-all hover:bg-zinc-50 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs active:scale-95 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                    class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-bold text-zinc-800 shadow-xs transition-all hover:bg-zinc-50 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 cursor-pointer"
                 >
-                    ← Previous Page
+                    <span>←</span>
+                    <span>Previous Page</span>
                 </button>
                 <button
                     type="button"
                     @click="setPage(currentPage + 1)"
                     :disabled="currentPage >= totalPages"
-                    class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-bold text-zinc-800 transition-all hover:bg-zinc-50 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs active:scale-95 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                    class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-bold text-zinc-800 shadow-xs transition-all hover:bg-zinc-50 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 cursor-pointer"
                 >
-                    Next Page →
+                    <span>Next Page</span>
+                    <span>→</span>
                 </button>
             </div>
 
@@ -703,25 +718,45 @@ watch(currentQuestionIndex, () => {
                 </span>
             </div>
 
-            <!-- Right: Quick Jump by Page Selector -->
-            <div class="flex items-center gap-2 text-xs">
-                <span class="text-brand-muted hidden md:inline">Jump to page:</span>
-                <select
-                    :value="currentPage"
-                    @change="setPage(Number($event.target.value))"
-                    class="rounded-xl border border-zinc-200/90 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-800 shadow-xs focus:border-sky-500 focus:outline-hidden dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
+            <!-- Right: Quick Jump by Page Selector + TOP SUBMIT TEST BUTTON -->
+            <div class="flex items-center gap-2.5 text-xs">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-brand-muted hidden md:inline">Jump to page:</span>
+                    <select
+                        :value="currentPage"
+                        @change="setPage(Number($event.target.value))"
+                        class="rounded-xl border border-zinc-200/90 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-800 shadow-xs focus:border-sky-500 focus:outline-hidden dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 cursor-pointer"
+                    >
+                        <option v-for="p in totalPages" :key="p" :value="p">
+                            Page {{ p }} (Q{{ (p - 1) * pageSize + 1 }}–{{ Math.min(p * pageSize, questions.length) }})
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Submit Test Button on Top (Requested by User) -->
+                <button
+                    v-if="!isSubmitted"
+                    type="button"
+                    @click="submitTest"
+                    :disabled="isSubmitting"
+                    class="inline-flex items-center gap-1.5 rounded-full px-4 sm:px-5 py-2 text-xs font-bold text-white shadow-xs transition-all duration-200 hover:shadow-md hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer shrink-0"
+                    style="background: var(--brand-gradient);"
                 >
-                    <option v-for="p in totalPages" :key="p" :value="p">
-                        Page {{ p }} (Q{{ (p - 1) * pageSize + 1 }}–{{ Math.min(p * pageSize, questions.length) }})
-                    </option>
-                </select>
+                    <span>{{ isSubmitting ? 'Evaluating...' : 'Submit Test ✓' }}</span>
+                </button>
+                <span
+                    v-else
+                    class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400"
+                >
+                    ✓ Submitted
+                </span>
             </div>
         </div>
 
         <!-- Result Summary Card (After Submission) — SenseLab Session Performance Report -->
         <div
             v-if="isSubmitted && scoreSummary"
-            class="relative overflow-hidden rounded-3xl border border-zinc-200/90 bg-white/95 p-6 sm:p-8 shadow-senselab-elevated backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/95"
+            class="relative z-10 overflow-hidden rounded-3xl border border-zinc-200/90 bg-white/95 p-6 sm:p-8 shadow-senselab-elevated backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/95"
         >
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-5 dark:border-zinc-800/80">
                 <div class="flex items-center gap-3">
@@ -1009,25 +1044,45 @@ watch(currentQuestionIndex, () => {
             </div>
         </div>
 
-        <!-- Bottom Action Bar / Pagination Footer -->
+        <!-- Bottom Action Bar / Sticky Pagination Footer -->
         <div
-            class="sticky bottom-4 z-40 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200/90 bg-white/95 p-4 shadow-senselab-elevated backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/95"
+            class="sticky bottom-4 z-30 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200/90 bg-white/95 p-4 shadow-senselab-elevated backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/95"
         >
-            <!-- Page View Bottom Bar: Page summary and Submit CTA (Top bar controls pagination) -->
+            <!-- Page View Bottom Bar: Both Previous / Next Navigation AND Submit CTA -->
             <template v-if="viewMode === 'page'">
+                <!-- Left: Previous Page & Next Page Primary Navigation (Tactile Buttons) -->
+                <div class="flex items-center gap-2">
+                    <button
+                        type="button"
+                        @click="setPage(currentPage - 1)"
+                        :disabled="currentPage === 1"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-bold text-zinc-800 shadow-xs transition-all hover:bg-zinc-50 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 cursor-pointer"
+                    >
+                        <span>←</span>
+                        <span>Previous Page</span>
+                    </button>
+                    <button
+                        type="button"
+                        @click="setPage(currentPage + 1)"
+                        :disabled="currentPage >= totalPages"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-bold text-zinc-800 shadow-xs transition-all hover:bg-zinc-50 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 cursor-pointer"
+                    >
+                        <span>Next Page</span>
+                        <span>→</span>
+                    </button>
+                </div>
+
+                <!-- Center: Page Status & Answered Count -->
                 <div class="flex items-center gap-3 text-xs text-brand-muted font-medium">
                     <div class="flex items-center gap-1.5">
                         <span>Page</span>
-                        <span class="rounded-md bg-zinc-100 px-2 py-0.5 font-bold text-senselab-heading dark:bg-zinc-800">
+                        <span class="rounded-lg bg-sky-500/10 px-2.5 py-0.5 font-bold text-sky-600 dark:text-sky-400">
                             {{ currentPage }}
                         </span>
                         <span>of {{ totalPages }}</span>
                     </div>
                     <span>•</span>
-                    <span>{{ answeredCount }} of {{ questions.length }} Answered</span>
-                    <span v-if="currentPage < totalPages" class="hidden sm:inline text-xs text-sky-600 dark:text-sky-400 font-semibold cursor-pointer hover:underline" @click="setPage(currentPage + 1)">
-                        (Next Page Available ↑)
-                    </span>
+                    <span><strong class="text-senselab-heading">{{ answeredCount }}</strong> of {{ questions.length }} Answered</span>
                 </div>
             </template>
 
@@ -1038,37 +1093,48 @@ watch(currentQuestionIndex, () => {
                         type="button"
                         @click="prevQuestion"
                         :disabled="currentQuestionIndex === 0"
-                        class="rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-semibold text-zinc-800 transition-all hover:bg-zinc-50 disabled:opacity-40 shadow-xs dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-bold text-zinc-800 shadow-xs transition-all hover:bg-zinc-50 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 cursor-pointer"
                     >
-                        ← Previous Question
+                        <span>←</span>
+                        <span>Previous Question</span>
                     </button>
                     <button
                         v-if="currentQuestionIndex < questions.length - 1"
                         type="button"
                         @click="nextQuestion"
-                        class="rounded-full px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all hover:shadow-md hover:scale-[1.02] active:scale-95"
+                        class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold text-white shadow-xs transition-all hover:shadow-md hover:scale-[1.02] active:scale-95 cursor-pointer"
                         style="background: var(--brand-gradient);"
                     >
-                        Next Question →
+                        <span>Next Question</span>
+                        <span>→</span>
                     </button>
                 </div>
 
                 <div class="text-xs text-brand-muted font-medium">
                     Question <span class="font-bold text-senselab-heading">{{ currentQuestionIndex + 1 }}</span> of <span class="font-bold text-senselab-heading">{{ questions.length }}</span>
+                    • <span class="font-semibold text-senselab-heading">{{ answeredCount }}</span> Answered
                 </div>
             </template>
 
-            <!-- Final Submit Test CTA -->
-            <button
-                v-if="!isSubmitted"
-                type="button"
-                @click="submitTest"
-                :disabled="isSubmitting"
-                class="rounded-full px-6 py-2.5 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
-                style="background: var(--brand-gradient);"
-            >
-                {{ isSubmitting ? 'Evaluating...' : 'Submit Test Session ✓' }}
-            </button>
+            <!-- Final Submit Test CTA (With generous right spacing to clear floating elements) -->
+            <div class="flex items-center gap-2 sm:mr-3">
+                <button
+                    v-if="!isSubmitted"
+                    type="button"
+                    @click="submitTest"
+                    :disabled="isSubmitting"
+                    class="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
+                    style="background: var(--brand-gradient);"
+                >
+                    <span>{{ isSubmitting ? 'Evaluating...' : 'Submit Test Session ✓' }}</span>
+                </button>
+                <div
+                    v-else
+                    class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-400"
+                >
+                    <span>✓ Session Complete</span>
+                </div>
+            </div>
         </div>
     </div>
 </template>
