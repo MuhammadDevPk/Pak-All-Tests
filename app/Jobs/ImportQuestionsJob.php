@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Actions\QuestionBank\StoreGeneratedQuestionsAction;
-use App\Models\ContentModule;
+use App\Actions\QuestionBank\SubjectModuleProvisioner;
 use App\Models\Domain;
 use App\Models\User;
 use Filament\Notifications\Notification;
@@ -15,14 +15,14 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 /**
  * Bulk question import from an uploaded JSON file.
  *
  * For every subject in the file's `subjects` map the job finds-or-creates a
- * `preparation` ContentModule directly under the chosen domain (modules are
- * flat — ContentModule has no parent_id), then inserts that subject's questions
+ * `preparation` ContentModule directly under the chosen domain via
+ * SubjectModuleProvisioner (modules are flat — ContentModule has no
+ * parent_id), then inserts that subject's questions
  * in batches of 50 through StoreGeneratedQuestionsAction (hash dedup + code
  * uniqueness are inherited). Supports `mcq` and `short_answer` items.
  *
@@ -253,15 +253,7 @@ class ImportQuestionsJob implements ShouldQueue
         foreach ($validation['subjects'] as $subjectKey => $subjectTitle) {
             $module = $this->dryRun
                 ? null
-                : ContentModule::firstOrCreate(
-                    ['domain_id' => $domain->id, 'slug' => Str::slug($subjectTitle)."-{$domain->id}"],
-                    [
-                        'title' => $subjectTitle,
-                        'module_type' => 'preparation',
-                        'is_active' => true,
-                        'content_meta' => ['import_subject_key' => $subjectKey],
-                    ]
-                );
+                : SubjectModuleProvisioner::findOrCreate($domain, $subjectKey, $subjectTitle);
 
             $items = $itemsBySubject[$subjectKey] ?? [];
             $inserted = 0;

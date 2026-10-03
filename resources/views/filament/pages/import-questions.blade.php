@@ -148,5 +148,59 @@
                 <p>The import job is executing in the background. This card will automatically update once processing finishes.</p>
             </div>
         @endif
+
+        @if ($linkReport = $this->getLastLinkReport())
+            <div class="qi-card">
+                <p class="qi-micro">Subject-module link report</p>
+                <h3>
+                    {{ $linkReport['dry_run'] ? 'Dry-run preview' : 'Link results' }}
+                    <span class="qi-badge {{ $linkReport['dry_run'] ? 'qi-badge-dry' : 'qi-badge-live' }}">
+                        {{ $linkReport['dry_run'] ? 'DRY RUN — nothing written' : 'LIVE RUN' }}
+                    </span>
+                </h3>
+
+                @if (! empty($linkReport['errors']))
+                    <p><strong>Errors:</strong> {{ implode(' ', $linkReport['errors']) }}</p>
+                @else
+                    <table class="qi-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Module</th>
+                                <th>Linked</th>
+                                <th>Already linked</th>
+                                <th>Via text match</th>
+                                <th>Not found</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($linkReport['subjects'] as $key => $subject)
+                                <tr>
+                                    <td>{{ $subject['title'] }} <code>{{ $key }}</code></td>
+                                    <td class="qi-num">{{ $subject['module_id'] ?? '—' }}@if ($subject['module_created']) (new)@endif</td>
+                                    <td class="qi-num">{{ $subject['linked'] }}</td>
+                                    <td class="qi-num">{{ $subject['already_linked'] }}</td>
+                                    <td class="qi-num">{{ $subject['linked_by_text_match'] }}</td>
+                                    <td class="qi-num">{{ $subject['question_not_found'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    <p style="margin-top: 0.9rem;">
+                        Totals: <span class="qi-num">{{ $linkReport['totals']['linked'] }}</span> linked,
+                        <span class="qi-num">{{ $linkReport['totals']['already_linked'] }}</span> already linked,
+                        <span class="qi-num">{{ $linkReport['totals']['linked_by_text_match'] }}</span> via text match,
+                        <span class="qi-num">{{ $linkReport['totals']['question_not_found'] }}</span> not found
+                        of <span class="qi-num">{{ $linkReport['totals']['processed'] }}</span> map entries.
+                    </p>
+                @endif
+            </div>
+        @elseif ($this->linkReportKey)
+            <div class="qi-card" wire:poll.3s>
+                <p class="qi-micro">Background Linking in Progress</p>
+                <h3>Linking questions to subject modules...</h3>
+                <p>The link job is executing in the background. This card will automatically update once it finishes.</p>
+            </div>
+        @endif
     </div>
 </x-filament-panels::page>

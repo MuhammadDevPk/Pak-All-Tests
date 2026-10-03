@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Jobs\ImportQuestionsJob;
+use App\Jobs\LinkPmaSubjectModulesJob;
 use App\Models\Domain;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
@@ -45,6 +46,8 @@ class ImportQuestions extends Page implements HasSchemas
 
     public ?string $reportKey = null;
 
+    public ?string $linkReportKey = null;
+
     public function mount(): void
     {
         $this->form->fill();
@@ -84,6 +87,15 @@ class ImportQuestions extends Page implements HasSchemas
                             ->helperText('Validate and preview the import without writing anything to the database.')
                             ->default(true),
                     ]),
+                Section::make('Repair: Link Existing Questions')
+                    ->description('One-time repair for questions already in the bank. Creates the five PMA subject modules under the selected domain if missing and links every PMA-ACAD question to its module. Nothing is re-imported and no vectorization jobs are dispatched.')
+                    ->icon(Heroicon::OutlinedLink)
+                    ->schema([
+                        Toggle::make('link_dry_run')
+                            ->label('Dry Run')
+                            ->helperText('Preview what would be linked without writing anything to the database.')
+                            ->default(true),
+                    ]),
             ])
             ->statePath('data');
     }
@@ -95,6 +107,11 @@ class ImportQuestions extends Page implements HasSchemas
                 ->label('Start Import')
                 ->icon(Heroicon::OutlinedArrowUpTray)
                 ->action(fn (): mixed => $this->startImport()),
+            Action::make('linkModules')
+                ->label('Link Questions to Modules')
+                ->icon(Heroicon::OutlinedLink)
+                ->color('warning')
+                ->action(fn (): mixed => $this->startLink()),
         ];
     }
 
@@ -104,6 +121,14 @@ class ImportQuestions extends Page implements HasSchemas
     public function getLastReport(): ?array
     {
         return $this->reportKey ? Cache::get($this->reportKey) : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getLastLinkReport(): ?array
+    {
+        return $this->linkReportKey ? Cache::get($this->linkReportKey) : null;
     }
 
     public function startImport(): mixed
@@ -183,6 +208,67 @@ class ImportQuestions extends Page implements HasSchemas
             Notification::make()
                 ->title('Import started')
                 ->body('The questions are being imported in the background. You will be notified when it finishes.')
+                ->success()
+                ->send();
+        }
+
+        return null;
+    }
+
+    public function startLink(): mixed
+    {
+        @set_time_limit(300);
+
+        $data = $this->form->getState();
+        $domainId = (int) $data['domain_id'];
+
+        $domainActive = Domain::where('id', $domainId)->where('is_active', true)->exists();
+        if (! $domainActive) {
+            Notification::make()
+                ->title('Domain not available')
+                ->body('The selected domain was not found or is inactive.')
+                ->danger()
+                ->send();
+
+            return null;
+        }
+
+        $this->linkReportKey = 'pma_link_report_'.Str::uuid()->toString();
+        $adminUserId = auth()->id() !== null ? (int) auth()->id() : null;
+
+        if ((bool) ($data['link_dry_run'] ?? true)) {
+            // Dry runs execute synchronously so the preview report is available immediately.
+            LinkPmaSubjectModulesJob::dispatchSync(
+                domainId: $domainId,
+                dryRun: true,
+                adminUserId: $adminUserId,
+                reportKey: $this->linkReportKey,
+            );
+
+            $report = Cache::get($this->linkReportKey, []);
+            $totals = $report['totals'] ?? ['linked' => 0, 'already_linked' => 0, 'question_not_found' => 0];
+
+            Notification::make()
+                ->title('Link dry run complete — nothing was written')
+                ->body(sprintf(
+                    '%d would be linked, %d already linked, %d not found.',
+                    $totals['linked'],
+                    $totals['already_linked'],
+                    $totals['question_not_found']
+                ))
+                ->info()
+                ->send();
+        } else {
+            LinkPmaSubjectModulesJob::dispatch(
+                domainId: $domainId,
+                dryRun: false,
+                adminUserId: $adminUserId,
+                reportKey: $this->linkReportKey,
+            );
+
+            Notification::make()
+                ->title('Linking started')
+                ->body('The questions are being linked to their subject modules in the background. You will be notified when it finishes.')
                 ->success()
                 ->send();
         }
