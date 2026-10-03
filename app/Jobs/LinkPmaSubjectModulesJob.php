@@ -413,9 +413,22 @@ class LinkPmaSubjectModulesJob implements ShouldQueue
 
         $admin = $this->adminUserId ? User::find($this->adminUserId) : null;
         if ($admin instanceof User) {
-            $notification = Notification::make()->title($title)->body($body);
-            $failed ? $notification->danger() : $notification->success();
-            $notification->sendToDatabase($admin);
+            try {
+                $notification = Notification::make()->title($title)->body($body);
+                $failed ? $notification->danger() : $notification->success();
+                $notification->sendToDatabase($admin);
+            } catch (\Throwable $e) {
+                // A notification failure must never fail the link run itself.
+                // Seen on servers where the `notifications` table was never
+                // migrated (SQLSTATE[42P01]); the report is already cached above.
+                Log::warning('PMA link notification could not be stored', [
+                    'correlation_id' => $this->reportKey,
+                    'user_id' => $this->adminUserId,
+                    'domain_id' => $this->domainId,
+                    'event' => 'pma_link.notification_failed',
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         Log::info("Question {$mode} finished", [

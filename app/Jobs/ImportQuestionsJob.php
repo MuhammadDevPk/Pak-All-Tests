@@ -354,9 +354,22 @@ class ImportQuestionsJob implements ShouldQueue
 
         $admin = $this->adminUserId ? User::find($this->adminUserId) : null;
         if ($admin) {
-            $notification = Notification::make()->title($title)->body($body);
-            $failed ? $notification->danger() : $notification->success();
-            $notification->sendToDatabase($admin);
+            try {
+                $notification = Notification::make()->title($title)->body($body);
+                $failed ? $notification->danger() : $notification->success();
+                $notification->sendToDatabase($admin);
+            } catch (\Throwable $e) {
+                // A notification failure must never fail the import itself.
+                // Seen on servers where the `notifications` table was never
+                // migrated (SQLSTATE[42P01]); the report is already cached above.
+                Log::warning('Question import notification could not be stored', [
+                    'correlation_id' => $this->reportKey,
+                    'user_id' => $this->adminUserId,
+                    'domain_id' => $this->domainId,
+                    'event' => 'question_import.notification_failed',
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         Log::info("Question {$mode} finished", [

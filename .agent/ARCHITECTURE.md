@@ -160,6 +160,9 @@ app/
 | **`Team`** | `teams` | `name`, `slug`, `is_personal` | `members()`, `invitations()`, `owner()` |
 | **`Membership`** | `team_members` | `team_id`, `user_id`, `role` (owner/admin/member) | `belongsTo(Team)`, `belongsTo(User)` |
 
+### Notification Storage
+- **`notifications`** (no app Eloquent model; Laravel `DatabaseNotification`): `id` (uuid PK), `type`, `notifiable_type`/`notifiable_id` (`morphs`), `data` (`text`), `read_at` (nullable), timestamps. Backs Filament `Notification::sendToDatabase()` used by the bulk import and link-repair jobs. Table added 2026-10-04 (`2026_10_04_000002_create_notifications_table`) — it never existed before, which crashed import dry runs with `SQLSTATE[42P01]`; both jobs now also guard the send with try/catch so a notification failure can never fail the report.
+
 ---
 
 ## 4. Frontend Architecture (Vue 3 + Inertia + SDUI)

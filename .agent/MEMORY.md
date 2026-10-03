@@ -97,6 +97,14 @@ This log records the 10 most critical architectural decisions, infrastructure fi
 - **Rollback Path**: Revert governance markdown commits via `git checkout HEAD~1 -- .agent/`.
 - **Lessons**: Autonomous coding assistants require explicit, falsifiable architectural gates (12-point checklist) and hard failure-mode matrices to prevent recurring regressions on remote cloud databases.
 
+### Entry 12 — 2026-10-04: Import Notification Resilience & Missing notifications Table
+- **Action**: Root-caused the Import Questions dry-run crash (`SQLSTATE[42P01]` on `notifications`): the repo never shipped a migration for Laravel's database-notifications table, so `Filament\Notifications\Notification::sendToDatabase()` threw inside both `ImportQuestionsJob::finish()` and `LinkPmaSubjectModulesJob::finish()`. Wrapped both sends in try/catch (structured warning log, report still cached and shown) and added migration `2026_10_04_000002_create_notifications_table`.
+- **Impact**: Dry runs and queued import/link runs can no longer fail because of a missing or failing notification write; the preview report is always persisted. New environments get the table via `migrate`.
+- **Files Changed**: `app/Jobs/ImportQuestionsJob.php`, `app/Jobs/LinkPmaSubjectModulesJob.php`, `database/migrations/2026_10_04_000002_create_notifications_table.php`, `tests/Feature/QuestionImportTest.php`, `tests/Feature/LinkPmaSubjectModulesTest.php`, `.agent/ARCHITECTURE.md`.
+- **Blast Radius**: isolated — notification step of the two import jobs only; no dispatch signatures, queue names, or data writes changed.
+- **Rollback Path**: `git revert` the branch; migration rolls back with `php artisan migrate:rollback --step=1` (drops only the `notifications` table). Note: the Azure deploy pipeline does not run migrations, so production still needs `php artisan migrate` on the server to create the table — the try/catch keeps imports working regardless.
+- **Lessons**: Reporting paths must never share a failure domain with their notification channel; a dry-run preview dying on its final line destroys trust in the whole report.
+
 ### Entry 10 — 2026-09-23: Question Ingestion Standards & Anti-Pattern Governance
 - **Action**: Established strict repository standards for bulk data ingestion, remote PostgreSQL transaction limits, and Livewire state management.
 - **Impact**: Banned sequential loops inside `DB::transaction(...)` across remote Supabase connections (mandating sub-200ms bulk multi-row inserts); enforced the Cache-Pointer pattern (`$batchId`) to eliminate Livewire modal payload bloat; mandated strict `NULL` sanitization on unique nullable columns (`code`); and instituted the Zero-Token rule (pure PHP for formatted MCQs, AI strictly for distractor generation).
@@ -129,14 +137,6 @@ This log records the 10 most critical architectural decisions, infrastructure fi
 ### Entry 03 — 2026-09-12: Server-Driven UI (SDUI) Dynamic Layout Engine
 - **Action**: Engineered `LayoutEngineService` to dynamically compile domain landing pages, subject hierarchies, and exam flows from database JSON schema definitions.
 - **Impact**: Eliminated brittle hardcoded frontend routes. Landing pages and subject trees adapt instantly to backend schema updates with zero client bundle recompilation.
-
-### Entry 02 — 2026-09-10: Supabase PostgreSQL PgBouncer & Emulated Prepares
-- **Action**: Configured `PDO::ATTR_EMULATE_PREPARES => true` in `config/database.php` on port 6543 (transaction pooling) and created `CachingUserProvider` with Redis caching.
-- **Impact**: Prevented fatal deallocated prepared statement exceptions during PgBouncer pooler connection switches and eliminated a ~1,700ms remote database latency penalty on authenticated requests.
-
-### Entry 01 — 2026-09-08: Multi-Tenant Filament v5 Administration Foundation
-- **Action**: Established administrative panels for domains, hierarchical nodes, question banks, candidate management, and team-scoped resources.
-- **Impact**: Separated system administrative capabilities from public candidate interfaces with granular Spatie role and permission enforcement.
 
 ---
 
