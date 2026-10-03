@@ -69,24 +69,24 @@ const SubjectiveUpload = defineAsyncComponent(
         <!-- Ambient Background Mesh Glow (SenseLab Atmosphere) -->
         <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
             <div
-                class="absolute -top-32 -left-32 mesh-aura-cyan opacity-60"
+                class="mesh-aura-cyan absolute -top-32 -left-32 opacity-60"
             ></div>
             <div
-                class="absolute top-10 -right-32 mesh-aura-warm opacity-40"
+                class="mesh-aura-warm absolute top-10 -right-32 opacity-40"
             ></div>
         </div>
 
         <!-- Hero Header & Track Overview (When browsing modules) -->
         <div
             v-if="!activeModule"
-            class="relative flex flex-col gap-4 rounded-3xl border border-zinc-200/80 bg-white/80 p-6 sm:p-8 shadow-senselab-card backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/80"
+            class="shadow-senselab-card relative flex flex-col gap-4 rounded-3xl border border-zinc-200/80 bg-white/80 p-6 backdrop-blur-md sm:p-8 dark:border-zinc-800/80 dark:bg-zinc-950/80"
         >
             <div class="flex flex-wrap items-center gap-2.5">
                 <div
                     class="inline-flex items-center gap-2 rounded-full border border-sky-200/90 bg-sky-50/80 px-3.5 py-1 text-xs font-semibold text-sky-800 shadow-xs dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300"
                 >
                     <span
-                        class="flex h-2 w-2 rounded-full bg-sky-500 animate-pulse"
+                        class="flex h-2 w-2 animate-pulse rounded-full bg-sky-500"
                     ></span>
                     <span>Official Preparation Track</span>
                     <span class="text-sky-300 dark:text-sky-700">•</span>
@@ -102,12 +102,12 @@ const SubjectiveUpload = defineAsyncComponent(
 
             <div>
                 <h1
-                    class="text-3xl sm:text-4xl font-extrabold tracking-tight text-senselab-heading"
+                    class="text-senselab-heading text-3xl font-extrabold tracking-tight sm:text-4xl"
                 >
                     {{ sdui?.meta?.domain?.name }}
                 </h1>
                 <p
-                    class="mt-2 max-w-3xl text-sm sm:text-base leading-relaxed text-brand-muted"
+                    class="mt-2 max-w-3xl text-sm leading-relaxed text-brand-muted sm:text-base"
                 >
                     Recursive self-improvement preparation workspace. Master
                     concepts through verified high-yield question banks,
@@ -118,7 +118,7 @@ const SubjectiveUpload = defineAsyncComponent(
 
             <!-- Syllabus Status Indicators (Human-readable metadata, zero raw DB paths) -->
             <div
-                class="flex flex-wrap items-center gap-3 pt-2 border-t border-zinc-100 dark:border-zinc-800/80 text-xs text-brand-muted"
+                class="flex flex-wrap items-center gap-3 border-t border-zinc-100 pt-2 text-xs text-brand-muted dark:border-zinc-800/80"
             >
                 <div class="flex items-center gap-1.5 font-medium">
                     <span class="text-emerald-500">✓</span>
@@ -149,12 +149,12 @@ const SubjectiveUpload = defineAsyncComponent(
         <div v-if="activeModule" class="flex flex-1 flex-col gap-4">
             <!-- Sleek Back Navigation Banner -->
             <div
-                class="flex items-center justify-between rounded-2xl border border-zinc-200/80 bg-white/90 p-3 sm:p-4 shadow-senselab-card backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80"
+                class="shadow-senselab-card flex items-center justify-between rounded-2xl border border-zinc-200/80 bg-white/90 p-3 backdrop-blur-md sm:p-4 dark:border-zinc-800 dark:bg-zinc-950/80"
             >
                 <button
                     type="button"
                     @click="closePlayer"
-                    class="group inline-flex items-center gap-2 rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-semibold text-zinc-800 shadow-xs hover:bg-zinc-50 hover:border-zinc-300 active:scale-95 transition-all dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                    class="group inline-flex items-center gap-2 rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-semibold text-zinc-800 shadow-xs transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
                 >
                     <span
                         class="transition-transform duration-200 group-hover:-translate-x-0.5"
@@ -167,7 +167,7 @@ const SubjectiveUpload = defineAsyncComponent(
                     class="flex items-center gap-2 text-xs font-medium text-brand-muted"
                 >
                     <span
-                        class="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"
+                        class="inline-block h-2 w-2 animate-pulse rounded-full bg-emerald-500"
                     ></span>
                     <span class="hidden sm:inline">Active Module:</span>
                     <strong class="text-senselab-heading font-semibold">{{
@@ -211,12 +211,12 @@ const SubjectiveUpload = defineAsyncComponent(
         <div v-else class="flex-1">
             <div
                 v-if="isLoadingModule"
-                class="flex min-h-90 flex-col items-center justify-center gap-3 rounded-3xl border border-zinc-200/80 bg-white/60 p-8 shadow-senselab-card backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/60"
+                class="shadow-senselab-card flex min-h-90 flex-col items-center justify-center gap-3 rounded-3xl border border-zinc-200/80 bg-white/60 p-8 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/60"
             >
                 <div
                     class="h-10 w-10 animate-spin rounded-full border-3 border-sky-500 border-t-transparent"
                 ></div>
-                <p class="text-sm font-semibold text-senselab-heading">
+                <p class="text-senselab-heading text-sm font-semibold">
                     Loading module curriculum...
                 </p>
                 <p class="text-xs text-brand-muted">

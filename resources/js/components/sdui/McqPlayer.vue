@@ -60,17 +60,22 @@ const isTimeLow = computed(
 const answeredCount = computed(() => Object.keys(selectedAnswers.value).length);
 
 const totalPages = computed(() => {
-    if (!props.questions.length) return 1;
+    if (!props.questions.length) {
+        return 1;
+    }
+
     return Math.ceil(props.questions.length / pageSize.value);
 });
 
 const paginatedQuestions = computed(() => {
     if (viewMode.value === 'focus') {
         const q = props.questions[currentQuestionIndex.value];
+
         return q ? [{ ...q, _globalIndex: currentQuestionIndex.value }] : [];
     }
 
     const start = (currentPage.value - 1) * pageSize.value;
+
     return props.questions.slice(start, start + pageSize.value).map((q, i) => ({
         ...q,
         _globalIndex: start + i,
@@ -83,8 +88,10 @@ const currentFocusQuestion = computed(
 
 const emitQuestionChange = () => {
     const q = currentFocusQuestion.value;
+
     if (!q) {
         emit('question-change', null);
+
         return;
     }
 
@@ -96,7 +103,9 @@ const emitQuestionChange = () => {
         const opts = q.payload?.options || [];
         const rawOpt = opts[selectedIdx];
         const text =
-            typeof rawOpt === 'object' ? rawOpt?.text || '' : String(rawOpt ?? '');
+            typeof rawOpt === 'object'
+                ? rawOpt?.text || ''
+                : String(rawOpt ?? '');
         userSelectedText = `${letter}) ${text}`;
     }
 
@@ -104,7 +113,8 @@ const emitQuestionChange = () => {
         ...q,
         user_selected: userSelectedText,
         user_selected_index: selectedIdx ?? null,
-        attempts_made: selectedIdx !== undefined && selectedIdx !== null ? 1 : 0,
+        attempts_made:
+            selectedIdx !== undefined && selectedIdx !== null ? 1 : 0,
         was_revealed: !!revealedAnswers.value[q.id],
     });
 };
@@ -119,23 +129,30 @@ const selectOption = async (question, optionIndex) => {
 
     // In practice or weak mode, record attempt on the server for Threshold Mastery
     try {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        const response = await fetch(`/api/questions/${question.id}/record-attempt`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': csrfToken,
+        const csrfToken =
+            document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content') || '';
+        const response = await fetch(
+            `/api/questions/${question.id}/record-attempt`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: JSON.stringify({
+                    selected_index: optionIndex,
+                    domain_id: props.module?.domain_id || null,
+                    was_revealed: !!revealedAnswers.value[question.id],
+                }),
             },
-            body: JSON.stringify({
-                selected_index: optionIndex,
-                domain_id: props.module?.domain_id || null,
-                was_revealed: !!revealedAnswers.value[question.id],
-            }),
-        });
+        );
 
         if (response.ok) {
             const data = await response.json();
+
             if (data.status === 'success') {
                 masteryState.value[question.id] = {
                     consecutive_correct: data.consecutive_correct,
@@ -150,7 +167,11 @@ const selectOption = async (question, optionIndex) => {
 };
 
 const revealAnswer = async (question) => {
-    if (!question || revealedAnswers.value[question.id] || isRevealing.value[question.id]) {
+    if (
+        !question ||
+        revealedAnswers.value[question.id] ||
+        isRevealing.value[question.id]
+    ) {
         return;
     }
 
@@ -158,7 +179,10 @@ const revealAnswer = async (question) => {
     forfeitedQuestions.value[question.id] = true;
 
     try {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const csrfToken =
+            document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content') || '';
         const response = await fetch(`/api/questions/${question.id}/reveal`, {
             method: 'POST',
             headers: {
@@ -173,12 +197,15 @@ const revealAnswer = async (question) => {
 
         if (response.ok) {
             const data = await response.json();
+
             if (data.status === 'success') {
                 revealedAnswers.value[question.id] = data;
                 showExplanations.value[question.id] = true;
+
                 if (data.weak_status) {
                     masteryState.value[question.id] = data.weak_status;
                 }
+
                 emitQuestionChange();
             }
         }
@@ -196,7 +223,9 @@ const toggleExplanation = (questionId) => {
 const setPage = (page) => {
     if (page >= 1 && page <= totalPages.value) {
         currentPage.value = page;
-        document.querySelector('#mcq-player-container')?.scrollIntoView({ behavior: 'smooth' });
+        document
+            .querySelector('#mcq-player-container')
+            ?.scrollIntoView({ behavior: 'smooth' });
     }
 };
 
@@ -204,31 +233,46 @@ const jumpInputQuery = ref('');
 const paletteFilter = ref('all'); // 'all', 'answered', 'unanswered', 'revealed'
 
 const filteredPaletteQuestions = computed(() => {
-    return props.questions.map((q, idx) => {
-        const isAnswered = selectedAnswers.value[q.id] !== undefined;
-        const isRevealed = !!revealedAnswers.value[q.id];
-        return {
-            ...q,
-            _index: idx,
-            _number: idx + 1,
-            isAnswered,
-            isRevealed,
-        };
-    }).filter((item) => {
-        if (paletteFilter.value === 'answered') return item.isAnswered;
-        if (paletteFilter.value === 'unanswered') return !item.isAnswered;
-        if (paletteFilter.value === 'revealed') return item.isRevealed;
-        return true;
-    });
+    return props.questions
+        .map((q, idx) => {
+            const isAnswered = selectedAnswers.value[q.id] !== undefined;
+            const isRevealed = !!revealedAnswers.value[q.id];
+
+            return {
+                ...q,
+                _index: idx,
+                _number: idx + 1,
+                isAnswered,
+                isRevealed,
+            };
+        })
+        .filter((item) => {
+            if (paletteFilter.value === 'answered') {
+                return item.isAnswered;
+            }
+
+            if (paletteFilter.value === 'unanswered') {
+                return !item.isAnswered;
+            }
+
+            if (paletteFilter.value === 'revealed') {
+                return item.isRevealed;
+            }
+
+            return true;
+        });
 });
 
 const jumpToQuestionNumber = () => {
     const num = parseInt(jumpInputQuery.value, 10);
+
     if (!isNaN(num) && num >= 1 && num <= props.questions.length) {
         goToQuestion(num - 1);
         jumpInputQuery.value = '';
     } else {
-        alert(`Please enter a valid question number between 1 and ${props.questions.length}`);
+        alert(
+            `Please enter a valid question number between 1 and ${props.questions.length}`,
+        );
     }
 };
 
@@ -241,12 +285,21 @@ const goToQuestion = (index) => {
 
         if (viewMode.value === 'page') {
             setTimeout(() => {
-                const targetElement = document.querySelector(`#question-card-${index}`);
+                const targetElement = document.querySelector(
+                    `#question-card-${index}`,
+                );
+
                 if (targetElement) {
-                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                    });
                     targetElement.classList.add('ring-2', 'ring-primary');
                     setTimeout(() => {
-                        targetElement.classList.remove('ring-2', 'ring-primary');
+                        targetElement.classList.remove(
+                            'ring-2',
+                            'ring-primary',
+                        );
                     }, 1500);
                 }
             }, 100);
@@ -257,7 +310,8 @@ const goToQuestion = (index) => {
 const nextQuestion = () => {
     if (currentQuestionIndex.value < props.questions.length - 1) {
         currentQuestionIndex.value++;
-        currentPage.value = Math.floor(currentQuestionIndex.value / pageSize.value) + 1;
+        currentPage.value =
+            Math.floor(currentQuestionIndex.value / pageSize.value) + 1;
         emitQuestionChange();
     }
 };
@@ -265,7 +319,8 @@ const nextQuestion = () => {
 const prevQuestion = () => {
     if (currentQuestionIndex.value > 0) {
         currentQuestionIndex.value--;
-        currentPage.value = Math.floor(currentQuestionIndex.value / pageSize.value) + 1;
+        currentPage.value =
+            Math.floor(currentQuestionIndex.value / pageSize.value) + 1;
         emitQuestionChange();
     }
 };
@@ -305,7 +360,8 @@ const scoreSummary = computed(() => {
         answered: answeredCount.value,
         correct: correctCount,
         percentage,
-        isPassed: percentage >= (props.module?.content_meta?.passing_score || 60),
+        isPassed:
+            percentage >= (props.module?.content_meta?.passing_score || 60),
     };
 });
 
@@ -316,11 +372,17 @@ const submitTest = async () => {
         clearInterval(timerInterval);
     }
 
-    if (!props.module?.id) return;
+    if (!props.module?.id) {
+        return;
+    }
 
     isSubmitting.value = true;
+
     try {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const csrfToken =
+            document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content') || '';
         const response = await fetch(`/api/modules/${props.module.id}/submit`, {
             method: 'POST',
             headers: {
@@ -336,6 +398,7 @@ const submitTest = async () => {
 
         if (response.ok) {
             const data = await response.json();
+
             if (data.status === 'success') {
                 serverSummary.value = {
                     total: data.summary.total_questions,
@@ -390,7 +453,7 @@ watch(currentQuestionIndex, () => {
     <div id="mcq-player-container" class="flex flex-col gap-6">
         <!-- Modern SenseLab Header Controls Bar -->
         <div
-            class="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-zinc-200/90 bg-white/95 p-4 sm:p-5 shadow-senselab-card backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/90"
+            class="shadow-senselab-card flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-zinc-200/90 bg-white/95 p-4 backdrop-blur-md sm:p-5 dark:border-zinc-800 dark:bg-zinc-950/90"
         >
             <div class="flex items-center gap-3.5">
                 <div
@@ -401,25 +464,40 @@ watch(currentQuestionIndex, () => {
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h2 class="text-base sm:text-lg font-bold tracking-tight text-senselab-heading">
+                        <h2
+                            class="text-senselab-heading text-base font-bold tracking-tight sm:text-lg"
+                        >
                             {{ module.title || 'MCQ Test Player' }}
                         </h2>
                         <span
                             v-if="isWeakMode"
                             class="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400"
                         >
-                            <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                            <span
+                                class="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500"
+                            ></span>
                             Weak MCQs Revision
                         </span>
                     </div>
-                    <p class="text-xs text-brand-muted mt-0.5">
+                    <p class="mt-0.5 text-xs text-brand-muted">
                         <span v-if="viewMode === 'page'">
-                            Showing Questions {{ (currentPage - 1) * pageSize + 1 }}–{{ Math.min(currentPage * pageSize, questions.length) }} of {{ questions.length }}
+                            Showing Questions
+                            {{ (currentPage - 1) * pageSize + 1 }}–{{
+                                Math.min(
+                                    currentPage * pageSize,
+                                    questions.length,
+                                )
+                            }}
+                            of {{ questions.length }}
                         </span>
                         <span v-else>
-                            Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}
+                            Question {{ currentQuestionIndex + 1 }} of
+                            {{ questions.length }}
                         </span>
-                        • <span class="font-semibold text-senselab-heading">{{ answeredCount }} Answered</span>
+                        •
+                        <span class="text-senselab-heading font-semibold"
+                            >{{ answeredCount }} Answered</span
+                        >
                     </p>
                 </div>
             </div>
@@ -427,7 +505,9 @@ watch(currentQuestionIndex, () => {
             <!-- Toolbar Controls: View Mode, Page Size, Timer, Navigator -->
             <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                 <!-- Dual View Mode Switcher -->
-                <div class="flex items-center rounded-lg border border-sidebar-border bg-sidebar/50 p-0.5 text-xs">
+                <div
+                    class="flex items-center rounded-lg border border-sidebar-border bg-sidebar/50 p-0.5 text-xs"
+                >
                     <button
                         type="button"
                         @click="viewMode = 'page'"
@@ -457,7 +537,10 @@ watch(currentQuestionIndex, () => {
                 </div>
 
                 <!-- Page Size Selector (only in Page View) -->
-                <div v-if="viewMode === 'page'" class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div
+                    v-if="viewMode === 'page'"
+                    class="flex items-center gap-1.5 text-xs text-muted-foreground"
+                >
                     <span class="hidden sm:inline">Show:</span>
                     <select
                         v-model.number="pageSize"
@@ -476,17 +559,25 @@ watch(currentQuestionIndex, () => {
                     <button
                         type="button"
                         @click="isNavigatorOpen = !isNavigatorOpen"
-                        class="flex items-center gap-2 rounded-xl border border-sidebar-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-xs hover:border-primary/50 hover:bg-sidebar-accent transition-all"
+                        class="flex items-center gap-2 rounded-xl border border-sidebar-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-xs transition-all hover:border-primary/50 hover:bg-sidebar-accent"
                         title="Open full question palette to view answered status or jump to any question"
                     >
-                        <span class="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-[11px] font-bold text-primary">
+                        <span
+                            class="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-[11px] font-bold text-primary"
+                        >
                             #
                         </span>
                         <span class="font-bold">Question Palette</span>
-                        <span class="rounded-full bg-sidebar px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                        <span
+                            class="rounded-full bg-sidebar px-2 py-0.5 text-[10px] font-semibold text-muted-foreground"
+                        >
                             {{ answeredCount }}/{{ questions.length }}
                         </span>
-                        <span class="text-[10px] text-muted-foreground transition-transform duration-200" :class="{ 'rotate-180': isNavigatorOpen }">▼</span>
+                        <span
+                            class="text-[10px] text-muted-foreground transition-transform duration-200"
+                            :class="{ 'rotate-180': isNavigatorOpen }"
+                            >▼</span
+                        >
                     </button>
 
                     <!-- Backdrop to dismiss on outside click -->
@@ -499,58 +590,75 @@ watch(currentQuestionIndex, () => {
                     <!-- Collapsible Question Palette Modal / Popover -->
                     <div
                         v-if="isNavigatorOpen"
-                        class="absolute right-0 top-full z-50 mt-2 w-80 sm:w-96 rounded-2xl border border-sidebar-border/90 bg-popover p-4 shadow-2xl backdrop-blur-md dark:bg-card"
+                        class="absolute top-full right-0 z-50 mt-2 w-80 rounded-2xl border border-sidebar-border/90 bg-popover p-4 shadow-2xl backdrop-blur-md sm:w-96 dark:bg-card"
                     >
                         <!-- Header with Title & Close -->
-                        <div class="flex items-center justify-between border-b border-sidebar-border/50 pb-2.5 mb-3">
+                        <div
+                            class="mb-3 flex items-center justify-between border-b border-sidebar-border/50 pb-2.5"
+                        >
                             <div>
-                                <div class="flex items-center gap-1.5 font-bold text-sm text-foreground">
+                                <div
+                                    class="flex items-center gap-1.5 text-sm font-bold text-foreground"
+                                >
                                     <span>📋</span>
                                     <span>Question Palette & Navigator</span>
                                 </div>
                                 <p class="text-[11px] text-muted-foreground">
-                                    Click any number to view or jump directly to it
+                                    Click any number to view or jump directly to
+                                    it
                                 </p>
                             </div>
                             <button
                                 type="button"
                                 @click="isNavigatorOpen = false"
-                                class="rounded-lg p-1 text-xs text-muted-foreground hover:bg-sidebar-accent hover:text-foreground transition-colors"
+                                class="rounded-lg p-1 text-xs text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
                             >
                                 ✕
                             </button>
                         </div>
 
                         <!-- Direct Jump by Number Input -->
-                        <form @submit.prevent="jumpToQuestionNumber" class="flex items-center gap-2 mb-3">
+                        <form
+                            @submit.prevent="jumpToQuestionNumber"
+                            class="mb-3 flex items-center gap-2"
+                        >
                             <div class="relative flex-1">
-                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-semibold">#</span>
+                                <span
+                                    class="absolute top-1/2 left-2.5 -translate-y-1/2 text-xs font-semibold text-muted-foreground"
+                                    >#</span
+                                >
                                 <input
                                     v-model="jumpInputQuery"
                                     type="number"
                                     min="1"
                                     :max="questions.length"
-                                    :placeholder="'Jump to question # (1–' + questions.length + ')'"
-                                    class="w-full rounded-lg border border-sidebar-border bg-background py-1.5 pl-6 pr-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-hidden"
+                                    :placeholder="
+                                        'Jump to question # (1–' +
+                                        questions.length +
+                                        ')'
+                                    "
+                                    class="w-full rounded-lg border border-sidebar-border bg-background py-1.5 pr-2.5 pl-6 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-hidden"
                                 />
                             </div>
                             <button
                                 type="submit"
-                                class="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors"
+                                class="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90"
                             >
                                 Jump ➔
                             </button>
                         </form>
 
                         <!-- Filter Tabs -->
-                        <div class="flex flex-wrap items-center gap-1 mb-2.5 text-[11px] border-b border-sidebar-border/40 pb-2">
+                        <div
+                            class="mb-2.5 flex flex-wrap items-center gap-1 border-b border-sidebar-border/40 pb-2 text-[11px]"
+                        >
                             <button
                                 type="button"
                                 @click="paletteFilter = 'all'"
                                 :class="[
                                     'rounded-md px-2 py-0.5 font-semibold transition-colors',
                                     paletteFilter === 'all'
-                                        ? 'bg-primary/10 text-primary font-bold'
+                                        ? 'bg-primary/10 font-bold text-primary'
                                         : 'text-muted-foreground hover:text-foreground',
                                 ]"
                             >
@@ -562,7 +670,7 @@ watch(currentQuestionIndex, () => {
                                 :class="[
                                     'rounded-md px-2 py-0.5 font-semibold transition-colors',
                                     paletteFilter === 'answered'
-                                        ? 'bg-emerald-500/10 text-emerald-600 font-bold'
+                                        ? 'bg-emerald-500/10 font-bold text-emerald-600'
                                         : 'text-muted-foreground hover:text-foreground',
                                 ]"
                             >
@@ -574,11 +682,13 @@ watch(currentQuestionIndex, () => {
                                 :class="[
                                     'rounded-md px-2 py-0.5 font-semibold transition-colors',
                                     paletteFilter === 'unanswered'
-                                        ? 'bg-sidebar text-foreground font-bold'
+                                        ? 'bg-sidebar font-bold text-foreground'
                                         : 'text-muted-foreground hover:text-foreground',
                                 ]"
                             >
-                                Unattempted ({{ questions.length - answeredCount }})
+                                Unattempted ({{
+                                    questions.length - answeredCount
+                                }})
                             </button>
                             <button
                                 v-if="Object.keys(revealedAnswers).length > 0"
@@ -587,33 +697,49 @@ watch(currentQuestionIndex, () => {
                                 :class="[
                                     'rounded-md px-2 py-0.5 font-semibold transition-colors',
                                     paletteFilter === 'revealed'
-                                        ? 'bg-amber-500/10 text-amber-600 font-bold'
+                                        ? 'bg-amber-500/10 font-bold text-amber-600'
                                         : 'text-muted-foreground hover:text-foreground',
                                 ]"
                             >
-                                👁️ Revealed ({{ Object.keys(revealedAnswers).length }})
+                                👁️ Revealed ({{
+                                    Object.keys(revealedAnswers).length
+                                }})
                             </button>
                         </div>
 
                         <!-- Status Legend -->
-                        <div class="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground mb-3">
+                        <div
+                            class="mb-3 flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground"
+                        >
                             <div class="flex items-center gap-1">
-                                <span class="h-2 w-2 rounded-full bg-primary" /> Current
+                                <span class="h-2 w-2 rounded-full bg-primary" />
+                                Current
                             </div>
                             <div class="flex items-center gap-1">
-                                <span class="h-2 w-2 rounded-full bg-emerald-500" /> Answered
+                                <span
+                                    class="h-2 w-2 rounded-full bg-emerald-500"
+                                />
+                                Answered
                             </div>
                             <div class="flex items-center gap-1">
-                                <span class="h-2 w-2 rounded-full bg-amber-500" /> Revealed
+                                <span
+                                    class="h-2 w-2 rounded-full bg-amber-500"
+                                />
+                                Revealed
                             </div>
                             <div class="flex items-center gap-1">
-                                <span class="h-2 w-2 rounded-full bg-muted-foreground/30" /> Unattempted
+                                <span
+                                    class="h-2 w-2 rounded-full bg-muted-foreground/30"
+                                />
+                                Unattempted
                             </div>
                         </div>
 
                         <!-- Question Numbers Grid -->
                         <div class="max-h-60 overflow-y-auto pr-1">
-                            <div class="grid grid-cols-6 sm:grid-cols-7 gap-1.5">
+                            <div
+                                class="grid grid-cols-6 gap-1.5 sm:grid-cols-7"
+                            >
                                 <button
                                     v-for="item in filteredPaletteQuestions"
                                     :key="item.id || item._index"
@@ -624,12 +750,17 @@ watch(currentQuestionIndex, () => {
                                         currentQuestionIndex === item._index
                                             ? 'bg-primary font-bold text-primary-foreground ring-2 ring-primary ring-offset-1'
                                             : item.isAnswered
-                                              ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-bold hover:bg-emerald-500/25'
+                                              ? 'border border-emerald-500/30 bg-emerald-500/15 font-bold text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-400'
                                               : item.isRevealed
-                                                ? 'border border-amber-500/30 bg-amber-500/15 text-amber-700 dark:text-amber-400 font-bold hover:bg-amber-500/25'
+                                                ? 'border border-amber-500/30 bg-amber-500/15 font-bold text-amber-700 hover:bg-amber-500/25 dark:text-amber-400'
                                                 : 'bg-sidebar-accent/50 text-muted-foreground hover:bg-sidebar-accent hover:text-foreground',
                                     ]"
-                                    :title="'Question #' + item._number + (item.isAnswered ? ' (Answered)' : '') + (item.isRevealed ? ' (Revealed)' : '')"
+                                    :title="
+                                        'Question #' +
+                                        item._number +
+                                        (item.isAnswered ? ' (Answered)' : '') +
+                                        (item.isRevealed ? ' (Revealed)' : '')
+                                    "
                                 >
                                     {{ item._number }}
                                 </button>
@@ -644,8 +775,8 @@ watch(currentQuestionIndex, () => {
                     :class="[
                         'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-colors',
                         isTimeLow
-                            ? 'bg-destructive/10 text-destructive animate-pulse'
-                            : 'bg-sidebar text-foreground border border-sidebar-border',
+                            ? 'animate-pulse bg-destructive/10 text-destructive'
+                            : 'border border-sidebar-border bg-sidebar text-foreground',
                     ]"
                 >
                     <span>⏱️</span>
@@ -665,7 +796,7 @@ watch(currentQuestionIndex, () => {
         <!-- Top Page Navigation Bar (Page View Only — Directly under Subject Banner) -->
         <div
             v-if="viewMode === 'page'"
-            class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200/80 bg-white/80 p-3.5 shadow-senselab-card backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/60 transition-all"
+            class="shadow-senselab-card flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200/80 bg-white/80 p-3.5 backdrop-blur-md transition-all dark:border-zinc-800 dark:bg-zinc-900/60"
         >
             <!-- Left: Previous Page & Next Page Primary Navigation -->
             <div class="flex items-center gap-2">
@@ -673,7 +804,7 @@ watch(currentQuestionIndex, () => {
                     type="button"
                     @click="setPage(currentPage - 1)"
                     :disabled="currentPage === 1"
-                    class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-bold text-zinc-800 transition-all hover:bg-zinc-50 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs active:scale-95 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                    class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-bold text-zinc-800 shadow-xs transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
                 >
                     ← Previous Page
                 </button>
@@ -681,38 +812,55 @@ watch(currentQuestionIndex, () => {
                     type="button"
                     @click="setPage(currentPage + 1)"
                     :disabled="currentPage >= totalPages"
-                    class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-bold text-zinc-800 transition-all hover:bg-zinc-50 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs active:scale-95 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                    class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-bold text-zinc-800 shadow-xs transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
                 >
                     Next Page →
                 </button>
             </div>
 
             <!-- Center: Page Indicator & Question Range Details -->
-            <div class="flex items-center gap-3 text-xs text-brand-muted font-medium">
+            <div
+                class="flex items-center gap-3 text-xs font-medium text-brand-muted"
+            >
                 <div class="flex items-center gap-1.5">
                     <span>Page</span>
-                    <span class="rounded-lg bg-sky-500/10 px-2.5 py-0.5 font-bold text-sky-600 dark:text-sky-400 text-sm">
+                    <span
+                        class="rounded-lg bg-sky-500/10 px-2.5 py-0.5 text-sm font-bold text-sky-600 dark:text-sky-400"
+                    >
                         {{ currentPage }}
                     </span>
                     <span>of</span>
-                    <span class="font-bold text-senselab-heading text-sm">{{ totalPages }}</span>
+                    <span class="text-senselab-heading text-sm font-bold">{{
+                        totalPages
+                    }}</span>
                 </div>
-                <span class="hidden sm:inline text-zinc-300 dark:text-zinc-700">|</span>
-                <span class="hidden sm:inline text-xs font-medium text-senselab-heading">
-                    Showing Questions {{ (currentPage - 1) * pageSize + 1 }}–{{ Math.min(currentPage * pageSize, questions.length) }} of {{ questions.length }}
+                <span class="hidden text-zinc-300 sm:inline dark:text-zinc-700"
+                    >|</span
+                >
+                <span
+                    class="text-senselab-heading hidden text-xs font-medium sm:inline"
+                >
+                    Showing Questions {{ (currentPage - 1) * pageSize + 1 }}–{{
+                        Math.min(currentPage * pageSize, questions.length)
+                    }}
+                    of {{ questions.length }}
                 </span>
             </div>
 
             <!-- Right: Quick Jump by Page Selector -->
             <div class="flex items-center gap-2 text-xs">
-                <span class="text-brand-muted hidden md:inline">Jump to page:</span>
+                <span class="hidden text-brand-muted md:inline"
+                    >Jump to page:</span
+                >
                 <select
                     :value="currentPage"
                     @change="setPage(Number($event.target.value))"
                     class="rounded-xl border border-zinc-200/90 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-800 shadow-xs focus:border-sky-500 focus:outline-hidden dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
                 >
                     <option v-for="p in totalPages" :key="p" :value="p">
-                        Page {{ p }} (Q{{ (p - 1) * pageSize + 1 }}–{{ Math.min(p * pageSize, questions.length) }})
+                        Page {{ p }} (Q{{ (p - 1) * pageSize + 1 }}–{{
+                            Math.min(p * pageSize, questions.length)
+                        }})
                     </option>
                 </select>
             </div>
@@ -721,19 +869,24 @@ watch(currentQuestionIndex, () => {
         <!-- Result Summary Card (After Submission) — SenseLab Session Performance Report -->
         <div
             v-if="isSubmitted && scoreSummary"
-            class="relative overflow-hidden rounded-3xl border border-zinc-200/90 bg-white/95 p-6 sm:p-8 shadow-senselab-elevated backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/95"
+            class="shadow-senselab-elevated relative overflow-hidden rounded-3xl border border-zinc-200/90 bg-white/95 p-6 backdrop-blur-md sm:p-8 dark:border-zinc-800 dark:bg-zinc-950/95"
         >
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-5 dark:border-zinc-800/80">
+            <div
+                class="flex flex-col justify-between gap-4 border-b border-zinc-100 pb-5 sm:flex-row sm:items-center dark:border-zinc-800/80"
+            >
                 <div class="flex items-center gap-3">
-                    <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-xl">
+                    <div
+                        class="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-xl"
+                    >
                         🎯
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold text-senselab-heading">
+                        <h3 class="text-senselab-heading text-lg font-bold">
                             Test Results Summary
                         </h3>
                         <p class="text-xs text-brand-muted">
-                            Verified session metrics evaluated against institutional passing standards.
+                            Verified session metrics evaluated against
+                            institutional passing standards.
                         </p>
                     </div>
                 </div>
@@ -749,63 +902,110 @@ watch(currentQuestionIndex, () => {
                     <span
                         :class="[
                             'h-2 w-2 rounded-full',
-                            scoreSummary.isPassed ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse',
+                            scoreSummary.isPassed
+                                ? 'bg-emerald-500'
+                                : 'animate-pulse bg-amber-500',
                         ]"
                     />
-                    {{ scoreSummary.isPassed ? 'PASSED TARGET BENCHMARK' : 'NEEDS PRACTICE — WEAK MCQS ISOLATED' }}
+                    {{
+                        scoreSummary.isPassed
+                            ? 'PASSED TARGET BENCHMARK'
+                            : 'NEEDS PRACTICE — WEAK MCQS ISOLATED'
+                    }}
                 </span>
             </div>
 
             <!-- Metric Tiles Grid -->
             <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <!-- Score Metric Card (SenseLab Gradient Accent) -->
-                <div class="rounded-2xl border border-sky-100 bg-sky-50/50 p-4 text-center dark:border-sky-900/40 dark:bg-sky-950/20">
-                    <span class="block text-xs font-bold uppercase tracking-wider text-sky-700 dark:text-sky-400">Score</span>
-                    <span class="mt-1 block text-3xl font-extrabold tracking-tight text-senselab-heading">
+                <div
+                    class="rounded-2xl border border-sky-100 bg-sky-50/50 p-4 text-center dark:border-sky-900/40 dark:bg-sky-950/20"
+                >
+                    <span
+                        class="block text-xs font-bold tracking-wider text-sky-700 uppercase dark:text-sky-400"
+                        >Score</span
+                    >
+                    <span
+                        class="text-senselab-heading mt-1 block text-3xl font-extrabold tracking-tight"
+                    >
                         {{ scoreSummary.percentage }}%
                     </span>
-                    <span class="text-[11px] text-brand-muted font-medium">accuracy rate</span>
+                    <span class="text-[11px] font-medium text-brand-muted"
+                        >accuracy rate</span
+                    >
                 </div>
 
                 <!-- Correct Metric Card (Emerald Accent) -->
-                <div class="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4 text-center dark:border-emerald-900/40 dark:bg-emerald-950/20">
-                    <span class="block text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Correct</span>
-                    <span class="mt-1 block text-3xl font-extrabold tracking-tight text-emerald-600 dark:text-emerald-400">
+                <div
+                    class="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4 text-center dark:border-emerald-900/40 dark:bg-emerald-950/20"
+                >
+                    <span
+                        class="block text-xs font-bold tracking-wider text-emerald-700 uppercase dark:text-emerald-400"
+                        >Correct</span
+                    >
+                    <span
+                        class="mt-1 block text-3xl font-extrabold tracking-tight text-emerald-600 dark:text-emerald-400"
+                    >
                         {{ scoreSummary.correct }} / {{ scoreSummary.total }}
                     </span>
-                    <span class="text-[11px] text-brand-muted font-medium">correct answers</span>
+                    <span class="text-[11px] font-medium text-brand-muted"
+                        >correct answers</span
+                    >
                 </div>
 
                 <!-- Answered Metric Card (Purple Accent) -->
-                <div class="rounded-2xl border border-purple-100 bg-purple-50/50 p-4 text-center dark:border-purple-900/40 dark:bg-purple-950/20">
-                    <span class="block text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400">Answered</span>
-                    <span class="mt-1 block text-3xl font-extrabold tracking-tight text-senselab-heading">
+                <div
+                    class="rounded-2xl border border-purple-100 bg-purple-50/50 p-4 text-center dark:border-purple-900/40 dark:bg-purple-950/20"
+                >
+                    <span
+                        class="block text-xs font-bold tracking-wider text-purple-700 uppercase dark:text-purple-400"
+                        >Answered</span
+                    >
+                    <span
+                        class="text-senselab-heading mt-1 block text-3xl font-extrabold tracking-tight"
+                    >
                         {{ scoreSummary.answered }}
                     </span>
-                    <span class="text-[11px] text-brand-muted font-medium">of {{ scoreSummary.total }} completed</span>
+                    <span class="text-[11px] font-medium text-brand-muted"
+                        >of {{ scoreSummary.total }} completed</span
+                    >
                 </div>
 
                 <!-- Target Pass Metric Card (Amber Accent) -->
-                <div class="rounded-2xl border border-amber-100 bg-amber-50/50 p-4 text-center dark:border-amber-900/40 dark:bg-amber-950/20">
-                    <span class="block text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">Target Pass</span>
-                    <span class="mt-1 block text-3xl font-extrabold tracking-tight text-senselab-heading">
+                <div
+                    class="rounded-2xl border border-amber-100 bg-amber-50/50 p-4 text-center dark:border-amber-900/40 dark:bg-amber-950/20"
+                >
+                    <span
+                        class="block text-xs font-bold tracking-wider text-amber-700 uppercase dark:text-amber-400"
+                        >Target Pass</span
+                    >
+                    <span
+                        class="text-senselab-heading mt-1 block text-3xl font-extrabold tracking-tight"
+                    >
                         {{ module.content_meta?.passing_score || 60 }}%
                     </span>
-                    <span class="text-[11px] text-brand-muted font-medium">benchmark threshold</span>
+                    <span class="text-[11px] font-medium text-brand-muted"
+                        >benchmark threshold</span
+                    >
                 </div>
             </div>
 
             <!-- Weak Question Spaced Repetition Note -->
-            <div class="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 text-xs text-brand-muted dark:border-zinc-800 dark:bg-zinc-900/40">
+            <div
+                class="mt-6 flex flex-col items-start justify-between gap-3 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 text-xs text-brand-muted sm:flex-row sm:items-center dark:border-zinc-800 dark:bg-zinc-900/40"
+            >
                 <div class="flex items-center gap-2.5">
                     <span class="text-base">💡</span>
                     <span>
-                        Questions missed or revealed during this attempt are actively isolated in your <strong>Revision & Weak MCQs</strong> workspace for spaced repetition.
+                        Questions missed or revealed during this attempt are
+                        actively isolated in your
+                        <strong>Revision & Weak MCQs</strong> workspace for
+                        spaced repetition.
                     </span>
                 </div>
                 <a
                     href="/revision-weak-questions"
-                    class="shrink-0 inline-flex items-center gap-1.5 font-bold text-sky-600 hover:text-sky-700 dark:text-sky-400 hover:underline"
+                    class="inline-flex shrink-0 items-center gap-1.5 font-bold text-sky-600 hover:text-sky-700 hover:underline dark:text-sky-400"
                 >
                     <span>View Revision Bank</span>
                     <span>→</span>
@@ -819,35 +1019,47 @@ watch(currentQuestionIndex, () => {
                 v-for="q in paginatedQuestions"
                 :key="q.id || q._globalIndex"
                 :id="'question-card-' + q._globalIndex"
-                class="flex flex-col gap-5 rounded-3xl border border-zinc-200/90 bg-white/95 p-6 sm:p-7 shadow-senselab-card hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-950/90 transition-all"
+                class="shadow-senselab-card flex flex-col gap-5 rounded-3xl border border-zinc-200/90 bg-white/95 p-6 transition-all hover:border-zinc-300 sm:p-7 dark:border-zinc-800 dark:bg-zinc-950/90"
             >
                 <!-- Question Header: Number + Text on Left, Reveal Button & Mastery on Right -->
-                <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                    <div class="flex items-start gap-3.5 flex-1">
+                <div
+                    class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"
+                >
+                    <div class="flex flex-1 items-start gap-3.5">
                         <span
                             class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-xs font-extrabold text-sky-600 dark:text-sky-400"
                         >
                             {{ q._globalIndex + 1 }}
                         </span>
-                        <h3 class="text-base font-bold leading-relaxed text-senselab-heading">
+                        <h3
+                            class="text-senselab-heading text-base leading-relaxed font-bold"
+                        >
                             {{ q.question_text }}
                         </h3>
                     </div>
 
                     <!-- Right Side Actions: Threshold Mastery Pip + Reveal Answer Button -->
-                    <div class="flex items-center gap-2 self-start shrink-0">
+                    <div class="flex shrink-0 items-center gap-2 self-start">
                         <!-- Mastery Badge (if in Weak MCQs mode or previously tracked) -->
                         <div
                             v-if="masteryState[q.id]"
                             class="flex items-center gap-1.5 rounded-full border border-zinc-200/80 bg-zinc-50 px-3 py-1 text-xs dark:border-zinc-800 dark:bg-zinc-900/60"
-                            :title="masteryState[q.id].is_mastered ? 'Mastered!' : 'Answer correctly 2 consecutive times to master'"
+                            :title="
+                                masteryState[q.id].is_mastered
+                                    ? 'Mastered!'
+                                    : 'Answer correctly 2 consecutive times to master'
+                            "
                         >
-                            <span class="text-[11px] text-brand-muted font-medium">Mastery:</span>
+                            <span
+                                class="text-[11px] font-medium text-brand-muted"
+                                >Mastery:</span
+                            >
                             <div class="flex items-center gap-1">
                                 <span
                                     :class="[
                                         'h-2 w-2 rounded-full',
-                                        masteryState[q.id].consecutive_correct >= 1
+                                        masteryState[q.id]
+                                            .consecutive_correct >= 1
                                             ? 'bg-emerald-500'
                                             : 'bg-zinc-300 dark:bg-zinc-700',
                                     ]"
@@ -855,7 +1067,8 @@ watch(currentQuestionIndex, () => {
                                 <span
                                     :class="[
                                         'h-2 w-2 rounded-full',
-                                        masteryState[q.id].consecutive_correct >= 2
+                                        masteryState[q.id]
+                                            .consecutive_correct >= 2
                                             ? 'bg-emerald-500'
                                             : 'bg-zinc-300 dark:bg-zinc-700',
                                     ]"
@@ -867,7 +1080,10 @@ watch(currentQuestionIndex, () => {
                             >
                                 ✓ Mastered
                             </span>
-                            <span v-else class="text-[10px] text-brand-muted font-medium">
+                            <span
+                                v-else
+                                class="text-[10px] font-medium text-brand-muted"
+                            >
                                 {{ masteryState[q.id].consecutive_correct }}/2
                             </span>
                         </div>
@@ -880,12 +1096,18 @@ watch(currentQuestionIndex, () => {
                             :class="[
                                 'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all',
                                 revealedAnswers[q.id]
-                                    ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 cursor-default'
-                                    : 'border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 active:scale-95 shadow-2xs',
+                                    ? 'cursor-default border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                    : 'border border-amber-500/30 bg-amber-500/10 text-amber-700 shadow-2xs hover:bg-amber-500/20 active:scale-95 dark:text-amber-400',
                             ]"
                         >
-                            <span v-if="isRevealing[q.id]" class="inline-block animate-spin">⏳</span>
-                            <span v-else-if="revealedAnswers[q.id]">✓ Answer Revealed</span>
+                            <span
+                                v-if="isRevealing[q.id]"
+                                class="inline-block animate-spin"
+                                >⏳</span
+                            >
+                            <span v-else-if="revealedAnswers[q.id]"
+                                >✓ Answer Revealed</span
+                            >
                             <span v-else>👁️ Reveal Answer</span>
                         </button>
                     </div>
@@ -898,7 +1120,10 @@ watch(currentQuestionIndex, () => {
                 >
                     <span>⚠️</span>
                     <span>
-                        <strong>Answer revealed:</strong> This question is marked as forfeited (0 points) and added to your <strong>Revision & Weak MCQs</strong> workspace for 2-strike spaced mastery.
+                        <strong>Answer revealed:</strong> This question is
+                        marked as forfeited (0 points) and added to your
+                        <strong>Revision & Weak MCQs</strong> workspace for
+                        2-strike spaced mastery.
                     </span>
                 </div>
 
@@ -913,46 +1138,71 @@ watch(currentQuestionIndex, () => {
                         :class="[
                             'group flex items-center justify-between rounded-2xl border p-4 text-left text-sm transition-all duration-150',
                             // 1. Revealed state styling
-                            revealedAnswers[q.id] && revealedAnswers[q.id].correct_option_index === idx
-                                ? 'border-emerald-500 bg-emerald-50/70 font-semibold text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100 ring-2 ring-emerald-500/40'
-                                : revealedAnswers[q.id] && selectedAnswers[q.id] === idx && revealedAnswers[q.id].correct_option_index !== idx
+                            revealedAnswers[q.id] &&
+                            revealedAnswers[q.id].correct_option_index === idx
+                                ? 'border-emerald-500 bg-emerald-50/70 font-semibold text-emerald-950 ring-2 ring-emerald-500/40 dark:bg-emerald-950/40 dark:text-emerald-100'
+                                : revealedAnswers[q.id] &&
+                                    selectedAnswers[q.id] === idx &&
+                                    revealedAnswers[q.id]
+                                        .correct_option_index !== idx
                                   ? 'border-destructive bg-destructive/10 font-semibold text-destructive'
-                                  // 2. Post-submission grading state
-                                  : isSubmitted && (serverResults[q.id]?.correct_index === idx || (!serverResults[q.id] && q.payload?.correct_option_index === idx))
+                                  : // 2. Post-submission grading state
+                                    isSubmitted &&
+                                      (serverResults[q.id]?.correct_index ===
+                                          idx ||
+                                          (!serverResults[q.id] &&
+                                              q.payload
+                                                  ?.correct_option_index ===
+                                                  idx))
                                     ? 'border-emerald-500 bg-emerald-50/70 font-semibold text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100'
                                     : selectedAnswers[q.id] === idx
-                                      ? isSubmitted && serverResults[q.id] && !serverResults[q.id]?.correct
-                                        ? 'border-destructive bg-destructive/10 font-semibold text-destructive'
-                                        : 'border-sky-500 bg-sky-50/70 font-semibold text-sky-950 dark:bg-sky-950/40 dark:text-sky-100 shadow-2xs'
-                                      : 'border-zinc-200/90 bg-zinc-50/40 text-senselab-heading hover:border-zinc-300 hover:bg-white dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:bg-zinc-900',
+                                      ? isSubmitted &&
+                                        serverResults[q.id] &&
+                                        !serverResults[q.id]?.correct
+                                          ? 'border-destructive bg-destructive/10 font-semibold text-destructive'
+                                          : 'border-sky-500 bg-sky-50/70 font-semibold text-sky-950 shadow-2xs dark:bg-sky-950/40 dark:text-sky-100'
+                                      : 'text-senselab-heading border-zinc-200/90 bg-zinc-50/40 hover:border-zinc-300 hover:bg-white dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:bg-zinc-900',
                         ]"
                     >
                         <div class="flex items-center gap-3">
                             <span
                                 :class="[
                                     'flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-xs font-bold transition-colors',
-                                    revealedAnswers[q.id] && revealedAnswers[q.id].correct_option_index === idx
+                                    revealedAnswers[q.id] &&
+                                    revealedAnswers[q.id]
+                                        .correct_option_index === idx
                                         ? 'bg-emerald-500 text-white'
                                         : selectedAnswers[q.id] === idx
                                           ? 'bg-sky-600 text-white'
-                                          : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700',
+                                          : 'bg-zinc-100 text-zinc-600 group-hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:group-hover:bg-zinc-700',
                                 ]"
                             >
                                 {{ String.fromCharCode(65 + idx) }}
                             </span>
-                            <span>{{ typeof option === 'object' ? option.text || '' : option }}</span>
+                            <span>{{
+                                typeof option === 'object'
+                                    ? option.text || ''
+                                    : option
+                            }}</span>
                         </div>
 
                         <!-- Right badge: Correct vs Selected Indicator -->
                         <div class="flex items-center gap-2">
                             <span
-                                v-if="revealedAnswers[q.id] && revealedAnswers[q.id].correct_option_index === idx"
+                                v-if="
+                                    revealedAnswers[q.id] &&
+                                    revealedAnswers[q.id]
+                                        .correct_option_index === idx
+                                "
                                 class="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300"
                             >
                                 ✓ Correct Answer
                             </span>
                             <span
-                                v-else-if="revealedAnswers[q.id] && selectedAnswers[q.id] === idx"
+                                v-else-if="
+                                    revealedAnswers[q.id] &&
+                                    selectedAnswers[q.id] === idx
+                                "
                                 class="rounded-full bg-destructive/20 px-2.5 py-0.5 text-[11px] font-bold text-destructive"
                             >
                                 ✗ Your Choice
@@ -964,8 +1214,6 @@ watch(currentQuestionIndex, () => {
                         </div>
                     </button>
                 </div>
-
-
 
                 <!-- Solution Explanation Toggle & Card -->
                 <div
@@ -984,18 +1232,26 @@ watch(currentQuestionIndex, () => {
                         class="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
                     >
                         <span>💡</span>
-                        {{ showExplanations[q.id] ? 'Hide Solution Explanation' : 'View Solution Explanation' }}
+                        {{
+                            showExplanations[q.id]
+                                ? 'Hide Solution Explanation'
+                                : 'View Solution Explanation'
+                        }}
                     </button>
 
                     <div
                         v-if="showExplanations[q.id]"
-                        class="mt-3 rounded-2xl border border-sky-200/80 bg-sky-50/60 p-5 text-xs leading-relaxed text-senselab-heading shadow-senselab-card dark:border-sky-900/50 dark:bg-sky-950/30"
+                        class="text-senselab-heading shadow-senselab-card mt-3 rounded-2xl border border-sky-200/80 bg-sky-50/60 p-5 text-xs leading-relaxed dark:border-sky-900/50 dark:bg-sky-950/30"
                     >
-                        <div class="flex items-center gap-2 mb-1.5 text-sky-700 dark:text-sky-300 font-bold">
+                        <div
+                            class="mb-1.5 flex items-center gap-2 font-bold text-sky-700 dark:text-sky-300"
+                        >
                             <span>📘</span>
                             <span>Solution & Academic Insights:</span>
                         </div>
-                        <p class="whitespace-pre-line text-brand-body leading-relaxed">
+                        <p
+                            class="leading-relaxed whitespace-pre-line text-brand-body"
+                        >
                             {{
                                 revealedAnswers[q.id]?.explanation ||
                                 serverResults[q.id]?.explanation ||
@@ -1011,21 +1267,32 @@ watch(currentQuestionIndex, () => {
 
         <!-- Bottom Action Bar / Pagination Footer -->
         <div
-            class="sticky bottom-4 z-40 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200/90 bg-white/95 p-4 shadow-senselab-elevated backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/95"
+            class="shadow-senselab-elevated sticky bottom-4 z-40 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200/90 bg-white/95 p-4 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/95"
         >
             <!-- Page View Bottom Bar: Page summary and Submit CTA (Top bar controls pagination) -->
             <template v-if="viewMode === 'page'">
-                <div class="flex items-center gap-3 text-xs text-brand-muted font-medium">
+                <div
+                    class="flex items-center gap-3 text-xs font-medium text-brand-muted"
+                >
                     <div class="flex items-center gap-1.5">
                         <span>Page</span>
-                        <span class="rounded-md bg-zinc-100 px-2 py-0.5 font-bold text-senselab-heading dark:bg-zinc-800">
+                        <span
+                            class="text-senselab-heading rounded-md bg-zinc-100 px-2 py-0.5 font-bold dark:bg-zinc-800"
+                        >
                             {{ currentPage }}
                         </span>
                         <span>of {{ totalPages }}</span>
                     </div>
                     <span>•</span>
-                    <span>{{ answeredCount }} of {{ questions.length }} Answered</span>
-                    <span v-if="currentPage < totalPages" class="hidden sm:inline text-xs text-sky-600 dark:text-sky-400 font-semibold cursor-pointer hover:underline" @click="setPage(currentPage + 1)">
+                    <span
+                        >{{ answeredCount }} of
+                        {{ questions.length }} Answered</span
+                    >
+                    <span
+                        v-if="currentPage < totalPages"
+                        class="hidden cursor-pointer text-xs font-semibold text-sky-600 hover:underline sm:inline dark:text-sky-400"
+                        @click="setPage(currentPage + 1)"
+                    >
                         (Next Page Available ↑)
                     </span>
                 </div>
@@ -1038,7 +1305,7 @@ watch(currentQuestionIndex, () => {
                         type="button"
                         @click="prevQuestion"
                         :disabled="currentQuestionIndex === 0"
-                        class="rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-semibold text-zinc-800 transition-all hover:bg-zinc-50 disabled:opacity-40 shadow-xs dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                        class="rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-semibold text-zinc-800 shadow-xs transition-all hover:bg-zinc-50 disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
                     >
                         ← Previous Question
                     </button>
@@ -1046,15 +1313,22 @@ watch(currentQuestionIndex, () => {
                         v-if="currentQuestionIndex < questions.length - 1"
                         type="button"
                         @click="nextQuestion"
-                        class="rounded-full px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all hover:shadow-md hover:scale-[1.02] active:scale-95"
-                        style="background: var(--brand-gradient);"
+                        class="rounded-full px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all hover:scale-[1.02] hover:shadow-md active:scale-95"
+                        style="background: var(--brand-gradient)"
                     >
                         Next Question →
                     </button>
                 </div>
 
-                <div class="text-xs text-brand-muted font-medium">
-                    Question <span class="font-bold text-senselab-heading">{{ currentQuestionIndex + 1 }}</span> of <span class="font-bold text-senselab-heading">{{ questions.length }}</span>
+                <div class="text-xs font-medium text-brand-muted">
+                    Question
+                    <span class="text-senselab-heading font-bold">{{
+                        currentQuestionIndex + 1
+                    }}</span>
+                    of
+                    <span class="text-senselab-heading font-bold">{{
+                        questions.length
+                    }}</span>
                 </div>
             </template>
 
@@ -1064,8 +1338,8 @@ watch(currentQuestionIndex, () => {
                 type="button"
                 @click="submitTest"
                 :disabled="isSubmitting"
-                class="rounded-full px-6 py-2.5 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
-                style="background: var(--brand-gradient);"
+                class="cursor-pointer rounded-full px-6 py-2.5 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-95 disabled:opacity-50"
+                style="background: var(--brand-gradient)"
             >
                 {{ isSubmitting ? 'Evaluating...' : 'Submit Test Session ✓' }}
             </button>

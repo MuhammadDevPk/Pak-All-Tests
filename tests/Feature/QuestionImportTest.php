@@ -7,6 +7,7 @@ use App\Models\ContentModule;
 use App\Models\Domain;
 use App\Models\QuestionBank;
 use App\Models\User;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
@@ -223,21 +224,25 @@ it('completes the dry run even when the notifications table is missing', functio
     $reportKey = 'import-no-notif-table-'.$suffix;
     Storage::disk('local')->put('imports/'.$reportKey.'.json', json_encode(importTestPayload($suffix)));
 
-    (new ImportQuestionsJob(
-        filePath: 'imports/'.$reportKey.'.json',
-        domainId: $domain->id,
-        dryRun: true,
-        adminUserId: $admin->id,
-        reportKey: $reportKey,
-    ))->handle(app(StoreGeneratedQuestionsAction::class));
+    try {
+        (new ImportQuestionsJob(
+            filePath: 'imports/'.$reportKey.'.json',
+            domainId: $domain->id,
+            dryRun: true,
+            adminUserId: $admin->id,
+            reportKey: $reportKey,
+        ))->handle(app(StoreGeneratedQuestionsAction::class));
 
-    $report = Cache::get($reportKey);
+        $report = Cache::get($reportKey);
 
-    expect($report)->not->toBeNull()
-        ->and($report['dry_run'])->toBeTrue()
-        ->and($report['errors'])->toBeEmpty()
-        ->and($report['totals']['inserted'])->toBe(3)
-        ->and($report['totals']['duplicates_skipped'])->toBe(0)
-        ->and($report['totals']['invalid'])->toBe(0)
-        ->and(QuestionBank::count())->toBe(0);
+        expect($report)->not->toBeNull()
+            ->and($report['dry_run'])->toBeTrue()
+            ->and($report['errors'])->toBeEmpty()
+            ->and($report['totals']['inserted'])->toBe(3)
+            ->and($report['totals']['duplicates_skipped'])->toBe(0)
+            ->and($report['totals']['invalid'])->toBe(0)
+            ->and(QuestionBank::count())->toBe(0);
+    } finally {
+        Artisan::call('migrate', ['--path' => 'database/migrations/2026_10_04_000002_create_notifications_table.php']);
+    }
 });

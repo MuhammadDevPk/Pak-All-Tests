@@ -7,6 +7,7 @@ use App\Models\ContentModule;
 use App\Models\Domain;
 use App\Models\QuestionBank;
 use App\Models\User;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -196,6 +197,7 @@ it('reports a missing map file as an error without throwing', function (): void 
 it('completes the dry run when the notifications table is missing', function (): void {
     $domain = makeLinkTestDomain();
     makeLinkTestQuestion('PMA-ACAD-T001', 'What is the test capital of Linkistan?');
+    makeLinkTestQuestion('PMA-ACAD-T002', 'Which test river flows through Linkistan?');
     $mapPath = writeLinkMapFixture(linkFixtureMap());
 
     $uniq = strtolower(Str::random(8));
@@ -206,18 +208,22 @@ it('completes the dry run when the notifications table is missing', function ():
 
     $reportKey = 'test_link_no_notif_'.Str::uuid()->toString();
 
-    LinkPmaSubjectModulesJob::dispatchSync(
-        domainId: $domain->id,
-        dryRun: true,
-        adminUserId: $admin->id,
-        reportKey: $reportKey,
-        mapPath: $mapPath,
-    );
+    try {
+        LinkPmaSubjectModulesJob::dispatchSync(
+            domainId: $domain->id,
+            dryRun: true,
+            adminUserId: $admin->id,
+            reportKey: $reportKey,
+            mapPath: $mapPath,
+        );
 
-    $report = Cache::get($reportKey);
+        $report = Cache::get($reportKey);
 
-    expect($report)->not->toBeNull();
-    expect($report['errors'])->toBe([]);
-    expect($report['totals']['processed'])->toBe(2);
-    expect($report['totals']['linked'])->toBe(2);
+        expect($report)->not->toBeNull();
+        expect($report['errors'])->toBe([]);
+        expect($report['totals']['processed'])->toBe(2);
+        expect($report['totals']['linked'])->toBe(2);
+    } finally {
+        Artisan::call('migrate', ['--path' => 'database/migrations/2026_10_04_000002_create_notifications_table.php']);
+    }
 });

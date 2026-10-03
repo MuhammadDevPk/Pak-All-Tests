@@ -14,6 +14,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -354,21 +355,29 @@ class ImportQuestionsJob implements ShouldQueue
 
         $admin = $this->adminUserId ? User::find($this->adminUserId) : null;
         if ($admin) {
-            try {
-                $notification = Notification::make()->title($title)->body($body);
-                $failed ? $notification->danger() : $notification->success();
-                $notification->sendToDatabase($admin);
-            } catch (\Throwable $e) {
-                // A notification failure must never fail the import itself.
-                // Seen on servers where the `notifications` table was never
-                // migrated (SQLSTATE[42P01]); the report is already cached above.
-                Log::warning('Question import notification could not be stored', [
+            if (! Schema::hasTable('notifications')) {
+                Log::warning('Question import notification could not be stored: notifications table does not exist', [
                     'correlation_id' => $this->reportKey,
                     'user_id' => $this->adminUserId,
                     'domain_id' => $this->domainId,
                     'event' => 'question_import.notification_failed',
-                    'error' => $e->getMessage(),
+                    'error' => 'Table notifications does not exist.',
                 ]);
+            } else {
+                try {
+                    $notification = Notification::make()->title($title)->body($body);
+                    $failed ? $notification->danger() : $notification->success();
+                    $notification->sendToDatabase($admin);
+                } catch (\Throwable $e) {
+                    // A notification failure must never fail the import itself.
+                    Log::warning('Question import notification could not be stored', [
+                        'correlation_id' => $this->reportKey,
+                        'user_id' => $this->adminUserId,
+                        'domain_id' => $this->domainId,
+                        'event' => 'question_import.notification_failed',
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
         }
 

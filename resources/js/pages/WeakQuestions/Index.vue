@@ -189,7 +189,7 @@ const exitPractice = async () => {
                         class="flex items-center gap-2 text-xs text-muted-foreground"
                     >
                         <span
-                            class="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"
+                            class="inline-block h-2 w-2 animate-pulse rounded-full bg-emerald-500"
                         />
                         Spaced Revision Active Session
                     </div>
@@ -206,12 +206,12 @@ const exitPractice = async () => {
             <template v-else>
                 <!-- Hero Header with Ambient SenseLab Aura -->
                 <div
-                    class="relative flex flex-col sm:flex-row sm:items-center justify-between gap-5 rounded-3xl border border-zinc-200/80 bg-white/80 p-6 sm:p-8 shadow-senselab-card backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/80"
+                    class="shadow-senselab-card relative flex flex-col justify-between gap-5 rounded-3xl border border-zinc-200/80 bg-white/80 p-6 backdrop-blur-md sm:flex-row sm:items-center sm:p-8 dark:border-zinc-800/80 dark:bg-zinc-950/80"
                 >
                     <div>
                         <div class="flex flex-wrap items-center gap-2.5">
                             <h1
-                                class="text-2xl sm:text-3xl font-extrabold tracking-tight text-senselab-heading"
+                                class="text-senselab-heading text-2xl font-extrabold tracking-tight sm:text-3xl"
                             >
                                 Revision & Weak MCQs
                             </h1>
@@ -223,7 +223,7 @@ const exitPractice = async () => {
                             </span>
                         </div>
                         <p
-                            class="mt-2 max-w-2xl text-xs sm:text-sm text-brand-muted leading-relaxed"
+                            class="mt-2 max-w-2xl text-xs leading-relaxed text-brand-muted sm:text-sm"
                         >
                             Targeted spaced repetition. Every question where an
                             answer was revealed or incorrectly chosen is
@@ -233,7 +233,7 @@ const exitPractice = async () => {
                     </div>
 
                     <!-- Global Practice Launch Button -->
-                    <div class="flex items-center gap-3 shrink-0">
+                    <div class="flex shrink-0 items-center gap-3">
                         <button
                             type="button"
                             @click="startPractice(null)"
@@ -241,7 +241,7 @@ const exitPractice = async () => {
                                 isLoadingPractice ||
                                 currentSummary.total_active === 0
                             "
-                            class="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-xs sm:text-sm font-bold text-white shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                            class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full px-6 py-3 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
                             style="background: var(--brand-gradient)"
                         >
                             <Play
@@ -267,7 +267,7 @@ const exitPractice = async () => {
 
                 <!-- 2-Strike Threshold Mastery Protocol Explainer -->
                 <div
-                    class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-3xl border border-zinc-200/90 bg-white/90 p-5 text-xs leading-relaxed text-senselab-heading shadow-senselab-card backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80"
+                    class="text-senselab-heading shadow-senselab-card flex flex-col items-start justify-between gap-4 rounded-3xl border border-zinc-200/90 bg-white/90 p-5 text-xs leading-relaxed backdrop-blur-md sm:flex-row sm:items-center dark:border-zinc-800 dark:bg-zinc-950/80"
                 >
                     <div class="flex items-start gap-3.5">
                         <div
@@ -276,11 +276,11 @@ const exitPractice = async () => {
                             <GraduationCap class="h-5 w-5" />
                         </div>
                         <div>
-                            <div class="font-bold text-senselab-heading">
+                            <div class="text-senselab-heading font-bold">
                                 Military & Academic Rigor: How Threshold Mastery
                                 Works
                             </div>
-                            <div class="text-brand-muted mt-0.5">
+                            <div class="mt-0.5 text-brand-muted">
                                 If you click <strong>Reveal Answer</strong> or
                                 submit an incorrect option, the question enters
                                 this revision bank. To graduate to
@@ -292,7 +292,7 @@ const exitPractice = async () => {
                         </div>
                     </div>
                     <div
-                        class="flex shrink-0 items-center gap-2.5 rounded-full border border-zinc-200/80 bg-zinc-50 px-3.5 py-1.5 text-xs font-semibold text-senselab-heading dark:border-zinc-800 dark:bg-zinc-900"
+                        class="text-senselab-heading flex shrink-0 items-center gap-2.5 rounded-full border border-zinc-200/80 bg-zinc-50 px-3.5 py-1.5 text-xs font-semibold dark:border-zinc-800 dark:bg-zinc-900"
                     >
                         <span class="text-amber-600 dark:text-amber-400"
                             >● ○ 1/2 Progress</span
@@ -308,10 +308,10 @@ const exitPractice = async () => {
                 <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
                     <!-- 1. Active Weak Questions (Amber Accent) -->
                     <div
-                        class="flex flex-col justify-between rounded-3xl border border-amber-100 bg-amber-50/50 p-5 shadow-senselab-card dark:border-amber-900/40 dark:bg-amber-950/20"
+                        class="shadow-senselab-card flex flex-col justify-between rounded-3xl border border-amber-100 bg-amber-50/50 p-5 dark:border-amber-900/40 dark:bg-amber-950/20"
                     >
                         <div
-                            class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400"
+                            class="flex items-center justify-between text-xs font-bold tracking-wider text-amber-700 uppercase dark:text-amber-400"
                         >
                             <span>Active Weak MCQs</span>
                             <div
@@ -324,7 +324,7 @@ const exitPractice = async () => {
                         </div>
                         <div class="mt-4 flex items-baseline gap-2">
                             <span
-                                class="text-3xl sm:text-4xl font-extrabold tracking-tight text-senselab-heading"
+                                class="text-senselab-heading text-3xl font-extrabold tracking-tight sm:text-4xl"
                             >
                                 {{ currentSummary.total_active }}
                             </span>
@@ -335,7 +335,7 @@ const exitPractice = async () => {
                             </span>
                         </div>
                         <div
-                            class="mt-1 text-[11px] text-brand-muted font-medium"
+                            class="mt-1 text-[11px] font-medium text-brand-muted"
                         >
                             pending graduation
                         </div>
@@ -343,10 +343,10 @@ const exitPractice = async () => {
 
                     <!-- 2. Mastered Questions (Emerald Accent) -->
                     <div
-                        class="flex flex-col justify-between rounded-3xl border border-emerald-100 bg-emerald-50/50 p-5 shadow-senselab-card dark:border-emerald-900/40 dark:bg-emerald-950/20"
+                        class="shadow-senselab-card flex flex-col justify-between rounded-3xl border border-emerald-100 bg-emerald-50/50 p-5 dark:border-emerald-900/40 dark:bg-emerald-950/20"
                     >
                         <div
-                            class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400"
+                            class="flex items-center justify-between text-xs font-bold tracking-wider text-emerald-700 uppercase dark:text-emerald-400"
                         >
                             <span>Mastered Questions</span>
                             <div
@@ -359,7 +359,7 @@ const exitPractice = async () => {
                         </div>
                         <div class="mt-4 flex items-baseline gap-2">
                             <span
-                                class="text-3xl sm:text-4xl font-extrabold tracking-tight text-emerald-600 dark:text-emerald-400"
+                                class="text-3xl font-extrabold tracking-tight text-emerald-600 sm:text-4xl dark:text-emerald-400"
                             >
                                 {{ currentSummary.total_mastered }}
                             </span>
@@ -370,7 +370,7 @@ const exitPractice = async () => {
                             </span>
                         </div>
                         <div
-                            class="mt-1 text-[11px] text-brand-muted font-medium"
+                            class="mt-1 text-[11px] font-medium text-brand-muted"
                         >
                             2 consecutive correct answers
                         </div>
@@ -378,10 +378,10 @@ const exitPractice = async () => {
 
                     <!-- 3. Total Identified Weaknesses (Sky Accent) -->
                     <div
-                        class="flex flex-col justify-between rounded-3xl border border-sky-100 bg-sky-50/50 p-5 shadow-senselab-card dark:border-sky-900/40 dark:bg-sky-950/20"
+                        class="shadow-senselab-card flex flex-col justify-between rounded-3xl border border-sky-100 bg-sky-50/50 p-5 dark:border-sky-900/40 dark:bg-sky-950/20"
                     >
                         <div
-                            class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-sky-700 dark:text-sky-400"
+                            class="flex items-center justify-between text-xs font-bold tracking-wider text-sky-700 uppercase dark:text-sky-400"
                         >
                             <span>Total Identified</span>
                             <div
@@ -394,7 +394,7 @@ const exitPractice = async () => {
                         </div>
                         <div class="mt-4 flex items-baseline gap-2">
                             <span
-                                class="text-3xl sm:text-4xl font-extrabold tracking-tight text-senselab-heading"
+                                class="text-senselab-heading text-3xl font-extrabold tracking-tight sm:text-4xl"
                             >
                                 {{ currentSummary.total_tracked }}
                             </span>
@@ -403,7 +403,7 @@ const exitPractice = async () => {
                             </span>
                         </div>
                         <div
-                            class="mt-1 text-[11px] text-brand-muted font-medium"
+                            class="mt-1 text-[11px] font-medium text-brand-muted"
                         >
                             historical failure events
                         </div>
@@ -411,10 +411,10 @@ const exitPractice = async () => {
 
                     <!-- 4. Retention & Mastery Rate (Purple Accent) -->
                     <div
-                        class="flex flex-col justify-between rounded-3xl border border-purple-100 bg-purple-50/50 p-5 shadow-senselab-card dark:border-purple-900/40 dark:bg-purple-950/20"
+                        class="shadow-senselab-card flex flex-col justify-between rounded-3xl border border-purple-100 bg-purple-50/50 p-5 dark:border-purple-900/40 dark:bg-purple-950/20"
                     >
                         <div
-                            class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400"
+                            class="flex items-center justify-between text-xs font-bold tracking-wider text-purple-700 uppercase dark:text-purple-400"
                         >
                             <span>Mastery Rate</span>
                             <div
@@ -427,7 +427,7 @@ const exitPractice = async () => {
                         </div>
                         <div class="mt-4 flex items-baseline gap-2">
                             <span
-                                class="text-3xl sm:text-4xl font-extrabold tracking-tight text-senselab-heading"
+                                class="text-senselab-heading text-3xl font-extrabold tracking-tight sm:text-4xl"
                             >
                                 {{ masteryRate }}%
                             </span>
@@ -438,7 +438,7 @@ const exitPractice = async () => {
                             </span>
                         </div>
                         <div
-                            class="mt-1 text-[11px] text-brand-muted font-medium"
+                            class="mt-1 text-[11px] font-medium text-brand-muted"
                         >
                             graduated from revision bank
                         </div>
@@ -454,28 +454,28 @@ const exitPractice = async () => {
                 >
                     <div class="flex items-center justify-between">
                         <h3
-                            class="text-xs font-bold uppercase tracking-wider text-brand-muted"
+                            class="text-xs font-bold tracking-wider text-brand-muted uppercase"
                         >
                             Weak Questions by Subject
                         </h3>
                     </div>
                     <div
-                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"
+                        class="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3"
                     >
                         <div
                             v-for="(
                                 count, subject
                             ) in currentSummary.by_subject"
                             :key="subject"
-                            class="flex items-center justify-between rounded-2xl border border-zinc-200/90 bg-white/95 p-4.5 shadow-senselab-card hover:border-sky-500/40 transition-all dark:border-zinc-800 dark:bg-zinc-950/90"
+                            class="shadow-senselab-card flex items-center justify-between rounded-2xl border border-zinc-200/90 bg-white/95 p-4.5 transition-all hover:border-sky-500/40 dark:border-zinc-800 dark:bg-zinc-950/90"
                         >
                             <div>
                                 <h4
-                                    class="text-sm font-bold text-senselab-heading"
+                                    class="text-senselab-heading text-sm font-bold"
                                 >
                                     {{ subject }}
                                 </h4>
-                                <p class="text-xs text-brand-muted mt-0.5">
+                                <p class="mt-0.5 text-xs text-brand-muted">
                                     {{ count }}
                                     {{ count === 1 ? 'Question' : 'Questions' }}
                                     need practice
@@ -484,7 +484,7 @@ const exitPractice = async () => {
                             <button
                                 type="button"
                                 @click="selectedSubjectFilter = String(subject)"
-                                class="rounded-full border border-zinc-200/90 bg-white px-3.5 py-1.5 text-xs font-semibold text-zinc-800 hover:bg-zinc-50 shadow-2xs dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                                class="rounded-full border border-zinc-200/90 bg-white px-3.5 py-1.5 text-xs font-semibold text-zinc-800 shadow-2xs hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
                             >
                                 Filter Subject
                             </button>
@@ -494,15 +494,15 @@ const exitPractice = async () => {
 
                 <!-- Active Weak Questions Directory -->
                 <div
-                    class="flex flex-col gap-4 rounded-3xl border border-zinc-200/90 bg-white/95 p-6 shadow-senselab-card dark:border-zinc-800 dark:bg-zinc-950/90"
+                    class="shadow-senselab-card flex flex-col gap-4 rounded-3xl border border-zinc-200/90 bg-white/95 p-6 dark:border-zinc-800 dark:bg-zinc-950/90"
                 >
                     <!-- Table Toolbar -->
                     <div
-                        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 pb-4 dark:border-zinc-800/80"
+                        class="flex flex-col justify-between gap-3 border-b border-zinc-100 pb-4 sm:flex-row sm:items-center dark:border-zinc-800/80"
                     >
                         <div class="flex items-center gap-2.5">
                             <h3
-                                class="text-base font-bold text-senselab-heading"
+                                class="text-senselab-heading text-base font-bold"
                             >
                                 Question Bank Drilldown
                             </h3>
@@ -540,7 +540,7 @@ const exitPractice = async () => {
                                 v-model="searchQuery"
                                 type="text"
                                 placeholder="Search question text or code..."
-                                class="w-48 sm:w-64 rounded-xl border border-zinc-200/90 bg-white px-3.5 py-1.5 text-xs font-medium text-senselab-heading placeholder:text-zinc-400 shadow-2xs focus:border-sky-500 focus:outline-hidden dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
+                                class="text-senselab-heading w-48 rounded-xl border border-zinc-200/90 bg-white px-3.5 py-1.5 text-xs font-medium shadow-2xs placeholder:text-zinc-400 focus:border-sky-500 focus:outline-hidden sm:w-64 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
                             />
                         </div>
                     </div>
@@ -553,10 +553,10 @@ const exitPractice = async () => {
                         <div
                             v-for="(item, idx) in filteredItems"
                             :key="item.id"
-                            class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-zinc-50/40 p-4.5 shadow-2xs hover:border-zinc-300 hover:bg-white hover:shadow-senselab-card transition-all dark:border-zinc-800/80 dark:bg-zinc-900/30 dark:hover:bg-zinc-900"
+                            class="hover:shadow-senselab-card flex flex-col justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-zinc-50/40 p-4.5 shadow-2xs transition-all hover:border-zinc-300 hover:bg-white sm:flex-row sm:items-center dark:border-zinc-800/80 dark:bg-zinc-900/30 dark:hover:bg-zinc-900"
                         >
                             <!-- Question Info -->
-                            <div class="flex items-start gap-3.5 flex-1">
+                            <div class="flex flex-1 items-start gap-3.5">
                                 <span
                                     class="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-xs font-extrabold text-sky-600 dark:text-sky-400"
                                 >
@@ -564,7 +564,7 @@ const exitPractice = async () => {
                                 </span>
                                 <div class="flex flex-col gap-1.5">
                                     <p
-                                        class="text-sm font-semibold leading-snug text-senselab-heading"
+                                        class="text-senselab-heading text-sm leading-snug font-semibold"
                                     >
                                         {{ item.question_text }}
                                     </p>
@@ -592,7 +592,7 @@ const exitPractice = async () => {
 
                             <!-- Mastery Progress & Telemetry Badges -->
                             <div
-                                class="flex items-center gap-3 shrink-0 self-end sm:self-center"
+                                class="flex shrink-0 items-center gap-3 self-end sm:self-center"
                             >
                                 <!-- Telemetry (Revealed & Failed counts) -->
                                 <div
@@ -621,7 +621,7 @@ const exitPractice = async () => {
                                     class="flex items-center gap-1.5 rounded-full border border-zinc-200/80 bg-white px-3 py-1 text-xs dark:border-zinc-800 dark:bg-zinc-900"
                                 >
                                     <span
-                                        class="text-[11px] text-brand-muted font-medium"
+                                        class="text-[11px] font-medium text-brand-muted"
                                         >Mastery:</span
                                     >
                                     <div class="flex items-center gap-1">
@@ -643,7 +643,7 @@ const exitPractice = async () => {
                                         />
                                     </div>
                                     <span
-                                        class="text-[10px] font-bold text-senselab-heading"
+                                        class="text-senselab-heading text-[10px] font-bold"
                                     >
                                         {{ item.consecutive_correct }}/2
                                     </span>
@@ -658,7 +658,7 @@ const exitPractice = async () => {
                         class="flex flex-col items-center justify-center py-12 text-center text-muted-foreground"
                     >
                         <div
-                            class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mb-3"
+                            class="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                         >
                             <CheckCircle2 class="h-6 w-6" />
                         </div>
