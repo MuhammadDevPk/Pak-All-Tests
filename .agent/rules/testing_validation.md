@@ -39,9 +39,17 @@ All components added to the SDUI registry must have their validation constraints
 
 ## 4. Forensic QA & The Real-User Verification Law (Canonical Rule)
 
+> **Master Protocol**: See [`QA.md`](file:///QA.md) for the complete forensic inspection checklist and real-user walkthroughs.
+
 Passing unit tests are a baseline sanity check, **never proof of correctness**. Automated tests frequently assert on their author's assumptions, use clean factories, and run against mocked or `fake` drivers that silently pass fatal production bugs.
 
-Every engineer and autonomous agent must execute **Forensic Real-User QA** — manually inspecting code line-by-line and testing against unexpected, hostile, and boundary data.
+**The Supreme QA Mandate**: Never believe purely in unit tests. Every developer and autonomous agent must execute **Line-by-Line Forensic QA** — manually inspecting every line of modified code against:
+1. **Logical Bugs**: Falsy zero traps (`if (!val)` when `val === 0`), off-by-one errors, inverted conditionals, race conditions.
+2. **Silent Bugs**: Swallowed catch blocks, unhandled early returns, loose PHP type coercion (`(int) 'string' === 0`), scrubbed payload assumptions.
+3. **Loud Bugs**: Null dereferencing, undefined array keys, unhandled 5xx/4xx external API responses.
+4. **Performance Bugs**: N+1 queries, unindexed `WHERE`/`ORDER BY` clauses, Supabase remote WAN latency cascades, frontend memory leaks.
+5. **Incomplete Logic & Half-Baked Features**: Missing backend routes for frontend buttons, desynchronized active filters between frontend and backend, missing loading/error states, dead clicks.
+6. **Client-Server Disconnects**: Synthetic click vs pointer-capture conflicts on touch/drag, keyboard accessibility failures (`Enter`/`Space`), CSS backdrop-blur z-index stacking collisions.
 
 ### The 6 Real-User Verification Directives:
 
