@@ -568,7 +568,6 @@ const handleWindowResize = () => {
     }
 
     const maxW = Math.min(880, window.innerWidth - 24);
-    const maxH = window.innerHeight - 110;
 
     if (drawerWidth.value > maxW) {
         drawerWidth.value = maxW;
@@ -789,14 +788,14 @@ const formatContent = (text) => {
         <button
             type="button"
             @click="handleClick"
-            class="group relative flex h-14 items-center gap-2.5 rounded-full border border-emerald-500/30 bg-card/95 px-4 sm:px-5 py-3 text-sm font-semibold text-foreground shadow-2xl backdrop-blur-md transition-shadow duration-200 hover:border-emerald-500 hover:bg-card hover:shadow-emerald-500/10 dark:bg-zinc-900/95 dark:hover:border-emerald-400 cursor-grab active:cursor-grabbing"
+            class="group relative flex h-14 cursor-grab items-center gap-2.5 rounded-full border border-emerald-500/30 bg-card/95 px-4 py-3 text-sm font-semibold text-foreground shadow-2xl backdrop-blur-md transition-shadow duration-200 hover:border-emerald-500 hover:bg-card hover:shadow-emerald-500/10 active:cursor-grabbing sm:px-5 dark:bg-zinc-900/95 dark:hover:border-emerald-400"
             :class="{ 'ring-2 ring-emerald-500/40': isOpen }"
             aria-label="Toggle AI Exam Mentor (Drag to reposition)"
             title="Drag to reposition anywhere on screen • Click to toggle AI Exam Mentor"
         >
             <!-- Grip Drag Indicator Dots -->
             <span
-                class="flex flex-col gap-0.5 opacity-40 group-hover:opacity-80 transition-opacity"
+                class="flex flex-col gap-0.5 opacity-40 transition-opacity group-hover:opacity-80"
             >
                 <span class="flex gap-0.5">
                     <span class="h-1 w-1 rounded-full bg-current"></span>
@@ -852,7 +851,7 @@ const formatContent = (text) => {
                 />
             </svg>
 
-            <span class="tracking-tight font-medium">AI Exam Mentor</span>
+            <span class="font-medium tracking-tight">AI Exam Mentor</span>
         </button>
     </div>
 
@@ -875,33 +874,33 @@ const formatContent = (text) => {
             <div
                 @pointerdown="startResize('top', $event)"
                 @dblclick="toggleMaximize"
-                class="group absolute -top-2 left-4 right-4 h-5 cursor-ns-resize z-30 touch-none flex items-center justify-center"
+                class="group absolute -top-2 right-4 left-4 z-30 flex h-5 cursor-ns-resize touch-none items-center justify-center"
                 title="Drag or swipe vertically to resize height (Double-click to toggle maximize)"
             >
                 <div
-                    class="h-1 w-12 rounded-full bg-muted-foreground/35 group-hover:bg-emerald-500/80 group-active:bg-emerald-500 transition-colors"
+                    class="h-1 w-12 rounded-full bg-muted-foreground/35 transition-colors group-hover:bg-emerald-500/80 group-active:bg-emerald-500"
                 ></div>
             </div>
 
             <!-- Left Resize & Swipe Handle (Mouse drag + Touch swipe) -->
             <div
                 @pointerdown="startResize('left', $event)"
-                class="group absolute top-4 bottom-4 -left-2 w-4 cursor-ew-resize z-30 touch-none flex items-center justify-center"
+                class="group absolute top-4 bottom-4 -left-2 z-30 flex w-4 cursor-ew-resize touch-none items-center justify-center"
                 title="Drag or swipe horizontally to resize width"
             >
                 <div
-                    class="w-1 h-12 rounded-full bg-muted-foreground/25 group-hover:bg-emerald-500/80 group-active:bg-emerald-500 transition-colors opacity-0 group-hover:opacity-100"
+                    class="h-12 w-1 rounded-full bg-muted-foreground/25 opacity-0 transition-colors group-hover:bg-emerald-500/80 group-hover:opacity-100 group-active:bg-emerald-500"
                 ></div>
             </div>
 
             <!-- Top-Left Corner Resize Handle -->
             <div
                 @pointerdown="startResize('corner', $event)"
-                class="group absolute -top-2 -left-2 h-6 w-6 cursor-nwse-resize z-40 touch-none flex items-center justify-center"
+                class="group absolute -top-2 -left-2 z-40 flex h-6 w-6 cursor-nwse-resize touch-none items-center justify-center"
                 title="Drag or swipe diagonally to resize height and width"
             >
                 <div
-                    class="h-2.5 w-2.5 rounded-tl-sm border-t-2 border-l-2 border-muted-foreground/40 group-hover:border-emerald-500 group-active:border-emerald-500 transition-colors"
+                    class="h-2.5 w-2.5 rounded-tl-sm border-t-2 border-l-2 border-muted-foreground/40 transition-colors group-hover:border-emerald-500 group-active:border-emerald-500"
                 ></div>
             </div>
 
@@ -938,7 +937,7 @@ const formatContent = (text) => {
                                 {{ domain.name }} Mentor
                             </h3>
                             <p
-                                class="text-[11px] font-mono text-muted-foreground"
+                                class="font-mono text-[11px] text-muted-foreground"
                             >
                                 Socratic Guidance &bull; pgvector RAG
                             </p>
@@ -955,7 +954,7 @@ const formatContent = (text) => {
                                     ? 'Restore Default Size'
                                     : 'Expand / Maximize Drawer'
                             "
-                            class="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
                             <svg
                                 v-if="!isMaximized"
@@ -990,7 +989,7 @@ const formatContent = (text) => {
                             type="button"
                             @click="clearHistory"
                             title="Clear Conversation"
-                            class="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
                             <svg
                                 class="h-4 w-4"
@@ -1010,7 +1009,7 @@ const formatContent = (text) => {
                             type="button"
                             @click="isOpen = false"
                             title="Close Drawer"
-                            class="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
                             <svg
                                 class="h-4 w-4"
@@ -1051,7 +1050,7 @@ const formatContent = (text) => {
                 <!-- Messages Stream Area -->
                 <div
                     ref="messagesContainer"
-                    class="flex-1 overflow-y-auto p-4 space-y-3.5 text-sm leading-relaxed"
+                    class="flex-1 space-y-3.5 overflow-y-auto p-4 text-sm leading-relaxed"
                 >
                     <!-- Loading State -->
                     <div
@@ -1136,7 +1135,7 @@ const formatContent = (text) => {
                                 v-html="formatContent(currentStreamingMessage)"
                             ></div>
                             <span
-                                class="inline-block h-3.5 w-1.5 animate-pulse bg-emerald-500 ml-1"
+                                class="ml-1 inline-block h-3.5 w-1.5 animate-pulse bg-emerald-500"
                             ></span>
                         </div>
                     </div>
@@ -1167,7 +1166,7 @@ const formatContent = (text) => {
                     class="border-t border-sidebar-border/60 bg-muted/20 px-3 py-2 dark:border-zinc-800/60"
                 >
                     <div
-                        class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5"
+                        class="no-scrollbar flex items-center gap-1.5 overflow-x-auto pb-0.5"
                     >
                         <button
                             v-for="chip in quickChips"
@@ -1175,7 +1174,7 @@ const formatContent = (text) => {
                             type="button"
                             :disabled="isStreaming"
                             @click="sendMessage(chip.prompt)"
-                            class="whitespace-nowrap rounded-md border border-border/60 bg-card px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:border-emerald-500 hover:text-foreground disabled:opacity-50 transition-colors"
+                            class="rounded-md border border-border/60 bg-card px-2.5 py-1 text-[11px] font-medium whitespace-nowrap text-muted-foreground transition-colors hover:border-emerald-500 hover:text-foreground disabled:opacity-50"
                         >
                             {{ chip.label }}
                         </button>
@@ -1185,7 +1184,7 @@ const formatContent = (text) => {
                 <!-- Input Form Bar -->
                 <form
                     @submit.prevent="sendMessage()"
-                    class="border-t border-sidebar-border/80 p-3 bg-card dark:border-zinc-800 dark:bg-zinc-950"
+                    class="border-t border-sidebar-border/80 bg-card p-3 dark:border-zinc-800 dark:bg-zinc-950"
                 >
                     <div class="relative flex items-center">
                         <textarea
@@ -1196,13 +1195,13 @@ const formatContent = (text) => {
                             rows="1"
                             placeholder="Ask a question or request a hint..."
                             @keydown.enter.exact.prevent="sendMessage()"
-                            class="w-full resize-none rounded-xl border border-input bg-background/80 py-2.5 pl-3.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
+                            class="w-full resize-none rounded-xl border border-input bg-background/80 py-2.5 pr-11 pl-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none disabled:opacity-50"
                         ></textarea>
 
                         <button
                             type="submit"
                             :disabled="!inputMessage.trim() || isStreaming"
-                            class="absolute right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-30 disabled:hover:bg-emerald-600 transition-colors"
+                            class="absolute right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white transition-colors hover:bg-emerald-500 disabled:opacity-30 disabled:hover:bg-emerald-600"
                             title="Send Message"
                         >
                             <svg
