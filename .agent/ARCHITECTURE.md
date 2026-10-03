@@ -200,7 +200,7 @@ This architecture is governed by cross-cutting principles in [`.agent/SYSTEM_RUL
 | Rule File | Scope & Mandatory Standards |
 | :--- | :--- |
 | [`.agent/SYSTEM_RULES.md`](file:///.agent/SYSTEM_RULES.md) | Persona, Radical simplicity (YAGNI), zero assumptions, clean code hygiene, battle-scarred reflexes, pure JavaScript in Vue (`<script setup>`). |
-| [`QA.md`](file:///QA.md) | Mandatory forensic line-by-line QA protocol: 6 defect hunting categories (logical, silent, loud, performance, incomplete logic, client-server disconnects) and real-user walkthroughs. |
+| [`.agent/QA.md`](file:///.agent/QA.md) | Mandatory forensic line-by-line QA protocol: 6 defect hunting categories (logical, silent, loud, performance, incomplete logic, client-server disconnects) and real-user walkthroughs. |
 | [`.agent/UI_REFERENCE.md`](file:///.agent/UI_REFERENCE.md) | Design token memory, provisional palettes, typography, and reference screenshot registry. |
 | [`.agent/rules/ui_design.md`](file:///.agent/rules/ui_design.md) | Academic Rigor & Military Precision tone, Anti-AI visual laws, no dead clicks, mathematical nested radius formula ($R_{\text{inner}} = \max(0, R_{\text{outer}} - P)$). |
 | [`.agent/rules/ai_tutor.md`](file:///.agent/rules/ai_tutor.md) | Socratic AI Tutor SSE streaming, intent routing, tool calling limits (max 2 rounds), zero correct answer leakage, PMA/ISSB/CSS/MDCAT institutional domain standards. |

@@ -39,7 +39,7 @@ All components added to the SDUI registry must have their validation constraints
 
 ## 4. Forensic QA & The Real-User Verification Law (Canonical Rule)
 
-> **Master Protocol**: See [`QA.md`](file:///QA.md) for the complete forensic inspection checklist and real-user walkthroughs.
+> **Master Protocol**: See [`.agent/QA.md`](file:///.agent/QA.md) for the complete forensic inspection checklist and real-user walkthroughs.
 
 Passing unit tests are a baseline sanity check, **never proof of correctness**. Automated tests frequently assert on their author's assumptions, use clean factories, and run against mocked or `fake` drivers that silently pass fatal production bugs.
 

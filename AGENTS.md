@@ -17,10 +17,11 @@ Before executing ANY file edit, running modifying terminal commands, generating 
 4. [`.agent/MEMORY.md`](file:///.agent/MEMORY.md) — Active rolling memory log of project decisions, known environment quirks, and hardening directives.
 5. [`.agent/SYSTEM_RULES.md`](file:///.agent/SYSTEM_RULES.md) — Cross-cutting engineering principles, senior architect mandate, YAGNI, zero assumptions, and clean code standards.
 6. [`.agent/UI_REFERENCE.md`](file:///.agent/UI_REFERENCE.md) — Persistent visual memory, design tokens, typography, and reference screenshot registry.
-7. [`FEATURES_BACKLOG.md`](file:///FEATURES_BACKLOG.md) — Master product feature backlog, strategic demand matrix, and architectural specifications.
+7. [`.agent/FEATURES_BACKLOG.md`](file:///.agent/FEATURES_BACKLOG.md) — Master product feature backlog, strategic demand matrix, and architectural specifications.
+8. [`.agent/CLAUDE.md`](file:///.agent/CLAUDE.md) — Laravel Boost guidelines and ecosystem specifications.
 
 ### 2. Domain & Sub-Architectural Rulebook (`.agent/rules/`)
-* [`QA.md`](file:///QA.md) — Mandatory forensic line-by-line code review, 6 defect hunting categories, and real-user walkthroughs.
+* [`.agent/QA.md`](file:///.agent/QA.md) — Mandatory forensic line-by-line code review, 6 defect hunting categories, and real-user walkthroughs.
 * [`.agent/rules/domains.md`](file:///.agent/rules/domains.md) & [`.agent/rules/domain_flows.md`](file:///.agent/rules/domain_flows.md) — PostgreSQL `ltree` hierarchies, SDUI page layout compilation.
 * [`.agent/rules/content_modules.md`](file:///.agent/rules/content_modules.md) & [`.agent/rules/question_bank.md`](file:///.agent/rules/question_bank.md) — Content nodes, MCQ players, test session state machines, answer-key scrubbing.
 * [`.agent/rules/user_subscriptions.md`](file:///.agent/rules/user_subscriptions.md) & [`.agent/rules/security_gating.md`](file:///.agent/rules/security_gating.md) — EasyPaisa / JazzCash payment gating, TRX verification queue, route guards.
@@ -47,7 +48,7 @@ Not every governance file is read on every turn. Load only what the task require
 - `.agent/SYSTEM_RULES.md`
 - `.agent/PATTERNS.md`
 - `.agent/rules/mistakes.md`
-- `QA.md` (Forensic line-by-line inspection checklist)
+- `.agent/QA.md` (Forensic line-by-line inspection checklist)
 
 **Tier 3 — Loaded only when the task touches the corresponding subsystem:**
 - Touching `ltree` or domain hierarchy → `.agent/rules/domains.md`
@@ -57,7 +58,7 @@ Not every governance file is read on every turn. Load only what the task require
 - Touching payments, subscriptions, or receipts → `.agent/rules/user_subscriptions.md`
 - Touching route guards, `is_active` gating, or `SubscriptionManager` → `.agent/rules/security_gating.md`
 - Touching queries, indexes, or migrations → `.agent/rules/database_performance.md`
-- Writing or modifying tests or performing QA sign-off → `.agent/rules/testing_validation.md` + `QA.md`
+- Writing or modifying tests or performing QA sign-off → `.agent/rules/testing_validation.md` + `.agent/QA.md`
 - Touching AI tutor, LLM calls, or SSE → `.agent/rules/ai_tutor.md`
 - Touching Vue/SDUI components or visual design → `.agent/rules/ui_design.md` + `.agent/UI_REFERENCE.md`
 
@@ -115,7 +116,7 @@ The 4-step checklist above is the minimum bar. Before declaring ANY task done, y
 10. **HTTP Hygiene** — Every external call has a timeout and a retry policy.
 11. **Blast Radius Declared** — If the change touches `SubscriptionManager`, `AiTutorService`, `SduiPayloadTransformer`, or the Fortify pipeline, a Blast Radius block is present in the response.
 12. **Memory Updated** — MEMORY.md has a new rolling entry in the mandated format (Action / Impact / Files / Blast Radius / Rollback Path / Lessons).
-13. **Forensic Real-User Code QA** — Never rely solely on unit tests. Confirmed that every line of modified code was audited against the 6 Defect Hunting Categories (logical bugs, silent bugs, loud bugs, performance bugs, incomplete logic, client-server disconnects) and tested across real-user execution paths (see [`QA.md`](file:///QA.md) and [`.agent/rules/testing_validation.md § 4`](file:///.agent/rules/testing_validation.md#4-forensic-qa--the-real-user-verification-law-canonical-rule)).
+13. **Forensic Real-User Code QA** — Never rely solely on unit tests. Confirmed that every line of modified code was audited against the 6 Defect Hunting Categories (logical bugs, silent bugs, loud bugs, performance bugs, incomplete logic, client-server disconnects) and tested across real-user execution paths (see [`.agent/QA.md`](file:///.agent/QA.md) and [`.agent/rules/testing_validation.md § 4`](file:///.agent/rules/testing_validation.md#4-forensic-qa--the-real-user-verification-law-canonical-rule)).
 
 ---
 

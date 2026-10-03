@@ -10,12 +10,20 @@
 
 This log records the 10 most critical architectural decisions, infrastructure fixes, and operational milestones shaping the active codebase.
 
+### Entry 22 — 2026-10-04: Workspace Hygiene & Governance Consolidation into .agent/
+- **Action**: Cleaned and standardized the root workspace by consolidating all auxiliary documentation and specification markdown files (`QA.md`, `FEATURES_BACKLOG.md`, `CLAUDE.md`, `task.md`) exclusively into `.agent/`, leaving only `AGENTS.md` as the single authoritative governance gateway in the repository root. Updated all cross-references across `AGENTS.md`, `.agent/ARCHITECTURE.md`, and `.agent/rules/testing_validation.md`.
+- **Impact**: Enforces pristine root directory hygiene, eliminates duplicate or misplaced `.md` files, establishes `.agent/` as the single canonical home for all governance, roadmap, and testing protocols, and simplifies documentation discovery through `AGENTS.md`.
+- **Files Changed**: `AGENTS.md`, `.agent/QA.md`, `.agent/FEATURES_BACKLOG.md`, `.agent/CLAUDE.md`, `.agent/task.md`, `.agent/ARCHITECTURE.md`, `.agent/rules/testing_validation.md`, `.agent/MEMORY.md`.
+- **Blast Radius**: Isolated to governance documentation and file paths.
+- **Rollback Path**: `git checkout HEAD~1 -- AGENTS.md .agent/ARCHITECTURE.md .agent/rules/testing_validation.md && git mv .agent/FEATURES_BACKLOG.md FEATURES_BACKLOG.md && git mv .agent/CLAUDE.md CLAUDE.md && git mv .agent/task.md task.md`.
+- **Lessons**: A clean repository root with a single, clear entry point (`AGENTS.md`) linking into a modular `.agent/` governance structure prevents documentation fragmentation and developer/agent cognitive overload.
+
 ### Entry 21 — 2026-10-04: Canonical QA Protocol Formalization (QA.md & The 6 Defect Hunting Categories)
-- **Action**: Formalized the repository's dedicated Quality Assurance Protocol in [`QA.md`](file:///QA.md) and [`.agent/QA.md`](file:///.agent/QA.md), enshrining the Supreme QA Law ("Never rely solely on unit tests") and standardizing the 6 Defect Hunting Categories (logical, silent, loud, performance, incomplete logic, client-server disconnects) alongside 4 real-user scenario walkthroughs and a 10-point pre-release sign-off checklist across `AGENTS.md`, `.agent/rules/testing_validation.md`, and `.agent/ARCHITECTURE.md`.
+- **Action**: Formalized the repository's dedicated Quality Assurance Protocol in [`.agent/QA.md`](file:///.agent/QA.md), enshrining the Supreme QA Law ("Never rely solely on unit tests") and standardizing the 6 Defect Hunting Categories (logical, silent, loud, performance, incomplete logic, client-server disconnects) alongside 4 real-user scenario walkthroughs and a 10-point pre-release sign-off checklist across `AGENTS.md`, `.agent/rules/testing_validation.md`, and `.agent/ARCHITECTURE.md`.
 - **Impact**: Establishes an un-bypassable operational law preventing agents and engineers from declaring features complete based solely on passing unit tests; eliminates silent bugs, half-baked logic, and unhandled boundary cases before code reaches production.
-- **Files Changed**: `QA.md`, `.agent/QA.md`, `.agent/rules/testing_validation.md`, `AGENTS.md`, `.agent/ARCHITECTURE.md`, `.agent/MEMORY.md`.
+- **Files Changed**: `.agent/QA.md`, `.agent/rules/testing_validation.md`, `AGENTS.md`, `.agent/ARCHITECTURE.md`, `.agent/MEMORY.md`.
 - **Blast Radius**: Quality assurance pipelines, autonomous agent review workflows, and pre-conclusion gates.
-- **Rollback Path**: `git checkout HEAD~1 -- QA.md .agent/QA.md .agent/rules/testing_validation.md AGENTS.md .agent/ARCHITECTURE.md`.
+- **Rollback Path**: `git checkout HEAD~1 -- .agent/QA.md .agent/rules/testing_validation.md AGENTS.md .agent/ARCHITECTURE.md`.
 - **Lessons**: Automated unit tests assert on idealized assumptions; line-by-line inspection against standardized failure categories is the only reliable defense against silent runtime and logical bugs.
 
 ### Entry 20 — 2026-10-04: Forensic Real-User QA Audit & Line-by-Line Quality Assurance Hardening
