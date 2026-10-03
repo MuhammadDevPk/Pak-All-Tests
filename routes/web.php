@@ -42,6 +42,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/api/questions/{question}/record-attempt', [WeakQuestionsController::class, 'recordAttempt'])->name('questions.record-attempt');
     Route::get('/api/weak-questions', [WeakQuestionsController::class, 'index'])->name('weak-questions.api.index');
     Route::get('/api/weak-questions/practice', [WeakQuestionsController::class, 'practice'])->name('weak-questions.practice');
+    Route::post('/api/weak-questions/submit', [WeakQuestionsController::class, 'submitPractice'])->name('weak-questions.submit');
     Route::get('/revision-weak-questions', [WeakQuestionsController::class, 'index'])->name('weak-questions.index');
 });
 

@@ -43,8 +43,8 @@ class McqExecutionController extends Controller
         $userAnswers = $request->input('answers', []);
         $revealedMap = array_flip(array_map('intval', (array) $request->input('revealed', [])));
 
-        // Ensure questions relationship is loaded (prevents N+1 in future refactors)
-        $questions = $module->loadMissing('questions')->questions;
+        // Ensure active questions only are graded (prevents discrepancy with ContentModuleController)
+        $questions = $module->questions()->where('is_active', true)->get();
 
         $totalQuestions = $questions->count();
         $correctCount = 0;

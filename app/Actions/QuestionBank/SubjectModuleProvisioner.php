@@ -58,7 +58,7 @@ final class SubjectModuleProvisioner
      * hook, table-cache invalidation and the vectorization hook). Used by the
      * bulk import path, where module vectorization is intended.
      *
-     * @param string|null $title explicit title; defaults to the canonical title for the key
+     * @param  string|null  $title  explicit title; defaults to the canonical title for the key
      */
     public static function findOrCreate(Domain $domain, string $subjectKey, ?string $title = null): ContentModule
     {

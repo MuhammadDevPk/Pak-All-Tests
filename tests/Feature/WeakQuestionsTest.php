@@ -358,3 +358,59 @@ test('weak questions index endpoint returns summary and items', function () {
         ],
     ]);
 });
+
+test('candidate can submit weak questions practice session and receive server grading and solutions', function () {
+    $user = User::factory()->create();
+
+    $q1 = QuestionBank::create([
+        'question_type' => 'mcq',
+        'question_text' => 'Question 1',
+        'explanation' => 'Explanation 1',
+        'payload' => ['options' => ['A', 'B'], 'correct_option_index' => 0],
+        'is_active' => true,
+    ]);
+
+    $q2 = QuestionBank::create([
+        'question_type' => 'mcq',
+        'question_text' => 'Question 2',
+        'explanation' => 'Explanation 2',
+        'payload' => ['options' => ['A', 'B'], 'correct_option_index' => 1],
+        'is_active' => true,
+    ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->postJson(route('weak-questions.submit'), [
+            'answers' => [
+                $q1->id => 0, // Correct
+                $q2->id => 0, // Incorrect
+            ],
+            'revealed' => [],
+        ]);
+
+    $response->assertOk();
+    $response->assertJson([
+        'status' => 'success',
+        'summary' => [
+            'total_questions' => 2,
+            'answered_count' => 2,
+            'correct_count' => 1,
+            'percentage' => 50,
+            'is_passed' => false,
+        ],
+        'questions' => [
+            $q1->id => [
+                'correct' => true,
+                'revealed' => false,
+                'correct_index' => 0,
+                'explanation' => 'Explanation 1',
+            ],
+            $q2->id => [
+                'correct' => false,
+                'revealed' => false,
+                'correct_index' => 1,
+                'explanation' => 'Explanation 2',
+            ],
+        ],
+    ]);
+});

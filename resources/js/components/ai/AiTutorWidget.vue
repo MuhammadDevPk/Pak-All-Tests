@@ -52,7 +52,7 @@ const fabRef = ref(null);
 const fabStyle = computed(() => {
     if (fabPosition.value.x === null || fabPosition.value.y === null) {
         return {
-            bottom: '1.5rem',
+            bottom: '5.5rem',
             right: '1.5rem',
         };
     }
@@ -75,7 +75,7 @@ const drawerStyle = computed(() => {
     if (typeof window === 'undefined' || fabPosition.value.x === null || fabPosition.value.y === null) {
         return {
             ...base,
-            bottom: '6rem',
+            bottom: '10rem',
             right: '1.5rem',
         };
     }
@@ -148,6 +148,17 @@ const onFabPointerMove = (e) => {
     }
 };
 
+let justDragged = false;
+
+const handleClick = (e) => {
+    if (justDragged) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+    }
+    toggleOpen();
+};
+
 const onFabPointerUp = (e) => {
     if (!isDraggingFab.value) return;
 
@@ -162,11 +173,13 @@ const onFabPointerUp = (e) => {
     isDraggingFab.value = false;
 
     if (wasDragged) {
+        justDragged = true;
+        setTimeout(() => {
+            justDragged = false;
+        }, 150);
         try {
             sessionStorage.setItem('ai_tutor_fab_pos', JSON.stringify(fabPosition.value));
         } catch (_) {}
-    } else {
-        toggleOpen();
     }
 };
 
@@ -637,6 +650,7 @@ const formatContent = (text) => {
     >
         <button
             type="button"
+            @click="handleClick"
             class="group relative flex h-14 items-center gap-2.5 rounded-full border border-emerald-500/30 bg-card/95 px-4 sm:px-5 py-3 text-sm font-semibold text-foreground shadow-2xl backdrop-blur-md transition-shadow duration-200 hover:border-emerald-500 hover:bg-card hover:shadow-emerald-500/10 dark:bg-zinc-900/95 dark:hover:border-emerald-400 cursor-grab active:cursor-grabbing"
             :class="{ 'ring-2 ring-emerald-500/40': isOpen }"
             aria-label="Toggle AI Exam Mentor (Drag to reposition)"

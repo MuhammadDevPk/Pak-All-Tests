@@ -281,12 +281,18 @@ const scoreSummary = computed(() => {
 
     let correctCount = 0;
     props.questions.forEach((q) => {
+        const isForfeited = forfeitedQuestions.value[q.id];
+
+        // 1. Weak mode or practice attempt recorded on server
+        if (!isForfeited && masteryState.value[q.id]?.is_correct) {
+            correctCount++;
+            return;
+        }
+
         const correctIndex =
             serverResults.value[q.id]?.correct_index ??
             revealedAnswers.value[q.id]?.correct_option_index ??
             q.payload?.correct_option_index;
-
-        const isForfeited = forfeitedQuestions.value[q.id];
 
         if (
             !isForfeited &&
@@ -316,12 +322,25 @@ const submitTest = async () => {
         clearInterval(timerInterval);
     }
 
-    if (!props.module?.id) return;
+    // Automatically expand solution explanations across all questions upon submission
+    props.questions.forEach((q) => {
+        showExplanations.value[q.id] = true;
+    });
+
+    const submitUrl = isWeakMode.value
+        ? '/api/weak-questions/submit'
+        : props.module?.id
+          ? `/api/modules/${props.module.id}/submit`
+          : null;
+
+    if (!submitUrl) {
+        return;
+    }
 
     isSubmitting.value = true;
     try {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        const response = await fetch(`/api/modules/${props.module.id}/submit`, {
+        const response = await fetch(submitUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -352,6 +371,137 @@ const submitTest = async () => {
     } finally {
         isSubmitting.value = false;
     }
+};
+
+const getOptionClasses = (q, idx) => {
+    const isSelected = selectedAnswers.value[q.id] === idx;
+    const isRevealedOption = revealedAnswers.value[q.id] && revealedAnswers.value[q.id].correct_option_index === idx;
+    const isRevealedMismatch = revealedAnswers.value[q.id] && isSelected && revealedAnswers.value[q.id].correct_option_index !== idx;
+
+    // 1. Revealed Answer State
+    if (isRevealedOption) {
+        return 'border-emerald-500 bg-emerald-50/70 font-semibold text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100 ring-2 ring-emerald-500/40';
+    }
+    if (isRevealedMismatch) {
+        return 'border-destructive bg-destructive/10 font-semibold text-destructive';
+    }
+
+    // 2. Post-Submission State
+    if (isSubmitted.value) {
+        const correctIndex = serverResults.value[q.id]?.correct_index ?? q.payload?.correct_option_index;
+        if (correctIndex !== undefined && correctIndex === idx) {
+            return 'border-emerald-500 bg-emerald-50/70 font-semibold text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100 ring-2 ring-emerald-500/40';
+        }
+        if (isSelected) {
+            const isUserCorrect = serverResults.value[q.id]
+                ? serverResults.value[q.id].correct
+                : masteryState.value[q.id]?.is_correct;
+            return isUserCorrect
+                ? 'border-emerald-500 bg-emerald-50/70 font-semibold text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100'
+                : 'border-destructive bg-destructive/10 font-semibold text-destructive';
+        }
+        return 'border-zinc-200/90 bg-zinc-50/40 text-senselab-heading hover:border-zinc-300 hover:bg-white dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:bg-zinc-900';
+    }
+
+    // 3. Immediate Live Practice / Weak Mode Feedback
+    if ((isWeakMode.value || props.mode === 'practice') && isSelected && masteryState.value[q.id]) {
+        return masteryState.value[q.id].is_correct
+            ? 'border-emerald-500 bg-emerald-50/70 font-semibold text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100'
+            : 'border-destructive bg-destructive/10 font-semibold text-destructive';
+    }
+
+    // 4. Normal Active Selection during active test session
+    if (isSelected) {
+        return 'border-sky-500 bg-sky-50/70 font-semibold text-sky-950 dark:bg-sky-950/40 dark:text-sky-100 shadow-2xs';
+    }
+
+    // 5. Default Unselected
+    return 'border-zinc-200/90 bg-zinc-50/40 text-senselab-heading hover:border-zinc-300 hover:bg-white dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:bg-zinc-900';
+};
+
+const getOptionCircleClasses = (q, idx) => {
+    const isSelected = selectedAnswers.value[q.id] === idx;
+    const isRevealedOption = revealedAnswers.value[q.id] && revealedAnswers.value[q.id].correct_option_index === idx;
+
+    if (isRevealedOption) {
+        return 'bg-emerald-500 text-white';
+    }
+
+    if (isSubmitted.value) {
+        const correctIndex = serverResults.value[q.id]?.correct_index ?? q.payload?.correct_option_index;
+        if (correctIndex !== undefined && correctIndex === idx) {
+            return 'bg-emerald-500 text-white';
+        }
+        if (isSelected) {
+            const isUserCorrect = serverResults.value[q.id]
+                ? serverResults.value[q.id].correct
+                : masteryState.value[q.id]?.is_correct;
+            return isUserCorrect ? 'bg-emerald-500 text-white' : 'bg-destructive text-white';
+        }
+        return 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700';
+    }
+
+    if ((isWeakMode.value || props.mode === 'practice') && isSelected && masteryState.value[q.id]) {
+        return masteryState.value[q.id].is_correct ? 'bg-emerald-500 text-white' : 'bg-destructive text-white';
+    }
+
+    if (isSelected) {
+        return 'bg-sky-600 text-white';
+    }
+
+    return 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700';
+};
+
+const getOptionBadge = (q, idx) => {
+    const isSelected = selectedAnswers.value[q.id] === idx;
+    const isRevealedOption = revealedAnswers.value[q.id] && revealedAnswers.value[q.id].correct_option_index === idx;
+
+    if (isRevealedOption) {
+        return { type: 'success', label: '✓ Correct Answer' };
+    }
+
+    if (revealedAnswers.value[q.id] && isSelected) {
+        return { type: 'danger', label: '✗ Your Choice' };
+    }
+
+    if (isSubmitted.value) {
+        const correctIndex = serverResults.value[q.id]?.correct_index ?? q.payload?.correct_option_index;
+        if (correctIndex !== undefined && correctIndex === idx) {
+            return isSelected
+                ? { type: 'success', label: '✓ Correct' }
+                : { type: 'success', label: '✓ Correct Answer' };
+        }
+        if (isSelected) {
+            const isUserCorrect = serverResults.value[q.id]
+                ? serverResults.value[q.id].correct
+                : masteryState.value[q.id]?.is_correct;
+            return isUserCorrect
+                ? { type: 'success', label: '✓ Correct' }
+                : { type: 'danger', label: '✗ Your Choice' };
+        }
+        return null;
+    }
+
+    if ((isWeakMode.value || props.mode === 'practice') && isSelected && masteryState.value[q.id]) {
+        return masteryState.value[q.id].is_correct
+            ? { type: 'success', label: '✓ Correct' }
+            : { type: 'danger', label: '✗ Needs Revision' };
+    }
+
+    if (isSelected) {
+        return { type: 'dot' };
+    }
+
+    return null;
+};
+
+const canViewExplanation = (questionId) => {
+    return (
+        isSubmitted.value ||
+        !!revealedAnswers.value[questionId] ||
+        !!serverResults.value[questionId]?.explanation ||
+        (selectedAnswers.value[questionId] !== undefined && (isWeakMode.value || props.mode === 'practice'))
+    );
 };
 
 onMounted(() => {
@@ -947,30 +1097,14 @@ watch(currentQuestionIndex, () => {
                         :disabled="isSubmitted"
                         :class="[
                             'group flex items-center justify-between rounded-2xl border p-4 text-left text-sm transition-all duration-150',
-                            // 1. Revealed state styling
-                            revealedAnswers[q.id] && revealedAnswers[q.id].correct_option_index === idx
-                                ? 'border-emerald-500 bg-emerald-50/70 font-semibold text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100 ring-2 ring-emerald-500/40'
-                                : revealedAnswers[q.id] && selectedAnswers[q.id] === idx && revealedAnswers[q.id].correct_option_index !== idx
-                                  ? 'border-destructive bg-destructive/10 font-semibold text-destructive'
-                                  // 2. Post-submission grading state
-                                  : isSubmitted && (serverResults[q.id]?.correct_index === idx || (!serverResults[q.id] && q.payload?.correct_option_index === idx))
-                                    ? 'border-emerald-500 bg-emerald-50/70 font-semibold text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100'
-                                    : selectedAnswers[q.id] === idx
-                                      ? isSubmitted && serverResults[q.id] && !serverResults[q.id]?.correct
-                                        ? 'border-destructive bg-destructive/10 font-semibold text-destructive'
-                                        : 'border-sky-500 bg-sky-50/70 font-semibold text-sky-950 dark:bg-sky-950/40 dark:text-sky-100 shadow-2xs'
-                                      : 'border-zinc-200/90 bg-zinc-50/40 text-senselab-heading hover:border-zinc-300 hover:bg-white dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:bg-zinc-900',
+                            getOptionClasses(q, idx),
                         ]"
                     >
                         <div class="flex items-center gap-3">
                             <span
                                 :class="[
                                     'flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-xs font-bold transition-colors',
-                                    revealedAnswers[q.id] && revealedAnswers[q.id].correct_option_index === idx
-                                        ? 'bg-emerald-500 text-white'
-                                        : selectedAnswers[q.id] === idx
-                                          ? 'bg-sky-600 text-white'
-                                          : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700',
+                                    getOptionCircleClasses(q, idx),
                                 ]"
                             >
                                 {{ String.fromCharCode(65 + idx) }}
@@ -979,44 +1113,36 @@ watch(currentQuestionIndex, () => {
                         </div>
 
                         <!-- Right badge: Correct vs Selected Indicator -->
-                        <div class="flex items-center gap-2">
+                        <div v-if="getOptionBadge(q, idx)" class="flex items-center gap-2">
                             <span
-                                v-if="revealedAnswers[q.id] && revealedAnswers[q.id].correct_option_index === idx"
+                                v-if="getOptionBadge(q, idx).type === 'success'"
                                 class="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300"
                             >
-                                ✓ Correct Answer
+                                {{ getOptionBadge(q, idx).label }}
                             </span>
                             <span
-                                v-else-if="revealedAnswers[q.id] && selectedAnswers[q.id] === idx"
+                                v-else-if="getOptionBadge(q, idx).type === 'danger'"
                                 class="rounded-full bg-destructive/20 px-2.5 py-0.5 text-[11px] font-bold text-destructive"
                             >
-                                ✗ Your Choice
+                                {{ getOptionBadge(q, idx).label }}
                             </span>
                             <div
-                                v-else-if="selectedAnswers[q.id] === idx"
+                                v-else-if="getOptionBadge(q, idx).type === 'dot'"
                                 class="h-3 w-3 rounded-full bg-sky-500"
                             />
                         </div>
                     </button>
                 </div>
 
-
-
                 <!-- Solution Explanation Toggle & Card -->
                 <div
-                    v-if="
-                        mode === 'practice' ||
-                        isSubmitted ||
-                        revealedAnswers[q.id] ||
-                        serverResults[q.id]?.explanation ||
-                        q.explanation
-                    "
+                    v-if="canViewExplanation(q.id)"
                     class="mt-1"
                 >
                     <button
                         type="button"
                         @click="toggleExplanation(q.id)"
-                        class="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                        class="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
                     >
                         <span>💡</span>
                         {{ showExplanations[q.id] ? 'Hide Solution Explanation' : 'View Solution Explanation' }}
@@ -1030,6 +1156,15 @@ watch(currentQuestionIndex, () => {
                             <span>📘</span>
                             <span>Solution & Academic Insights:</span>
                         </div>
+
+                        <div
+                            v-if="revealedAnswers[q.id]?.correct_option_text"
+                            class="mb-2 inline-flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-1 font-semibold text-emerald-700 dark:text-emerald-400"
+                        >
+                            <span>Correct Choice:</span>
+                            <strong>Option {{ revealedAnswers[q.id].correct_option_letter }}) {{ revealedAnswers[q.id].correct_option_text }}</strong>
+                        </div>
+
                         <p class="whitespace-pre-line text-brand-body leading-relaxed">
                             {{
                                 revealedAnswers[q.id]?.explanation ||

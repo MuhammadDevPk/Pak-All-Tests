@@ -289,4 +289,96 @@ class WeakQuestionsController extends Controller
             'questions' => $questions,
         ]);
     }
+
+    /**
+     * Submit and grade a practice session of Weak Questions.
+     */
+    public function submitPractice(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'answers' => ['present', 'array'],
+            'revealed' => ['nullable', 'array'],
+        ]);
+
+        $userAnswers = $validated['answers'];
+        $revealedMap = array_flip(array_map('intval', (array) ($validated['revealed'] ?? [])));
+
+        $questionIds = array_map('intval', array_keys($userAnswers));
+        if (! empty($validated['revealed'])) {
+            $questionIds = array_unique(array_merge($questionIds, array_map('intval', (array) $validated['revealed'])));
+        }
+
+        $questions = QuestionBank::whereIn('id', $questionIds)->get();
+
+        $totalQuestions = $questions->count();
+        $correctCount = 0;
+        $answeredCount = 0;
+        $results = [];
+
+        foreach ($questions as $question) {
+            $questionId = (int) $question->id;
+            $userOptionIndex = $userAnswers[$questionId] ?? null;
+            $correctOptionIndex = $question->payload['correct_option_index'] ?? null;
+            $wasRevealed = isset($revealedMap[$questionId]);
+
+            $isCorrect = false;
+            if ($userOptionIndex !== null && is_numeric($userOptionIndex)) {
+                $answeredCount++;
+                if (
+                    ! $wasRevealed &&
+                    $correctOptionIndex !== null &&
+                    is_numeric($correctOptionIndex) &&
+                    (int) $userOptionIndex === (int) $correctOptionIndex
+                ) {
+                    $correctCount++;
+                    $isCorrect = true;
+                }
+            }
+
+            // Sync with UserWeakQuestion table
+            $weak = UserWeakQuestion::where('user_id', $user->id)
+                ->where('question_id', $questionId)
+                ->first();
+
+            if ($weak) {
+                $weak->recordAttempt($isCorrect);
+            } elseif (! $isCorrect && ($userOptionIndex !== null || $wasRevealed)) {
+                UserWeakQuestion::create([
+                    'user_id' => $user->id,
+                    'question_id' => $questionId,
+                    'consecutive_correct' => 0,
+                    'status' => 'active',
+                    'revealed_count' => $wasRevealed ? 1 : 0,
+                    'failed_count' => ($userOptionIndex !== null) ? 1 : 0,
+                    'last_practiced_at' => now(),
+                ]);
+            }
+
+            $results[$questionId] = [
+                'correct' => $isCorrect,
+                'revealed' => $wasRevealed,
+                'correct_index' => is_numeric($correctOptionIndex) ? (int) $correctOptionIndex : null,
+                'explanation' => $question->explanation,
+            ];
+        }
+
+        $percentage = $totalQuestions > 0 ? (int) round(($correctCount / $totalQuestions) * 100) : 0;
+        $passingScore = 60;
+        $isPassed = $percentage >= $passingScore;
+
+        return response()->json([
+            'status' => 'success',
+            'summary' => [
+                'total_questions' => $totalQuestions,
+                'answered_count' => $answeredCount,
+                'correct_count' => $correctCount,
+                'percentage' => $percentage,
+                'passing_score' => $passingScore,
+                'is_passed' => $isPassed,
+            ],
+            'questions' => $results,
+        ]);
+    }
 }
