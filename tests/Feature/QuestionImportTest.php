@@ -6,8 +6,11 @@ use App\Jobs\VectorizeDomainKnowledgeJob;
 use App\Models\ContentModule;
 use App\Models\Domain;
 use App\Models\QuestionBank;
+use App\Models\User;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 function importTestPayload(string $suffix): array
@@ -205,4 +208,41 @@ it('rejects payloads missing the subjects map or questions array', function () {
     expect($ok['valid'])->toBeTrue()
         ->and($ok['subjects'])->toHaveCount(2)
         ->and($ok['questions'])->toHaveCount(3);
+});
+
+it('completes the dry run even when the notifications table is missing', function () {
+    Queue::fake();
+    Storage::fake('local');
+
+    $suffix = uniqid();
+    $domain = importTestDomain($suffix);
+    $admin = User::factory()->create(['email' => 'import-admin-'.$suffix.'@example.com']);
+
+    // Simulate production, where the notifications table was never migrated.
+    Schema::dropIfExists('notifications');
+
+    $reportKey = 'import-no-notif-table-'.$suffix;
+    Storage::disk('local')->put('imports/'.$reportKey.'.json', json_encode(importTestPayload($suffix)));
+
+    try {
+        (new ImportQuestionsJob(
+            filePath: 'imports/'.$reportKey.'.json',
+            domainId: $domain->id,
+            dryRun: true,
+            adminUserId: $admin->id,
+            reportKey: $reportKey,
+        ))->handle(app(StoreGeneratedQuestionsAction::class));
+
+        $report = Cache::get($reportKey);
+
+        expect($report)->not->toBeNull()
+            ->and($report['dry_run'])->toBeTrue()
+            ->and($report['errors'])->toBeEmpty()
+            ->and($report['totals']['inserted'])->toBe(3)
+            ->and($report['totals']['duplicates_skipped'])->toBe(0)
+            ->and($report['totals']['invalid'])->toBe(0)
+            ->and(QuestionBank::count())->toBe(0);
+    } finally {
+        Artisan::call('migrate', ['--path' => 'database/migrations/2026_10_04_000002_create_notifications_table.php']);
+    }
 });

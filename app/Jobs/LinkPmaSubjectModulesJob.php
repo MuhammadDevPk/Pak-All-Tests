@@ -18,6 +18,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * One-time repair: link already-imported PMA Academic questions to their
@@ -413,9 +414,30 @@ class LinkPmaSubjectModulesJob implements ShouldQueue
 
         $admin = $this->adminUserId ? User::find($this->adminUserId) : null;
         if ($admin instanceof User) {
-            $notification = Notification::make()->title($title)->body($body);
-            $failed ? $notification->danger() : $notification->success();
-            $notification->sendToDatabase($admin);
+            if (! Schema::hasTable('notifications')) {
+                Log::warning('PMA link notification could not be stored: notifications table does not exist', [
+                    'correlation_id' => $this->reportKey,
+                    'user_id' => $this->adminUserId,
+                    'domain_id' => $this->domainId,
+                    'event' => 'pma_link.notification_failed',
+                    'error' => 'Table notifications does not exist.',
+                ]);
+            } else {
+                try {
+                    $notification = Notification::make()->title($title)->body($body);
+                    $failed ? $notification->danger() : $notification->success();
+                    $notification->sendToDatabase($admin);
+                } catch (\Throwable $e) {
+                    // A notification failure must never fail the link run itself.
+                    Log::warning('PMA link notification could not be stored', [
+                        'correlation_id' => $this->reportKey,
+                        'user_id' => $this->adminUserId,
+                        'domain_id' => $this->domainId,
+                        'event' => 'pma_link.notification_failed',
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
         }
 
         Log::info("Question {$mode} finished", [

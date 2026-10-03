@@ -56,7 +56,11 @@ const getSubjectMeta = (title) => {
         };
     }
 
-    if (t.includes('history') || t.includes('movement') || t.includes('pakistan')) {
+    if (
+        t.includes('history') ||
+        t.includes('movement') ||
+        t.includes('pakistan')
+    ) {
         return {
             icon: '📜',
             themeBg: 'bg-amber-500/10 dark:bg-amber-950/40',
@@ -80,7 +84,11 @@ const getSubjectMeta = (title) => {
         };
     }
 
-    if (t.includes('general knowledge') || t.includes('science') || t.includes('gk')) {
+    if (
+        t.includes('general knowledge') ||
+        t.includes('science') ||
+        t.includes('gk')
+    ) {
         return {
             icon: '🔬',
             themeBg: 'bg-purple-500/10 dark:bg-purple-950/40',
@@ -92,7 +100,12 @@ const getSubjectMeta = (title) => {
         };
     }
 
-    if (t.includes('current affairs') || t.includes('defense') || t.includes('security') || t.includes('military')) {
+    if (
+        t.includes('current affairs') ||
+        t.includes('defense') ||
+        t.includes('security') ||
+        t.includes('military')
+    ) {
         return {
             icon: '🛡️',
             themeBg: 'bg-blue-500/10 dark:bg-blue-950/40',
@@ -121,7 +134,7 @@ const getSubjectMeta = (title) => {
         <div
             v-for="(item, index) in items"
             :key="item.id || index"
-            class="group relative flex flex-col justify-between rounded-3xl border border-zinc-200/90 bg-white/95 p-6 shadow-senselab-card hover:shadow-senselab-elevated hover:border-sky-500/40 hover:-translate-y-1 transition-all duration-300 dark:border-zinc-800 dark:bg-zinc-950/90 backdrop-blur-md"
+            class="group shadow-senselab-card hover:shadow-senselab-elevated relative flex flex-col justify-between rounded-3xl border border-zinc-200/90 bg-white/95 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-sky-500/40 dark:border-zinc-800 dark:bg-zinc-950/90"
         >
             <div>
                 <!-- Top Header: Themed Icon Box + Question Count Pill Badge -->
@@ -129,31 +142,53 @@ const getSubjectMeta = (title) => {
                     <div
                         :class="[
                             'flex h-12 w-12 items-center justify-center rounded-2xl border text-xl shadow-xs transition-transform duration-200 group-hover:scale-105',
-                            getSubjectMeta(item.title || item.module?.title).themeBg,
-                            getSubjectMeta(item.title || item.module?.title).themeBorder,
+                            getSubjectMeta(item.title || item.module?.title)
+                                .themeBg,
+                            getSubjectMeta(item.title || item.module?.title)
+                                .themeBorder,
                         ]"
                     >
-                        {{ getSubjectMeta(item.title || item.module?.title).icon }}
+                        {{
+                            getSubjectMeta(item.title || item.module?.title)
+                                .icon
+                        }}
                     </div>
 
-                    <div class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/80 bg-zinc-50/80 px-3 py-1 text-xs font-semibold text-zinc-700 shadow-2xs dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-300">
-                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>{{ item.description || item.module?.content_meta?.description || 'Curriculum Bank' }}</span>
+                    <div
+                        class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/80 bg-zinc-50/80 px-3 py-1 text-xs font-semibold text-zinc-700 shadow-2xs dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-300"
+                    >
+                        <span
+                            class="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"
+                        ></span>
+                        <span>{{
+                            item.description ||
+                            item.module?.content_meta?.description ||
+                            'Curriculum Bank'
+                        }}</span>
                     </div>
                 </div>
 
                 <!-- Subject Title & Tags -->
                 <div class="mt-4">
-                    <h3 class="text-lg font-bold tracking-tight text-senselab-heading group-hover:text-sky-600 transition-colors leading-snug">
+                    <h3
+                        class="text-senselab-heading text-lg leading-snug font-bold tracking-tight transition-colors group-hover:text-sky-600"
+                    >
                         {{ item.title || item.module?.title }}
                     </h3>
 
                     <!-- Syllabus Capability Chips -->
                     <div class="mt-2.5 flex flex-wrap items-center gap-1.5">
-                        <span class="rounded-lg bg-zinc-100/80 px-2.5 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-400">
-                            {{ getSubjectMeta(item.title || item.module?.title).tag }}
+                        <span
+                            class="rounded-lg bg-zinc-100/80 px-2.5 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-400"
+                        >
+                            {{
+                                getSubjectMeta(item.title || item.module?.title)
+                                    .tag
+                            }}
                         </span>
-                        <span class="rounded-lg bg-zinc-100/80 px-2.5 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-400">
+                        <span
+                            class="rounded-lg bg-zinc-100/80 px-2.5 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-400"
+                        >
                             Threshold Mastery
                         </span>
                     </div>
@@ -161,8 +196,12 @@ const getSubjectMeta = (title) => {
             </div>
 
             <!-- Bottom Card Strip: Duration & SenseLab Gradient Button -->
-            <div class="mt-6 flex items-center justify-between border-t border-zinc-100 pt-4 dark:border-zinc-800/80">
-                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-brand-muted">
+            <div
+                class="mt-6 flex items-center justify-between border-t border-zinc-100 pt-4 dark:border-zinc-800/80"
+            >
+                <span
+                    class="inline-flex items-center gap-1.5 text-xs font-medium text-brand-muted"
+                >
                     <span>⏱️</span>
                     <span>{{
                         item.module?.content_meta?.duration_minutes
@@ -174,11 +213,14 @@ const getSubjectMeta = (title) => {
                 <button
                     @click="startItem(item)"
                     type="button"
-                    class="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-semibold text-white shadow-xs transition-all duration-200 hover:shadow-md hover:scale-[1.03] active:scale-95 cursor-pointer"
-                    style="background: var(--brand-gradient);"
+                    class="inline-flex cursor-pointer items-center gap-2 rounded-full px-5 py-2.5 text-xs font-semibold text-white shadow-xs transition-all duration-200 hover:scale-[1.03] hover:shadow-md active:scale-95"
+                    style="background: var(--brand-gradient)"
                 >
                     <span>{{ item.actionLabel || 'Start Practice' }}</span>
-                    <span class="transition-transform duration-200 group-hover:translate-x-0.5">➔</span>
+                    <span
+                        class="transition-transform duration-200 group-hover:translate-x-0.5"
+                        >➔</span
+                    >
                 </button>
             </div>
         </div>

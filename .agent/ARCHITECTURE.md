@@ -79,6 +79,9 @@ app/
 | **`DomainKnowledgeEmbedding`** | `domain_knowledge_embeddings` | `domain_id`, `content_module_id`, `title`, `embedding` (`vector(1536)`) | `belongsTo(Domain)`, `belongsTo(ContentModule)` |
 | **`Team`** / **`Membership`** | `teams` / `team_members` | `name`, `slug`, `is_personal` / `team_id`, `user_id`, `role` | Multi-tenant team relationships |
 
+### Notification Storage
+- **`notifications`** (no app Eloquent model; Laravel `DatabaseNotification`): `id` (uuid PK), `type`, `notifiable_type`/`notifiable_id` (`morphs`), `data` (`text`), `read_at` (nullable), timestamps. Backs Filament `Notification::sendToDatabase()` used by the bulk import and link-repair jobs. Table added 2026-10-04 (`2026_10_04_000002_create_notifications_table`) — it never existed before, which crashed import dry runs with `SQLSTATE[42P01]`; both jobs now also guard the send with try/catch so a notification failure can never fail the report.
+
 ---
 
 ## 4. Frontend Architecture (Vue 3 + Inertia + SDUI)
