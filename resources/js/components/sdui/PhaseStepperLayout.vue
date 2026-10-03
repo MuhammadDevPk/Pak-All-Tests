@@ -28,51 +28,71 @@ const selectPhase = (number) => {
 
 <template>
     <div class="flex flex-col gap-6">
-        <!-- Horizontal Multi-Step Stepper Header -->
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+        <!-- Horizontal Multi-Step Stepper Pipeline Header -->
+        <div class="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             <button
                 v-for="phase in phases"
                 :key="phase.number"
                 type="button"
                 @click="selectPhase(phase.number)"
                 :class="[
-                    'flex flex-col gap-1 rounded-xl border p-4 text-left transition-all',
+                    'group relative flex flex-col justify-between rounded-2xl border p-4 sm:p-5 text-left transition-all duration-200',
                     Number(phase.number) === activePhaseNumber
-                        ? 'border-primary bg-primary/5 shadow-sm dark:bg-primary/10'
-                        : 'border-sidebar-border/70 bg-sidebar/20 hover:border-sidebar-border',
+                        ? 'border-sky-500/80 bg-linear-to-br from-sky-50/70 via-white to-orange-50/30 shadow-senselab-card dark:border-sky-400/70 dark:from-sky-950/30 dark:via-zinc-900/70 dark:to-orange-950/20'
+                        : 'border-zinc-200/80 bg-white/70 hover:border-zinc-300 hover:bg-white hover:shadow-senselab-card dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-700 dark:hover:bg-zinc-900',
                 ]"
             >
-                <div class="flex items-center justify-between">
-                    <span
-                        :class="[
-                            'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold',
-                            Number(phase.number) === activePhaseNumber
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-sidebar-accent text-muted-foreground',
-                        ]"
+                <div>
+                    <div class="flex items-center justify-between">
+                        <span
+                            :class="[
+                                'flex h-8 w-8 items-center justify-center rounded-xl text-xs font-bold transition-transform duration-200 group-hover:scale-105',
+                                Number(phase.number) === activePhaseNumber
+                                    ? 'bg-senselab-gradient text-white shadow-xs'
+                                    : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
+                            ]"
+                        >
+                            {{ phase.number }}
+                        </span>
+
+                        <span
+                            v-if="Number(phase.number) === activePhaseNumber"
+                            class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400"
+                        >
+                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            ACTIVE PHASE
+                        </span>
+                        <span
+                            v-else
+                            class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider"
+                        >
+                            Phase {{ phase.number }}
+                        </span>
+                    </div>
+
+                    <h4 class="mt-3 text-sm sm:text-base font-bold text-senselab-heading">
+                        {{ phase.title }}
+                    </h4>
+                    <p
+                        v-if="phase.subtitle"
+                        class="mt-0.5 line-clamp-1 text-xs text-brand-muted"
                     >
-                        {{ phase.number }}
-                    </span>
-                    <span
-                        v-if="Number(phase.number) === activePhaseNumber"
-                        class="text-[10px] font-semibold tracking-wider text-primary uppercase"
-                    >
-                        Active
-                    </span>
+                        {{ phase.subtitle }}
+                    </p>
                 </div>
-                <h4 class="mt-2 text-sm font-semibold text-foreground">
-                    {{ phase.title }}
-                </h4>
-                <p
-                    v-if="phase.subtitle"
-                    class="line-clamp-1 text-xs text-muted-foreground"
-                >
-                    {{ phase.subtitle }}
-                </p>
+
+                <!-- Bottom Active Indicator Bar -->
+                <div class="mt-3.5 pt-2.5 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-[11px]">
+                    <span :class="Number(phase.number) === activePhaseNumber ? 'text-sky-600 dark:text-sky-400 font-semibold' : 'text-zinc-400 dark:text-zinc-500'">
+                        {{ Number(phase.number) === activePhaseNumber ? 'In Progress' : 'Click to View' }}
+                    </span>
+                    <span class="text-zinc-400 transition-transform duration-200 group-hover:translate-x-0.5">➔</span>
+                </div>
             </button>
         </div>
+
         <!-- Render Selected Phase's SDUI Node -->
-        <div class="mt-2">
+        <div class="mt-1">
             <SduiRenderer
                 v-if="activePhaseContent"
                 :node="activePhaseContent"

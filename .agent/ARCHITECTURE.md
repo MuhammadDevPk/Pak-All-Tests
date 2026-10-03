@@ -167,13 +167,15 @@ app/
 1. **Server-Driven UI (SDUI) Engine**:
    - `DomainDashboardController` calls `SduiPayloadTransformer` to compile a complete tree of UI nodes.
    - [resources/js/components/sdui/SduiRenderer.vue](file:///resources/js/components/sdui/SduiRenderer.vue) recursively traverses the node tree and resolves components via [componentRegistry.js](file:///resources/js/components/sdui/componentRegistry.js).
-   - Registered layouts: `VerticalStack`, `TabbedLayout`, `PhaseStepperLayout`, `SubjectGrid`, `ProgressCard`, `ResourceList`, `EmptyStateLayout`.
-2. **Assessment Execution**:
-   - `McqPlayer.vue`: Interactive timed question player with immediate feedback, pattern breakdown, and answer submission to `/api/modules/{module}/submit`.
+   - Registered layouts: `VerticalStack`, `TabbedLayout`, `PhaseStepperLayout`, `SubjectGrid`, `ProgressCard`, `ResourceList`, `EmptyStateLayout` (all styled in SenseLab luxury design language with radial mesh auras, nested concentric radii, and tactile controls).
+2. **Assessment Execution & Candidate Workspace**:
+   - `McqPlayer.vue`: Interactive timed question player with dual view modes (Page View with 10/25/50/100 pagination vs Focus Mode), on-demand Reveal Answer forfeiture, instant 2-strike Threshold Mastery tracking, and submission to `/api/modules/{module}/submit`.
+   - `WeakQuestions/Index.vue`: Targeted spaced repetition dashboard with subject drilldown filters, mastery rate metrics, and direct in-place practice test launcher.
+   - `Dashboard.vue`: SenseLab Candidate Command Center featuring active exam tracks (PMA, Weak MCQs, CSS), platform metrics, and interactive curriculum topology graph.
    - `PdfViewer.vue`: Fullscreen PDF viewer supporting `/storage/...` documents and Google Drive previews.
    - `SubjectiveUpload.vue`: Subjective word-association and situation-reaction input with real-time character counters.
 3. **AI Socratic Tutor Widget**:
-   - [resources/js/components/ai/AiTutorWidget.vue](file:///resources/js/components/ai/AiTutorWidget.vue): Floating action trigger + slide-over drawer.
+   - [resources/js/components/ai/AiTutorWidget.vue](file:///resources/js/components/ai/AiTutorWidget.vue): Floating action trigger + slide-over drawer with smooth mouse/touch resizing handles.
    - Streams responses via Server-Sent Events (`POST /api/domains/{domainSlug}/ai-tutor/ask`).
    - Renders clean Markdown and communicates with the Socratic hint engine.
 

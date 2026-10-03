@@ -28,7 +28,7 @@ const gridClass = computed(() => {
         return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4';
     }
 
-    return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
+    return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3';
 });
 
 const sduiContext = inject('sduiContext', null);
@@ -40,54 +40,145 @@ const startItem = (item) => {
         sduiContext.launchModule(moduleId);
     }
 };
+
+const getSubjectMeta = (title) => {
+    const t = (title || '').toLowerCase();
+
+    if (t.includes('islam') || t.includes('quran') || t.includes('hadith')) {
+        return {
+            icon: '🕌',
+            themeBg: 'bg-emerald-500/10 dark:bg-emerald-950/40',
+            themeBorder: 'border-emerald-500/30 dark:border-emerald-800/40',
+            themeText: 'text-emerald-600 dark:text-emerald-400',
+            badgeBg: 'bg-emerald-50 dark:bg-emerald-950/60',
+            badgeText: 'text-emerald-700 dark:text-emerald-300',
+            tag: 'Core Faith & Sharia',
+        };
+    }
+
+    if (t.includes('history') || t.includes('movement') || t.includes('pakistan')) {
+        return {
+            icon: '📜',
+            themeBg: 'bg-amber-500/10 dark:bg-amber-950/40',
+            themeBorder: 'border-amber-500/30 dark:border-amber-800/40',
+            themeText: 'text-amber-600 dark:text-amber-400',
+            badgeBg: 'bg-amber-50 dark:bg-amber-950/60',
+            badgeText: 'text-amber-700 dark:text-amber-300',
+            tag: 'Freedom Movement Archive',
+        };
+    }
+
+    if (t.includes('geography') || t.includes('world') || t.includes('map')) {
+        return {
+            icon: '🌍',
+            themeBg: 'bg-sky-500/10 dark:bg-sky-950/40',
+            themeBorder: 'border-sky-500/30 dark:border-sky-800/40',
+            themeText: 'text-sky-600 dark:text-sky-400',
+            badgeBg: 'bg-sky-50 dark:bg-sky-950/60',
+            badgeText: 'text-sky-700 dark:text-sky-300',
+            tag: 'Physical & Cartography',
+        };
+    }
+
+    if (t.includes('general knowledge') || t.includes('science') || t.includes('gk')) {
+        return {
+            icon: '🔬',
+            themeBg: 'bg-purple-500/10 dark:bg-purple-950/40',
+            themeBorder: 'border-purple-500/30 dark:border-purple-800/40',
+            themeText: 'text-purple-600 dark:text-purple-400',
+            badgeBg: 'bg-purple-50 dark:bg-purple-950/60',
+            badgeText: 'text-purple-700 dark:text-purple-300',
+            tag: 'Scientific Analytical',
+        };
+    }
+
+    if (t.includes('current affairs') || t.includes('defense') || t.includes('security') || t.includes('military')) {
+        return {
+            icon: '🛡️',
+            themeBg: 'bg-blue-500/10 dark:bg-blue-950/40',
+            themeBorder: 'border-blue-500/30 dark:border-blue-800/40',
+            themeText: 'text-blue-600 dark:text-blue-400',
+            badgeBg: 'bg-blue-50 dark:bg-blue-950/60',
+            badgeText: 'text-blue-700 dark:text-blue-300',
+            tag: 'Strategic & Geo-politics',
+        };
+    }
+
+    return {
+        icon: '📚',
+        themeBg: 'bg-zinc-500/10 dark:bg-zinc-800/50',
+        themeBorder: 'border-zinc-300 dark:border-zinc-700',
+        themeText: 'text-zinc-700 dark:text-zinc-300',
+        badgeBg: 'bg-zinc-100 dark:bg-zinc-800',
+        badgeText: 'text-zinc-700 dark:text-zinc-300',
+        tag: 'Academic Syllabus',
+    };
+};
 </script>
 
 <template>
-    <div :class="['grid gap-4', gridClass]">
+    <div :class="['grid gap-5', gridClass]">
         <div
             v-for="(item, index) in items"
             :key="item.id || index"
-            class="flex flex-col justify-between rounded-xl border border-sidebar-border/70 bg-card p-5 shadow-xs transition-all hover:border-sidebar-border hover:shadow-md dark:bg-card/50"
+            class="group relative flex flex-col justify-between rounded-3xl border border-zinc-200/90 bg-white/95 p-6 shadow-senselab-card hover:shadow-senselab-elevated hover:border-sky-500/40 hover:-translate-y-1 transition-all duration-300 dark:border-zinc-800 dark:bg-zinc-950/90 backdrop-blur-md"
         >
             <div>
-                <div>
-                    <h3>
+                <!-- Top Header: Themed Icon Box + Question Count Pill Badge -->
+                <div class="flex items-center justify-between gap-3">
+                    <div
+                        :class="[
+                            'flex h-12 w-12 items-center justify-center rounded-2xl border text-xl shadow-xs transition-transform duration-200 group-hover:scale-105',
+                            getSubjectMeta(item.title || item.module?.title).themeBg,
+                            getSubjectMeta(item.title || item.module?.title).themeBorder,
+                        ]"
+                    >
+                        {{ getSubjectMeta(item.title || item.module?.title).icon }}
+                    </div>
+
+                    <div class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/80 bg-zinc-50/80 px-3 py-1 text-xs font-semibold text-zinc-700 shadow-2xs dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-300">
+                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>{{ item.description || item.module?.content_meta?.description || 'Curriculum Bank' }}</span>
+                    </div>
+                </div>
+
+                <!-- Subject Title & Tags -->
+                <div class="mt-4">
+                    <h3 class="text-lg font-bold tracking-tight text-senselab-heading group-hover:text-sky-600 transition-colors leading-snug">
                         {{ item.title || item.module?.title }}
                     </h3>
-                    <span
-                        v-if="item.badge || item.module?.type"
-                        class="shrink-0 rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
-                    >
-                        {{ item.badge || item.module?.type }}
-                    </span>
+
+                    <!-- Syllabus Capability Chips -->
+                    <div class="mt-2.5 flex flex-wrap items-center gap-1.5">
+                        <span class="rounded-lg bg-zinc-100/80 px-2.5 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-400">
+                            {{ getSubjectMeta(item.title || item.module?.title).tag }}
+                        </span>
+                        <span class="rounded-lg bg-zinc-100/80 px-2.5 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-400">
+                            Threshold Mastery
+                        </span>
+                    </div>
                 </div>
-                <p
-                    v-if="
-                        item.description ||
-                        item.module?.content_meta?.description
-                    "
-                    class="line-clamp-2 text-xs text-muted-foreground"
-                >
-                    {{
-                        item.description ||
-                        item.module?.content_meta?.description
-                    }}
-                </p>
             </div>
-            <div
-                class="mt-5 flex items-center justify-between border-t border-sidebar-border/50 pt-4"
-            >
-                <span>{{
-                    item.module?.content_meta?.duration_minutes
-                        ? `${item.module.content_meta.duration_minutes} mins`
-                        : 'Self-Paced'
-                }}</span>
+
+            <!-- Bottom Card Strip: Duration & SenseLab Gradient Button -->
+            <div class="mt-6 flex items-center justify-between border-t border-zinc-100 pt-4 dark:border-zinc-800/80">
+                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-brand-muted">
+                    <span>⏱️</span>
+                    <span>{{
+                        item.module?.content_meta?.duration_minutes
+                            ? `${item.module.content_meta.duration_minutes} mins`
+                            : 'Self-Paced'
+                    }}</span>
+                </span>
+
                 <button
                     @click="startItem(item)"
                     type="button"
-                    class="inline-flex items-center justify-center rounded-lg bg-primary px-3.5 py-1.5 text-xs font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90"
+                    class="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-semibold text-white shadow-xs transition-all duration-200 hover:shadow-md hover:scale-[1.03] active:scale-95 cursor-pointer"
+                    style="background: var(--brand-gradient);"
                 >
-                    {{ item.actionLabel || 'Start Module' }}
+                    <span>{{ item.actionLabel || 'Start Practice' }}</span>
+                    <span class="transition-transform duration-200 group-hover:translate-x-0.5">➔</span>
                 </button>
             </div>
         </div>

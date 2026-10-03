@@ -388,37 +388,38 @@ watch(currentQuestionIndex, () => {
 
 <template>
     <div id="mcq-player-container" class="flex flex-col gap-6">
-        <!-- Modern Header Controls Bar -->
+        <!-- Modern SenseLab Header Controls Bar -->
         <div
-            class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-sidebar-border/70 bg-card p-4 shadow-xs dark:bg-card/50"
+            class="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-zinc-200/90 bg-white/95 p-4 sm:p-5 shadow-senselab-card backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/90"
         >
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3.5">
                 <div
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold"
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-sky-500/20 bg-sky-500/10 text-lg shadow-2xs dark:border-sky-500/30 dark:bg-sky-950/40"
                 >
                     <span v-if="isWeakMode">🎯</span>
                     <span v-else>📝</span>
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h2 class="text-base font-bold text-foreground">
+                        <h2 class="text-base sm:text-lg font-bold tracking-tight text-senselab-heading">
                             {{ module.title || 'MCQ Test Player' }}
                         </h2>
                         <span
                             v-if="isWeakMode"
-                            class="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400"
+                            class="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400"
                         >
+                            <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                             Weak MCQs Revision
                         </span>
                     </div>
-                    <p class="text-xs text-muted-foreground">
+                    <p class="text-xs text-brand-muted mt-0.5">
                         <span v-if="viewMode === 'page'">
-                            Showing {{ (currentPage - 1) * pageSize + 1 }}–{{ Math.min(currentPage * pageSize, questions.length) }} of {{ questions.length }} Questions
+                            Showing Questions {{ (currentPage - 1) * pageSize + 1 }}–{{ Math.min(currentPage * pageSize, questions.length) }} of {{ questions.length }}
                         </span>
                         <span v-else>
                             Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}
                         </span>
-                        • <span class="font-medium text-foreground">{{ answeredCount }} Answered</span>
+                        • <span class="font-semibold text-senselab-heading">{{ answeredCount }} Answered</span>
                     </p>
                 </div>
             </div>
@@ -664,7 +665,7 @@ watch(currentQuestionIndex, () => {
         <!-- Top Page Navigation Bar (Page View Only — Directly under Subject Banner) -->
         <div
             v-if="viewMode === 'page'"
-            class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sidebar-border/80 bg-sidebar/40 p-3.5 shadow-xs dark:bg-card/40 backdrop-blur-xs transition-all"
+            class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200/80 bg-white/80 p-3.5 shadow-senselab-card backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/60 transition-all"
         >
             <!-- Left: Previous Page & Next Page Primary Navigation -->
             <div class="flex items-center gap-2">
@@ -672,7 +673,7 @@ watch(currentQuestionIndex, () => {
                     type="button"
                     @click="setPage(currentPage - 1)"
                     :disabled="currentPage === 1"
-                    class="inline-flex items-center gap-1.5 rounded-xl border border-sidebar-border bg-background px-4 py-2 text-xs font-bold text-foreground transition-all hover:bg-sidebar-accent disabled:opacity-40 disabled:cursor-not-allowed shadow-xs active:scale-95"
+                    class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-bold text-zinc-800 transition-all hover:bg-zinc-50 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs active:scale-95 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
                 >
                     ← Previous Page
                 </button>
@@ -680,35 +681,35 @@ watch(currentQuestionIndex, () => {
                     type="button"
                     @click="setPage(currentPage + 1)"
                     :disabled="currentPage >= totalPages"
-                    class="inline-flex items-center gap-1.5 rounded-xl border border-sidebar-border bg-background px-4 py-2 text-xs font-bold text-foreground transition-all hover:bg-sidebar-accent disabled:opacity-40 disabled:cursor-not-allowed shadow-xs active:scale-95"
+                    class="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-bold text-zinc-800 transition-all hover:bg-zinc-50 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs active:scale-95 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
                 >
                     Next Page →
                 </button>
             </div>
 
             <!-- Center: Page Indicator & Question Range Details -->
-            <div class="flex items-center gap-3 text-xs text-muted-foreground font-medium">
+            <div class="flex items-center gap-3 text-xs text-brand-muted font-medium">
                 <div class="flex items-center gap-1.5">
                     <span>Page</span>
-                    <span class="rounded-lg bg-primary/10 px-2.5 py-0.5 font-bold text-primary text-sm">
+                    <span class="rounded-lg bg-sky-500/10 px-2.5 py-0.5 font-bold text-sky-600 dark:text-sky-400 text-sm">
                         {{ currentPage }}
                     </span>
                     <span>of</span>
-                    <span class="font-bold text-foreground text-sm">{{ totalPages }}</span>
+                    <span class="font-bold text-senselab-heading text-sm">{{ totalPages }}</span>
                 </div>
-                <span class="hidden sm:inline text-sidebar-border">|</span>
-                <span class="hidden sm:inline text-xs font-medium text-foreground">
+                <span class="hidden sm:inline text-zinc-300 dark:text-zinc-700">|</span>
+                <span class="hidden sm:inline text-xs font-medium text-senselab-heading">
                     Showing Questions {{ (currentPage - 1) * pageSize + 1 }}–{{ Math.min(currentPage * pageSize, questions.length) }} of {{ questions.length }}
                 </span>
             </div>
 
             <!-- Right: Quick Jump by Page Selector -->
             <div class="flex items-center gap-2 text-xs">
-                <span class="text-muted-foreground hidden md:inline">Jump to page:</span>
+                <span class="text-brand-muted hidden md:inline">Jump to page:</span>
                 <select
                     :value="currentPage"
                     @change="setPage(Number($event.target.value))"
-                    class="rounded-xl border border-sidebar-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground focus:border-primary focus:outline-hidden shadow-xs"
+                    class="rounded-xl border border-zinc-200/90 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-800 shadow-xs focus:border-sky-500 focus:outline-hidden dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
                 >
                     <option v-for="p in totalPages" :key="p" :value="p">
                         Page {{ p }} (Q{{ (p - 1) * pageSize + 1 }}–{{ Math.min(p * pageSize, questions.length) }})
@@ -717,45 +718,98 @@ watch(currentQuestionIndex, () => {
             </div>
         </div>
 
-        <!-- Result Summary Card (After Submission) -->
+        <!-- Result Summary Card (After Submission) — SenseLab Session Performance Report -->
         <div
             v-if="isSubmitted && scoreSummary"
-            class="flex flex-col gap-3 rounded-2xl border border-sidebar-border/70 bg-sidebar/30 p-5"
+            class="relative overflow-hidden rounded-3xl border border-zinc-200/90 bg-white/95 p-6 sm:p-8 shadow-senselab-elevated backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/95"
         >
-            <div class="flex items-center justify-between border-b border-sidebar-border/50 pb-3">
-                <h3 class="text-base font-bold text-foreground">
-                    Test Results Summary
-                </h3>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-5 dark:border-zinc-800/80">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-xl">
+                        🎯
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-senselab-heading">
+                            Test Results Summary
+                        </h3>
+                        <p class="text-xs text-brand-muted">
+                            Verified session metrics evaluated against institutional passing standards.
+                        </p>
+                    </div>
+                </div>
+
                 <span
                     :class="[
-                        'rounded-full px-3 py-1 text-xs font-bold',
+                        'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold tracking-wide shadow-2xs',
                         scoreSummary.isPassed
-                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                            : 'bg-destructive/10 text-destructive',
+                            ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                            : 'border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400',
                     ]"
                 >
-                    {{ scoreSummary.isPassed ? 'PASSED' : 'NEEDS PRACTICE' }}
+                    <span
+                        :class="[
+                            'h-2 w-2 rounded-full',
+                            scoreSummary.isPassed ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse',
+                        ]"
+                    />
+                    {{ scoreSummary.isPassed ? 'PASSED TARGET BENCHMARK' : 'NEEDS PRACTICE — WEAK MCQS ISOLATED' }}
                 </span>
             </div>
-            <div class="mt-2 grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
-                <div class="rounded-xl border border-sidebar-border/50 bg-card p-3">
-                    <span class="block text-xs text-muted-foreground">Score</span>
-                    <span class="text-xl font-bold text-foreground">{{ scoreSummary.percentage }}%</span>
+
+            <!-- Metric Tiles Grid -->
+            <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <!-- Score Metric Card (SenseLab Gradient Accent) -->
+                <div class="rounded-2xl border border-sky-100 bg-sky-50/50 p-4 text-center dark:border-sky-900/40 dark:bg-sky-950/20">
+                    <span class="block text-xs font-bold uppercase tracking-wider text-sky-700 dark:text-sky-400">Score</span>
+                    <span class="mt-1 block text-3xl font-extrabold tracking-tight text-senselab-heading">
+                        {{ scoreSummary.percentage }}%
+                    </span>
+                    <span class="text-[11px] text-brand-muted font-medium">accuracy rate</span>
                 </div>
-                <div class="rounded-xl border border-sidebar-border/50 bg-card p-3">
-                    <span class="block text-xs text-muted-foreground">Correct</span>
-                    <span class="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+
+                <!-- Correct Metric Card (Emerald Accent) -->
+                <div class="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4 text-center dark:border-emerald-900/40 dark:bg-emerald-950/20">
+                    <span class="block text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Correct</span>
+                    <span class="mt-1 block text-3xl font-extrabold tracking-tight text-emerald-600 dark:text-emerald-400">
                         {{ scoreSummary.correct }} / {{ scoreSummary.total }}
                     </span>
+                    <span class="text-[11px] text-brand-muted font-medium">correct answers</span>
                 </div>
-                <div class="rounded-xl border border-sidebar-border/50 bg-card p-3">
-                    <span class="block text-xs text-muted-foreground">Answered</span>
-                    <span class="text-xl font-bold text-foreground">{{ scoreSummary.answered }}</span>
+
+                <!-- Answered Metric Card (Purple Accent) -->
+                <div class="rounded-2xl border border-purple-100 bg-purple-50/50 p-4 text-center dark:border-purple-900/40 dark:bg-purple-950/20">
+                    <span class="block text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400">Answered</span>
+                    <span class="mt-1 block text-3xl font-extrabold tracking-tight text-senselab-heading">
+                        {{ scoreSummary.answered }}
+                    </span>
+                    <span class="text-[11px] text-brand-muted font-medium">of {{ scoreSummary.total }} completed</span>
                 </div>
-                <div class="rounded-xl border border-sidebar-border/50 bg-card p-3">
-                    <span class="block text-xs text-muted-foreground">Target Pass</span>
-                    <span class="text-xl font-bold text-foreground">{{ module.content_meta?.passing_score || 60 }}%</span>
+
+                <!-- Target Pass Metric Card (Amber Accent) -->
+                <div class="rounded-2xl border border-amber-100 bg-amber-50/50 p-4 text-center dark:border-amber-900/40 dark:bg-amber-950/20">
+                    <span class="block text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">Target Pass</span>
+                    <span class="mt-1 block text-3xl font-extrabold tracking-tight text-senselab-heading">
+                        {{ module.content_meta?.passing_score || 60 }}%
+                    </span>
+                    <span class="text-[11px] text-brand-muted font-medium">benchmark threshold</span>
                 </div>
+            </div>
+
+            <!-- Weak Question Spaced Repetition Note -->
+            <div class="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 text-xs text-brand-muted dark:border-zinc-800 dark:bg-zinc-900/40">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-base">💡</span>
+                    <span>
+                        Questions missed or revealed during this attempt are actively isolated in your <strong>Revision & Weak MCQs</strong> workspace for spaced repetition.
+                    </span>
+                </div>
+                <a
+                    href="/revision-weak-questions"
+                    class="shrink-0 inline-flex items-center gap-1.5 font-bold text-sky-600 hover:text-sky-700 dark:text-sky-400 hover:underline"
+                >
+                    <span>View Revision Bank</span>
+                    <span>→</span>
+                </a>
             </div>
         </div>
 
@@ -765,17 +819,17 @@ watch(currentQuestionIndex, () => {
                 v-for="q in paginatedQuestions"
                 :key="q.id || q._globalIndex"
                 :id="'question-card-' + q._globalIndex"
-                class="flex flex-col gap-5 rounded-2xl border border-sidebar-border/70 bg-card p-6 shadow-xs dark:bg-card/50 transition-all hover:border-sidebar-border"
+                class="flex flex-col gap-5 rounded-3xl border border-zinc-200/90 bg-white/95 p-6 sm:p-7 shadow-senselab-card hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-950/90 transition-all"
             >
                 <!-- Question Header: Number + Text on Left, Reveal Button & Mastery on Right -->
                 <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                    <div class="flex items-start gap-3 flex-1">
+                    <div class="flex items-start gap-3.5 flex-1">
                         <span
-                            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary"
+                            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-xs font-extrabold text-sky-600 dark:text-sky-400"
                         >
                             {{ q._globalIndex + 1 }}
                         </span>
-                        <h3 class="text-base font-semibold leading-relaxed text-foreground">
+                        <h3 class="text-base font-bold leading-relaxed text-senselab-heading">
                             {{ q.question_text }}
                         </h3>
                     </div>
@@ -785,17 +839,17 @@ watch(currentQuestionIndex, () => {
                         <!-- Mastery Badge (if in Weak MCQs mode or previously tracked) -->
                         <div
                             v-if="masteryState[q.id]"
-                            class="flex items-center gap-1.5 rounded-lg border border-sidebar-border/60 bg-sidebar/50 px-2.5 py-1 text-xs"
+                            class="flex items-center gap-1.5 rounded-full border border-zinc-200/80 bg-zinc-50 px-3 py-1 text-xs dark:border-zinc-800 dark:bg-zinc-900/60"
                             :title="masteryState[q.id].is_mastered ? 'Mastered!' : 'Answer correctly 2 consecutive times to master'"
                         >
-                            <span class="text-[11px] text-muted-foreground font-medium">Mastery:</span>
+                            <span class="text-[11px] text-brand-muted font-medium">Mastery:</span>
                             <div class="flex items-center gap-1">
                                 <span
                                     :class="[
                                         'h-2 w-2 rounded-full',
                                         masteryState[q.id].consecutive_correct >= 1
                                             ? 'bg-emerald-500'
-                                            : 'bg-sidebar-border',
+                                            : 'bg-zinc-300 dark:bg-zinc-700',
                                     ]"
                                 />
                                 <span
@@ -803,7 +857,7 @@ watch(currentQuestionIndex, () => {
                                         'h-2 w-2 rounded-full',
                                         masteryState[q.id].consecutive_correct >= 2
                                             ? 'bg-emerald-500'
-                                            : 'bg-sidebar-border',
+                                            : 'bg-zinc-300 dark:bg-zinc-700',
                                     ]"
                                 />
                             </div>
@@ -813,7 +867,7 @@ watch(currentQuestionIndex, () => {
                             >
                                 ✓ Mastered
                             </span>
-                            <span v-else class="text-[10px] text-muted-foreground">
+                            <span v-else class="text-[10px] text-brand-muted font-medium">
                                 {{ masteryState[q.id].consecutive_correct }}/2
                             </span>
                         </div>
@@ -824,10 +878,10 @@ watch(currentQuestionIndex, () => {
                             @click="revealAnswer(q)"
                             :disabled="!!revealedAnswers[q.id] || isSubmitted"
                             :class="[
-                                'inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all',
+                                'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all',
                                 revealedAnswers[q.id]
                                     ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 cursor-default'
-                                    : 'border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 active:scale-95 shadow-xs',
+                                    : 'border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 active:scale-95 shadow-2xs',
                             ]"
                         >
                             <span v-if="isRevealing[q.id]" class="inline-block animate-spin">⏳</span>
@@ -840,11 +894,11 @@ watch(currentQuestionIndex, () => {
                 <!-- Answer Revealed Notice Banner (Explaining mark forfeiture) -->
                 <div
                     v-if="forfeitedQuestions[q.id]"
-                    class="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-400"
+                    class="flex items-center gap-2 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 text-xs text-amber-700 dark:text-amber-400"
                 >
                     <span>⚠️</span>
                     <span>
-                        <strong>Answer revealed:</strong> This question is marked as forfeited (0 points) and added to your <strong>Weak MCQs list</strong> for targeted revision.
+                        <strong>Answer revealed:</strong> This question is marked as forfeited (0 points) and added to your <strong>Revision & Weak MCQs</strong> workspace for 2-strike spaced mastery.
                     </span>
                 </div>
 
@@ -857,31 +911,31 @@ watch(currentQuestionIndex, () => {
                         @click="selectOption(q, idx)"
                         :disabled="isSubmitted"
                         :class="[
-                            'group flex items-center justify-between rounded-xl border p-4 text-left text-sm transition-all',
+                            'group flex items-center justify-between rounded-2xl border p-4 text-left text-sm transition-all duration-150',
                             // 1. Revealed state styling
                             revealedAnswers[q.id] && revealedAnswers[q.id].correct_option_index === idx
-                                ? 'border-emerald-500 bg-emerald-500/10 font-semibold text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/40'
+                                ? 'border-emerald-500 bg-emerald-50/70 font-semibold text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100 ring-2 ring-emerald-500/40'
                                 : revealedAnswers[q.id] && selectedAnswers[q.id] === idx && revealedAnswers[q.id].correct_option_index !== idx
                                   ? 'border-destructive bg-destructive/10 font-semibold text-destructive'
                                   // 2. Post-submission grading state
                                   : isSubmitted && (serverResults[q.id]?.correct_index === idx || (!serverResults[q.id] && q.payload?.correct_option_index === idx))
-                                    ? 'border-emerald-500 bg-emerald-500/10 font-semibold text-emerald-700 dark:text-emerald-400'
+                                    ? 'border-emerald-500 bg-emerald-50/70 font-semibold text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100'
                                     : selectedAnswers[q.id] === idx
                                       ? isSubmitted && serverResults[q.id] && !serverResults[q.id]?.correct
                                         ? 'border-destructive bg-destructive/10 font-semibold text-destructive'
-                                        : 'border-primary bg-primary/10 font-semibold text-primary shadow-xs'
-                                      : 'border-sidebar-border/70 bg-sidebar/20 text-foreground hover:border-sidebar-border hover:bg-sidebar/40',
+                                        : 'border-sky-500 bg-sky-50/70 font-semibold text-sky-950 dark:bg-sky-950/40 dark:text-sky-100 shadow-2xs'
+                                      : 'border-zinc-200/90 bg-zinc-50/40 text-senselab-heading hover:border-zinc-300 hover:bg-white dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:bg-zinc-900',
                         ]"
                     >
                         <div class="flex items-center gap-3">
                             <span
                                 :class="[
-                                    'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors',
+                                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-xs font-bold transition-colors',
                                     revealedAnswers[q.id] && revealedAnswers[q.id].correct_option_index === idx
                                         ? 'bg-emerald-500 text-white'
                                         : selectedAnswers[q.id] === idx
-                                          ? 'bg-primary text-primary-foreground'
-                                          : 'bg-sidebar-accent text-muted-foreground group-hover:text-foreground',
+                                          ? 'bg-sky-600 text-white'
+                                          : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700',
                                 ]"
                             >
                                 {{ String.fromCharCode(65 + idx) }}
@@ -893,23 +947,25 @@ watch(currentQuestionIndex, () => {
                         <div class="flex items-center gap-2">
                             <span
                                 v-if="revealedAnswers[q.id] && revealedAnswers[q.id].correct_option_index === idx"
-                                class="rounded-md bg-emerald-500/20 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300"
+                                class="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300"
                             >
                                 ✓ Correct Answer
                             </span>
                             <span
                                 v-else-if="revealedAnswers[q.id] && selectedAnswers[q.id] === idx"
-                                class="rounded-md bg-destructive/20 px-2 py-0.5 text-[11px] font-bold text-destructive"
+                                class="rounded-full bg-destructive/20 px-2.5 py-0.5 text-[11px] font-bold text-destructive"
                             >
                                 ✗ Your Choice
                             </span>
                             <div
                                 v-else-if="selectedAnswers[q.id] === idx"
-                                class="h-3 w-3 rounded-full bg-primary"
+                                class="h-3 w-3 rounded-full bg-sky-500"
                             />
                         </div>
                     </button>
                 </div>
+
+
 
                 <!-- Solution Explanation Toggle & Card -->
                 <div
@@ -933,19 +989,19 @@ watch(currentQuestionIndex, () => {
 
                     <div
                         v-if="showExplanations[q.id]"
-                        class="mt-2.5 rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs leading-relaxed text-foreground shadow-xs"
+                        class="mt-3 rounded-2xl border border-sky-200/80 bg-sky-50/60 p-5 text-xs leading-relaxed text-senselab-heading shadow-senselab-card dark:border-sky-900/50 dark:bg-sky-950/30"
                     >
-                        <div class="flex items-center gap-2 mb-1 text-primary font-bold">
+                        <div class="flex items-center gap-2 mb-1.5 text-sky-700 dark:text-sky-300 font-bold">
                             <span>📘</span>
-                            <span>Solution & Key Insights:</span>
+                            <span>Solution & Academic Insights:</span>
                         </div>
-                        <p class="whitespace-pre-line text-muted-foreground">
+                        <p class="whitespace-pre-line text-brand-body leading-relaxed">
                             {{
                                 revealedAnswers[q.id]?.explanation ||
                                 serverResults[q.id]?.explanation ||
                                 q.explanation ||
                                 q.payload?.explanation ||
-                                'The correct option has been confirmed by our academic syllabus.'
+                                'The correct option has been verified against the official syllabus curriculum.'
                             }}
                         </p>
                     </div>
@@ -955,21 +1011,21 @@ watch(currentQuestionIndex, () => {
 
         <!-- Bottom Action Bar / Pagination Footer -->
         <div
-            class="sticky bottom-4 z-40 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sidebar-border/80 bg-background/95 p-4 shadow-lg backdrop-blur-md dark:bg-card/95"
+            class="sticky bottom-4 z-40 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200/90 bg-white/95 p-4 shadow-senselab-elevated backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/95"
         >
             <!-- Page View Bottom Bar: Page summary and Submit CTA (Top bar controls pagination) -->
             <template v-if="viewMode === 'page'">
-                <div class="flex items-center gap-3 text-xs text-muted-foreground font-medium">
+                <div class="flex items-center gap-3 text-xs text-brand-muted font-medium">
                     <div class="flex items-center gap-1.5">
                         <span>Page</span>
-                        <span class="rounded-md bg-sidebar px-2 py-0.5 font-bold text-foreground">
+                        <span class="rounded-md bg-zinc-100 px-2 py-0.5 font-bold text-senselab-heading dark:bg-zinc-800">
                             {{ currentPage }}
                         </span>
                         <span>of {{ totalPages }}</span>
                     </div>
                     <span>•</span>
                     <span>{{ answeredCount }} of {{ questions.length }} Answered</span>
-                    <span v-if="currentPage < totalPages" class="hidden sm:inline text-xs text-primary cursor-pointer hover:underline" @click="setPage(currentPage + 1)">
+                    <span v-if="currentPage < totalPages" class="hidden sm:inline text-xs text-sky-600 dark:text-sky-400 font-semibold cursor-pointer hover:underline" @click="setPage(currentPage + 1)">
                         (Next Page Available ↑)
                     </span>
                 </div>
@@ -982,7 +1038,7 @@ watch(currentQuestionIndex, () => {
                         type="button"
                         @click="prevQuestion"
                         :disabled="currentQuestionIndex === 0"
-                        class="rounded-xl border border-sidebar-border bg-sidebar px-4 py-2 text-xs font-semibold text-foreground transition-all hover:bg-sidebar-accent disabled:opacity-40"
+                        class="rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-semibold text-zinc-800 transition-all hover:bg-zinc-50 disabled:opacity-40 shadow-xs dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
                     >
                         ← Previous Question
                     </button>
@@ -990,14 +1046,15 @@ watch(currentQuestionIndex, () => {
                         v-if="currentQuestionIndex < questions.length - 1"
                         type="button"
                         @click="nextQuestion"
-                        class="rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-xs transition-all hover:bg-primary/90"
+                        class="rounded-full px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all hover:shadow-md hover:scale-[1.02] active:scale-95"
+                        style="background: var(--brand-gradient);"
                     >
                         Next Question →
                     </button>
                 </div>
 
-                <div class="text-xs text-muted-foreground font-medium">
-                    Question <span class="font-bold text-foreground">{{ currentQuestionIndex + 1 }}</span> of <span class="font-bold text-foreground">{{ questions.length }}</span>
+                <div class="text-xs text-brand-muted font-medium">
+                    Question <span class="font-bold text-senselab-heading">{{ currentQuestionIndex + 1 }}</span> of <span class="font-bold text-senselab-heading">{{ questions.length }}</span>
                 </div>
             </template>
 
@@ -1007,9 +1064,10 @@ watch(currentQuestionIndex, () => {
                 type="button"
                 @click="submitTest"
                 :disabled="isSubmitting"
-                class="rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-emerald-700 active:scale-95 disabled:opacity-50"
+                class="rounded-full px-6 py-2.5 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer"
+                style="background: var(--brand-gradient);"
             >
-                {{ isSubmitting ? 'Evaluating...' : 'Submit Test ✓' }}
+                {{ isSubmitting ? 'Evaluating...' : 'Submit Test Session ✓' }}
             </button>
         </div>
     </div>
