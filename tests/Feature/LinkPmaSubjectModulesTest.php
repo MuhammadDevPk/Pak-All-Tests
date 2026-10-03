@@ -35,6 +35,9 @@ function makeLinkTestQuestion(string $code, string $text): QuestionBank
     ]);
 }
 
+/**
+ * @param  array<string, array{subject: string, question: string}>  $entries
+ */
 function writeLinkMapFixture(array $entries): string
 {
     $path = sys_get_temp_dir().'/pma_link_map_'.Str::random(10).'.json';
@@ -61,6 +64,9 @@ function runLinkJob(Domain $domain, bool $dryRun, string $mapPath): array
     return ['key' => $reportKey, 'report' => Cache::get($reportKey)];
 }
 
+/**
+ * @return array<string, array{subject: string, question: string}>
+ */
 function linkFixtureMap(): array
 {
     return [

@@ -218,26 +218,20 @@ class LinkPmaSubjectModulesJob implements ShouldQueue
         /** @var list<array{subject: string, module_id: int, question_id: int, via_text: bool}> $pairs */
         $pairs = [];
 
-        $newBucket = static fn (): array => [
-            'linked' => 0,
-            'already_linked' => 0,
-            'linked_by_text_match' => 0,
-            'question_not_found' => 0,
-        ];
-
         foreach ($entries as $code => $row) {
             $subjectKey = $row['subject'];
             $report['totals']['processed']++;
 
             if (! isset($subjectRows[$subjectKey])) {
-                $subjectRows[$subjectKey] = array_merge(
-                    [
-                        'title' => SubjectModuleProvisioner::titleFor($subjectKey),
-                        'module_id' => null,
-                        'module_created' => false,
-                    ],
-                    $newBucket()
-                );
+                $subjectRows[$subjectKey] = [
+                    'title' => SubjectModuleProvisioner::titleFor($subjectKey),
+                    'module_id' => null,
+                    'module_created' => false,
+                    'linked' => 0,
+                    'already_linked' => 0,
+                    'linked_by_text_match' => 0,
+                    'question_not_found' => 0,
+                ];
             }
 
             $questionId = $questionIdByCode[$code] ?? null;
@@ -311,9 +305,13 @@ class LinkPmaSubjectModulesJob implements ShouldQueue
                 $qid = $pair['question_id'];
                 $bucket = $pair['via_text'] ? 'linked_by_text_match' : 'linked';
 
+                $subject = $pair['subject'];
+
                 if (isset($alreadyAttached[$qid])) {
                     $report['totals']['already_linked']++;
-                    $subjectRows[$pair['subject']]['already_linked']++;
+                    if (isset($subjectRows[$subject])) {
+                        $subjectRows[$subject]['already_linked']++;
+                    }
 
                     continue;
                 }
@@ -326,7 +324,9 @@ class LinkPmaSubjectModulesJob implements ShouldQueue
                     'marks' => 1.00,
                 ];
                 $report['totals'][$bucket]++;
-                $subjectRows[$pair['subject']][$bucket]++;
+                if (isset($subjectRows[$subject])) {
+                    $subjectRows[$subject][$bucket]++;
+                }
             }
 
             if ($toAttach !== [] && ! $this->dryRun) {
