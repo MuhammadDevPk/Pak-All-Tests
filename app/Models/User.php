@@ -115,4 +115,12 @@ class User extends Authenticatable implements FilamentUser, PasskeyUser
     {
         return $this->hasMany(DomainChatMessage::class);
     }
+
+    /**
+     * @return HasMany<UserWeakQuestion, $this>
+     */
+    public function weakQuestions(): HasMany
+    {
+        return $this->hasMany(UserWeakQuestion::class);
+    }
 }

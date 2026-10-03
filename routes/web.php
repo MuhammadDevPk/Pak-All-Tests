@@ -7,6 +7,7 @@ use App\Http\Controllers\DomainDashboardController;
 use App\Http\Controllers\McqExecutionController;
 use App\Http\Controllers\SubscriptionReceiptController;
 use App\Http\Controllers\Teams\TeamInvitationController;
+use App\Http\Controllers\WeakQuestionsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +36,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/domains/{domainSlug}/ai-tutor/messages', [AiTutorController::class, 'history'])->name('ai-tutor.history');
     Route::post('/api/domains/{domainSlug}/ai-tutor/ask', [AiTutorController::class, 'ask'])->middleware('throttle:15,1')->name('ai-tutor.ask');
     Route::post('/api/domains/{domainSlug}/ai-tutor/clear', [AiTutorController::class, 'clear'])->name('ai-tutor.clear');
+
+    // Weak MCQs & Reveal Answer Routes
+    Route::post('/api/questions/{question}/reveal', [WeakQuestionsController::class, 'reveal'])->name('questions.reveal');
+    Route::post('/api/questions/{question}/record-attempt', [WeakQuestionsController::class, 'recordAttempt'])->name('questions.record-attempt');
+    Route::get('/api/weak-questions', [WeakQuestionsController::class, 'index'])->name('weak-questions.api.index');
+    Route::get('/api/weak-questions/practice', [WeakQuestionsController::class, 'practice'])->name('weak-questions.practice');
+    Route::get('/revision-weak-questions', [WeakQuestionsController::class, 'index'])->name('weak-questions.index');
 });
 
 Route::middleware(['auth'])->group(function () {

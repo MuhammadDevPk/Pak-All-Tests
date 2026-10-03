@@ -88,6 +88,7 @@ app/
 │   │   ├── DomainDashboardController.php # Candidate portal SDUI compiler & renderer
 │   │   ├── McqExecutionController.php    # MCQ answer evaluation & score calculation
 │   │   ├── SubscriptionReceiptController.php # Proof-of-payment upload handler
+│   │   ├── WeakQuestionsController.php   # Weak MCQs revision portal, reveal-answer forfeit, 2-strike mastery engine
 │   │   ├── Settings/                     # ProfileController, SecurityController
 │   │   └── Teams/                        # TeamController, TeamMemberController, TeamInvitationController
 │   ├── Middleware/
@@ -152,6 +153,7 @@ app/
 | **`ContentModule`**| `content_modules`| `domain_id`, `title`, `slug`, `module_type` (preparation/mock_test/pdf_repo), `sort_order`, `content_meta` (`jsonb`) | `belongsTo(Domain)`, `belongsToMany(QuestionBank)` |
 | **`QuestionBank`** | `question_bank` | `code`, `question_text`, `question_type` (mcq/subjective), `difficulty_level`, `payload` (`jsonb`), `is_active` | `belongsToMany(ContentModule)` via `module_questions` |
 | **`UserSubscription`**| `user_subscriptions`| `user_id`, `domain_id`, `status` (active/pending/rejected/expired), `payment_method`, `receipt_url`, `starts_at`, `expires_at` | `belongsTo(User)`, `belongsTo(Domain)` |
+| **`UserWeakQuestion`**| `user_weak_questions`| `user_id`, `question_id`, `domain_id`, `consecutive_correct`, `status` (active/mastered), `revealed_count`, `failed_count`, `last_practiced_at`, `mastered_at` | `belongsTo(User)`, `belongsTo(QuestionBank)`, `belongsTo(Domain)` |
 | **`DomainFlow`** | `domain_flows` | `domain_id`, `title`, `slug`, `sort_order`, `prerequisites` (`jsonb`), `is_active` | `belongsTo(Domain)` |
 | **`DomainChatMessage`**| `domain_chat_messages`| `domain_id`, `user_id`, `role` (user/assistant), `content`, `context_metadata` (`jsonb`) | `belongsTo(Domain)`, `belongsTo(User)` |
 | **`DomainKnowledgeEmbedding`**| `domain_knowledge_embeddings`| `domain_id`, `content_module_id`, `title`, `content`, `embedding` (`vector(1536)`), `metadata` (`jsonb`) | `belongsTo(Domain)`, `belongsTo(ContentModule)` |
