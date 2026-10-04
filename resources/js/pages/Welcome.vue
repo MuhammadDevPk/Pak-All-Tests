@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 
@@ -364,6 +364,16 @@ const cloudTags = [
                             />
                         </svg>
                     </Link>
+
+                    <button
+                        v-if="!isAuthenticated"
+                        type="button"
+                        class="inline-flex items-center gap-2 rounded-full border border-amber-300/80 bg-amber-500/10 px-6 py-3.5 text-sm font-semibold text-amber-800 shadow-xs transition-all hover:bg-amber-500/20 active:scale-95 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-300"
+                        @click="router.post('/guest-login')"
+                    >
+                        <span>⚡ Instant 1-Day Access</span>
+                        <span>→</span>
+                    </button>
 
                     <a
                         href="#how-it-works"

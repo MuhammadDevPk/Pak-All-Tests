@@ -15,6 +15,14 @@ const props = defineProps({
         type: String,
         default: 'none',
     },
+    isSuspended: {
+        type: Boolean,
+        default: false,
+    },
+    suspensionReason: {
+        type: String,
+        default: null,
+    },
 });
 
 // Payment Accounts Data
@@ -145,9 +153,57 @@ const submitReceipt = () => {
 
         <!-- Main Enrollment Card Layout -->
         <main class="mx-auto my-8 w-full max-w-4xl">
+            <!-- STATE 0: Suspended Account -->
+            <div
+                v-if="isSuspended"
+                class="flex flex-col gap-6 rounded-xl border border-destructive/40 bg-card p-6 shadow-xs sm:p-10"
+            >
+                <div class="flex items-start gap-4">
+                    <div
+                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-destructive/10 font-mono text-xl font-bold text-destructive"
+                    >
+                        ⛔
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-2">
+                            <span
+                                class="font-mono text-xs font-semibold tracking-wider text-destructive uppercase"
+                            >
+                                Account Suspended
+                            </span>
+                        </div>
+                        <h1
+                            class="text-xl font-extrabold tracking-tight text-foreground sm:text-2xl"
+                        >
+                            Platform Access Restricted
+                        </h1>
+                        <p
+                            class="text-xs leading-relaxed text-muted-foreground sm:text-sm"
+                        >
+                            Your candidate account has been restricted by
+                            platform administration.
+                            <span
+                                v-if="suspensionReason"
+                                class="mt-1 block font-semibold text-destructive"
+                            >
+                                Reason: {{ suspensionReason }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    class="rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-xs leading-relaxed text-foreground/90"
+                >
+                    If you believe this suspension is an error, please reach out
+                    to the administrative support team via WhatsApp or the
+                    portal helpdesk with your registered email address.
+                </div>
+            </div>
+
             <!-- STATE 1: Pending Review -->
             <div
-                v-if="subscriptionStatus === 'pending'"
+                v-else-if="subscriptionStatus === 'pending'"
                 class="flex flex-col gap-6 rounded-xl border border-sidebar-border bg-card p-6 shadow-xs sm:p-10"
             >
                 <div class="flex items-start gap-4">

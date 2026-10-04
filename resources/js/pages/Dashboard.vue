@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowRight, Sparkles, Target } from '@lucide/vue';
+import GuestBanner from '@/components/auth/GuestBanner.vue';
 import PendingInvitationsModal from '@/components/PendingInvitationsModal.vue';
 import { dashboard } from '@/routes';
 import type { DashboardInvitation, Team } from '@/types';
 
 defineProps<{
     pendingInvitations?: DashboardInvitation[];
+    guest?: {
+        is_guest: boolean;
+        expires_at?: string;
+        expires_in_hours?: number;
+    } | null;
 }>();
 
 defineOptions({
@@ -83,6 +89,9 @@ const examTracks = [
                 class="mesh-aura-warm absolute top-10 -right-32 opacity-40"
             ></div>
         </div>
+
+        <!-- Ephemeral Guest Pass Banner -->
+        <GuestBanner v-if="guest?.is_guest" :guest="guest" />
 
         <!-- 1. Hero Welcome & Candidate Command Center Banner -->
         <div

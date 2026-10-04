@@ -74,6 +74,12 @@ class DomainForm
                                 ->helperText('Controls whether this domain appears across the portal.')
                                 ->default(true)
                                 ->required(),
+
+                            Toggle::make('requires_subscription')
+                                ->label('Require Paid Subscription')
+                                ->helperText('Disable to make this domain free for all students without payment upload.')
+                                ->default(false)
+                                ->required(),
                         ]),
                     ]),
             ]);

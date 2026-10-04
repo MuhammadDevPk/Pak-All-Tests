@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Form, Head, router } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import PasskeyVerify from '@/components/PasskeyVerify.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
@@ -27,6 +27,10 @@ defineProps<{
     canResetPassword: boolean;
     teamInvitation?: TeamInvitationContext | null;
 }>();
+
+const startGuestSession = () => {
+    router.post('/guest-login');
+};
 </script>
 
 <template>
@@ -110,6 +114,30 @@ defineProps<{
                 Log in
             </Button>
         </div>
+
+        <!-- 1-Click Instant Guest Access -->
+        <div class="relative flex items-center justify-center">
+            <div class="absolute inset-0 flex items-center">
+                <span
+                    class="w-full border-t border-zinc-200 dark:border-zinc-800"
+                ></span>
+            </div>
+            <span
+                class="relative bg-white px-3 text-[11px] tracking-wider text-zinc-500 uppercase dark:bg-zinc-900 dark:text-zinc-400"
+            >
+                Or explore without sign up
+            </span>
+        </div>
+
+        <button
+            type="button"
+            class="flex w-full items-center justify-center gap-2 rounded-xl border border-amber-300/80 bg-amber-500/10 py-2.5 text-center text-xs font-semibold text-amber-800 transition hover:bg-amber-500/20 active:scale-98 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-950/60"
+            data-test="guest-login-button"
+            @click="startGuestSession"
+        >
+            <span>⚡ Instant 1-Day Guest Pass (No Registration)</span>
+            <span>→</span>
+        </button>
 
         <div class="text-center text-sm text-muted-foreground">
             Don't have an account?

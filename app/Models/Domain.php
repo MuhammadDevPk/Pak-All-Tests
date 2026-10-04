@@ -18,12 +18,29 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $code
  * @property string|null $path
  * @property bool $is_active
+ * @property bool $requires_subscription
  */
 class Domain extends Model
 {
     use CachesTableData;
 
     protected $guarded = [];
+
+    protected $attributes = [
+        'is_active' => true,
+        'requires_subscription' => true,
+    ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+            'requires_subscription' => 'boolean',
+        ];
+    }
 
     /**
      * @return BelongsTo<Domain, $this>
@@ -79,6 +96,14 @@ class Domain extends Model
     public function subscriptions(): HasMany
     {
         return $this->hasMany(UserSubscription::class);
+    }
+
+    /**
+     * @return HasMany<Referral, $this>
+     */
+    public function referrals(): HasMany
+    {
+        return $this->hasMany(Referral::class);
     }
 
     /**

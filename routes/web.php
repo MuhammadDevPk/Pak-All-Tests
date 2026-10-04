@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AiTutorController;
+use App\Http\Controllers\Auth\ConvertGuestAccountController;
+use App\Http\Controllers\Auth\GuestLoginController;
 use App\Http\Controllers\ContentModuleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainDashboardController;
@@ -12,12 +14,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
+Route::post('/guest-login', GuestLoginController::class)->name('guest.login');
 
 Route::get('/ping', function () {
     return 'Ping is working without database queries!';
 });
 
 Route::middleware(['auth'])->group(function () {
+    Route::post('/convert-guest', ConvertGuestAccountController::class)->name('guest.convert');
+
     Route::get('dashboard', function (Request $request) {
         $user = $request->user();
         if ($user && $user->currentTeam && $user->belongsToTeam($user->currentTeam)) {

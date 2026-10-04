@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Domain;
+use App\Models\PlatformSetting;
 use App\Models\User;
 use App\Models\UserSubscription;
 use Carbon\Carbon;
@@ -11,9 +12,31 @@ class SubscriptionManager
 {
     /**
      * Determine if a user holds an active, non-expired subscription for a domain.
+     * Evaluates suspension, global free bypass, domain free bypass, and guest passes.
      */
     public function hasActiveAccess(User $user, Domain $domain): bool
     {
+        // 0. Account Suspension Check
+        if ($user->is_suspended) {
+            return false;
+        }
+
+        // 1. Global Platform Override (1-click Admin master switch)
+        if (PlatformSetting::isAllDomainsFree()) {
+            return true;
+        }
+
+        // 2. Per-Domain Free Toggle
+        if ($domain->requires_subscription === false) {
+            return true;
+        }
+
+        // 3. Active 24-Hour Guest Access
+        if ($user->is_guest && $user->guest_expires_at?->isFuture()) {
+            return true;
+        }
+
+        // 4. Standard Active Subscription / Free Trial
         return $this->getActiveSubscription($user, $domain) !== null;
     }
 
@@ -80,5 +103,53 @@ class SubscriptionManager
             ->update([
                 'status' => 'expired',
             ]);
+    }
+
+    /**
+     * Provision an initial free trial for a user on a domain.
+     */
+    public function grantFreeTrial(User $user, Domain $domain, int $days = 7): UserSubscription
+    {
+        /** @var UserSubscription $subscription */
+        $subscription = UserSubscription::query()->firstOrNew([
+            'user_id' => $user->id,
+            'domain_id' => $domain->id,
+        ]);
+
+        $subscription->fill([
+            'status' => 'active',
+            'payment_method' => 'free_trial',
+            'starts_at' => now(),
+            'expires_at' => now()->addDays($days),
+            'rejection_reason' => null,
+        ])->save();
+
+        return $subscription;
+    }
+
+    /**
+     * Extend a user's subscription on a domain by a specified number of days.
+     */
+    public function extendSubscription(User $user, Domain $domain, int $additionalDays): UserSubscription
+    {
+        /** @var UserSubscription $subscription */
+        $subscription = UserSubscription::query()->firstOrNew([
+            'user_id' => $user->id,
+            'domain_id' => $domain->id,
+        ]);
+
+        $baseExpiry = ($subscription->exists && $subscription->expires_at && $subscription->expires_at->isFuture())
+            ? $subscription->expires_at
+            : now();
+
+        $subscription->fill([
+            'status' => 'active',
+            'payment_method' => $subscription->payment_method ?? 'referral_reward',
+            'starts_at' => $subscription->starts_at ?? now(),
+            'expires_at' => $baseExpiry->copy()->addDays($additionalDays),
+            'rejection_reason' => null,
+        ])->save();
+
+        return $subscription;
     }
 }

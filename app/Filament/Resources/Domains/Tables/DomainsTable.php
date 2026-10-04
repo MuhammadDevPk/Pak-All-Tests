@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\Domains\Tables;
 
 use App\Models\Domain;
+use App\Models\PlatformSetting;
 use App\Services\Ai\KnowledgeVectorizationService;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -80,6 +82,11 @@ class DomainsTable
                     ->boolean()
                     ->sortable(),
 
+                IconColumn::make('requires_subscription')
+                    ->label('Payment Required')
+                    ->boolean()
+                    ->sortable(),
+
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -88,7 +95,44 @@ class DomainsTable
             ->filters([
                 //
             ])
+            ->headerActions([
+                Action::make('toggleGlobalFree')
+                    ->label(fn (): string => PlatformSetting::isAllDomainsFree() ? 'Platform Mode: ALL FREE (Bypassed)' : 'Platform Mode: Payment Gated')
+                    ->icon(Heroicon::OutlinedSparkles)
+                    ->color(fn (): string => PlatformSetting::isAllDomainsFree() ? 'success' : 'warning')
+                    ->requiresConfirmation()
+                    ->modalHeading('Toggle Global Free Mode')
+                    ->modalDescription(fn (): string => PlatformSetting::isAllDomainsFree()
+                        ? 'All domains are currently 100% free. Clicking confirm will re-enable per-domain payment requirements.'
+                        : 'Clicking confirm will make ALL domains free across the platform, immediately bypassing payment uploads.')
+                    ->action(function () {
+                        $current = PlatformSetting::isAllDomainsFree();
+                        PlatformSetting::set('all_domains_free', ! $current);
+                        Domain::flushCache();
+
+                        Notification::make()
+                            ->title(! $current ? 'All Domains Set To FREE' : 'Payment Requirements Restored')
+                            ->body(! $current ? 'Students can now access all test content without payment screenshots.' : 'Per-domain subscription rules are now active.')
+                            ->success()
+                            ->send();
+                    }),
+            ])
             ->recordActions([
+                Action::make('togglePayment')
+                    ->label(fn (Domain $record): string => $record->requires_subscription ? 'Make Free' : 'Require Payment')
+                    ->icon(fn (Domain $record): BackedEnum => $record->requires_subscription ? Heroicon::OutlinedGift : Heroicon::OutlinedCurrencyDollar)
+                    ->color(fn (Domain $record): string => $record->requires_subscription ? 'success' : 'warning')
+                    ->action(function (Domain $record) {
+                        $record->update(['requires_subscription' => ! $record->requires_subscription]);
+                        Domain::flushCache();
+
+                        Notification::make()
+                            ->title("Payment status updated for {$record->name}")
+                            ->body($record->requires_subscription ? 'Paid subscription is now required.' : 'Domain is now free for all students.')
+                            ->success()
+                            ->send();
+                    }),
+
                 Action::make('syncKnowledge')
                     ->label('Sync AI Vectors')
                     ->icon(Heroicon::OutlinedSparkles)

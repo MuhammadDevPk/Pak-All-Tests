@@ -31,8 +31,22 @@ class DashboardController extends Controller
                 ],
             ]);
 
+        $user = $request->user();
+        $guestData = null;
+
+        if ($user && $user->is_guest) {
+            $expiresAt = $user->guest_expires_at;
+            $hoursLeft = $expiresAt ? max(0, (int) now()->diffInHours($expiresAt, false)) : 0;
+            $guestData = [
+                'is_guest' => true,
+                'expires_at' => $expiresAt?->toIso8601String(),
+                'expires_in_hours' => $hoursLeft,
+            ];
+        }
+
         return Inertia::render('Dashboard', [
             'pendingInvitations' => $pendingInvitations,
+            'guest' => $guestData,
         ]);
     }
 }

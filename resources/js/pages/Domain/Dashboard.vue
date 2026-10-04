@@ -2,12 +2,22 @@
 import { Head } from '@inertiajs/vue3';
 import { ref, provide, defineAsyncComponent } from 'vue';
 import AiTutorWidget from '@/components/ai/AiTutorWidget.vue';
+import GuestBanner from '@/components/auth/GuestBanner.vue';
+import ReferralCard from '@/components/referral/ReferralCard.vue';
 import SduiRenderer from '@/components/sdui/SduiRenderer.vue';
 
 defineProps({
     sdui: {
         type: Object,
         required: true,
+    },
+    referral: {
+        type: Object,
+        default: null,
+    },
+    guest: {
+        type: Object,
+        default: () => ({ is_guest: false }),
     },
 });
 
@@ -68,6 +78,9 @@ const SubjectiveUpload = defineAsyncComponent(
     <Head :title="sdui?.meta?.domain?.name || 'Course Dashboard'" />
 
     <div class="relative flex h-full flex-1 flex-col gap-6 p-4 sm:p-6 lg:p-8">
+        <!-- Guest Mode Alert & Conversion Banner -->
+        <GuestBanner :guest="guest" />
+
         <!-- Ambient Background Mesh Glow (SenseLab Atmosphere) -->
         <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
             <div
@@ -146,6 +159,9 @@ const SubjectiveUpload = defineAsyncComponent(
                 </div>
             </div>
         </div>
+
+        <!-- Viral Referral Progress Card -->
+        <ReferralCard v-if="!activeModule && referral" :referral="referral" />
 
         <!-- Active Module Workspace -->
         <div v-if="activeModule" class="flex flex-1 flex-col gap-4">

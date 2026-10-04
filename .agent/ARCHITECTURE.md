@@ -49,11 +49,13 @@ app/
 │   ├── Middleware/               # EnsureTeamMembership, HandleAppearance, HandleInertiaRequests
 │   └── Responses/                # Fortify custom responses (redirects candidates to /#exams)
 ├── Jobs/                         # ImportQuestionsJob, LinkPmaSubjectModulesJob, VectorizeDomainKnowledgeJob
-├── Models/                       # Domain, ContentModule, QuestionBank, User, UserSubscription, UserWeakQuestion
+├── Models/                       # Domain, ContentModule, QuestionBank, User, UserSubscription, UserWeakQuestion, Referral, PlatformSetting
 ├── Policies/                     # TeamPolicy
 ├── Providers/                    # AppServiceProvider, FortifyServiceProvider, Filament/AdminPanelProvider
 └── Services/
-    ├── SubscriptionManager.php   # Central access gating via user_subscriptions state machine
+    ├── SubscriptionManager.php   # Central access gating via user_subscriptions state machine & free bypass toggles
+    ├── GuestAuthService.php      # 24h ephemeral guest passes with non-destructive permanent account conversion
+    ├── ReferralService.php       # Viral referral ladder (+7 days, 30 days at 5), abuse detection, anti-fraud
     ├── SduiPayloadTransformer.php# Transforms domain hierarchy into SDUI node tree
     ├── SduiSchemaValidator.php   # Validates SDUI component schema payloads
     └── Ai/                       # AiCompletionService, AiTutorService (SSE), EmbeddingService,
@@ -68,11 +70,13 @@ app/
 
 | Model | Table | Key Columns | Relationships |
 | :--- | :--- | :--- | :--- |
-| **`User`** | `users` | `name`, `email`, `password`, `current_team_id` | `subscriptions()`, `subscribedDomains()`, `teams()` |
-| **`Domain`** | `domains` | `name`, `slug`, `code`, `is_active`, `path` (`ltree`) | `contentModules()`, `flows()`, `knowledgeEmbeddings()` |
+| **`User`** | `users` | `name`, `email`, `password`, `is_guest`, `guest_expires_at`, `is_suspended`, `suspension_reason`, `referral_code`, `referred_by_id`, `registration_ip` | `subscriptions()`, `subscribedDomains()`, `teams()`, `referralsGiven()`, `referralsReceived()`, `referrer()` |
+| **`Domain`** | `domains` | `name`, `slug`, `code`, `is_active`, `requires_subscription`, `path` (`ltree`) | `contentModules()`, `flows()`, `knowledgeEmbeddings()`, `referrals()` |
+| **`Referral`** | `referrals` | `referrer_id`, `referred_user_id`, `domain_id`, `referral_code`, `reward_days`, `status` (pending/approved/rejected/flagged_abuse), `abuse_reason`, `ip_address`, `device_fingerprint` | `belongsTo(User, 'referrer_id')`, `belongsTo(User, 'referred_user_id')`, `belongsTo(Domain)` |
+| **`PlatformSetting`** | `platform_settings` | `key`, `value` | Key-value application runtime config store with cache-busting |
 | **`ContentModule`** | `content_modules` | `domain_id`, `title`, `slug`, `module_type`, `sort_order` | `belongsTo(Domain)`, `belongsToMany(QuestionBank)` |
 | **`QuestionBank`** | `question_bank` | `code`, `question_text`, `question_type`, `payload` (`jsonb`), `is_active` | `belongsToMany(ContentModule)` via `module_questions` |
-| **`UserSubscription`** | `user_subscriptions` | `user_id`, `domain_id`, `status` (active/pending/rejected/expired), `receipt_url` | `belongsTo(User)`, `belongsTo(Domain)` |
+| **`UserSubscription`** | `user_subscriptions` | `user_id`, `domain_id`, `status` (active/pending/rejected/expired), `receipt_url`, `payment_method` | `belongsTo(User)`, `belongsTo(Domain)` |
 | **`UserWeakQuestion`** | `user_weak_questions` | `user_id`, `question_id`, `domain_id`, `consecutive_correct`, `status` (active/mastered) | `belongsTo(User)`, `belongsTo(QuestionBank)` |
 | **`DomainFlow`** | `domain_flows` | `domain_id`, `title`, `slug`, `sort_order`, `prerequisites` (`jsonb`), `is_active` | `belongsTo(Domain)` |
 | **`DomainChatMessage`** | `domain_chat_messages` | `domain_id`, `user_id`, `role`, `content`, `context_metadata` (`jsonb`) | `belongsTo(Domain)`, `belongsTo(User)` |
