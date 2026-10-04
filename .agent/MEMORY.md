@@ -8,6 +8,14 @@
 
 ## 📜 Active Rolling Memory Log
 
+### Entry 25 — 2026-10-04: Codification of Socratic Viewport Synchronization & The CLI Authority Law
+- **Action**: Formalized architectural rules and anti-patterns following `/learn` command execution, codifying Viewport & Multi-Question Page Context Synchronization in `.agent/rules/ai_tutor.md` § 11, Mistake #12 in `.agent/rules/mistakes.md`, and The CLI Authority Law in `.agent/SYSTEM_RULES.md` § 7.
+- **Impact**: Establishes permanent operational guardrails preventing AI mentor viewport blindness during paginated tests, and establishes that the deterministic CLI toolchain (`npm run format:check`, `lint:check`, `types:check`, `pest`) is the sole authoritative standard of repository health over local IDE extension host runtime artifacts.
+- **Files Changed**: `.agent/rules/ai_tutor.md`, `.agent/rules/mistakes.md`, `.agent/SYSTEM_RULES.md`, `.agent/MEMORY.md`.
+- **Blast Radius**: Governance files and development standards.
+- **Rollback Path**: `git checkout HEAD~1 -- .agent/rules/ai_tutor.md .agent/rules/mistakes.md .agent/SYSTEM_RULES.md .agent/MEMORY.md`.
+- **Lessons**: Codifying recurring patterns into governance prevents future agents and developers from repeating pagination disconnects and chasing false-positive IDE extension runtime artifacts.
+
 ### Entry 24 — 2026-10-04: Full Viewport & Multi-Question Page Context Synchronization for AI Exam Mentor
 - **Action**: Synchronized active page and visible questions state across `McqPlayer.vue`, `Dashboard.vue`, `AiTutorWidget.vue`, `AiTutorService.php`, and `AiCompletionService.php`, adding `computedPageContext` and auto-aligning active question indices on page/pagination changes so the Socratic mentor has accurate awareness of the candidate's exact viewport in both Page View (10/25/50/100 per page) and Focus Mode.
 - **Impact**: Resolves the screen disconnect where the AI mentor defaulted to Question 1 (Nishan-e-Haider) regardless of the active page (e.g. Page 9 displaying Questions 81–85); displays dynamic context ribbons in the chat drawer and enables the mentor to accurately answer queries about the candidate's current page and questions while upholding Zero-Knowledge answer security.

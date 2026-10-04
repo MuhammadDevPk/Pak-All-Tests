@@ -320,10 +320,34 @@ X-Accel-Buffering: no
 
 ---
 
-## 11. Engineering Checklist (Must Pass)
+## 11. Viewport & Multi-Question Page Context Synchronization
+
+In any test, practice, or assessment surface utilizing pagination (e.g., 10, 25, 50, 100 items per page) or scrolling viewport slices:
+
+1. **Structured Viewport Payload (`page_context`)**:
+   The client widget must emit active viewport metadata on every page change, page-size change, or mode toggle:
+   - `view_mode`: `'page'` or `'focus'`
+   - `current_page`, `total_pages`, `page_size`
+   - `showing_from`, `showing_to`, `total_questions`
+   - `active_question_number` (1-indexed)
+   - `visible_questions`: Array of visible questions currently displayed on the candidate's screen.
+
+2. **System Prompt Screen Representation**:
+   Prompt builders (`AiTutorService`) must inject the exact candidate screen state (`CANDIDATE VIEWPORT / SCREEN STATE`):
+   - Explicitly list all questions currently visible on the screen with their numbers and statements.
+   - Explicitly identify which question currently holds primary focus.
+   - Authoritatively answer candidate orientation queries (e.g., *"what question am I on?"*, *"what content is on my screen?"*).
+
+3. **Zero-Knowledge Security Invariant**:
+   Viewport questions included in prompts or context payloads must **never** include correct answer keys, correct option indexes, or unearned full explanations.
+
+---
+
+## 12. Engineering Checklist (Must Pass)
 
 - [ ] Pure JavaScript only in Vue AI components
 - [ ] Correct MCQ answer never reaches frontend or streamed events
+- [ ] Viewport & page_context synchronized on pagination changes
 - [ ] Subscription gating returns 403 or redirects inactive candidates
 - [ ] CSRF protected
 - [ ] Messages ordered correctly (id DESC then reverse)

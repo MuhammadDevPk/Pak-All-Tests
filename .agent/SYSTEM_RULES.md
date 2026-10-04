@@ -102,3 +102,22 @@ These reflexes are the operational difference between junior speculation and pro
 - **No TypeScript in Vue**: TypeScript (`lang="ts"`) is **strictly prohibited** in `.vue` SFCs in this repository. Any `.vue` file with `lang="ts"` is a governance violation.
 - **Simplicity & Velocity**: Keep component state, props, and logic in idiomatic modern JavaScript (ESNext, Vue 3 Composition API).
 - **Type Checking Scope**: TypeScript tooling in `package.json` / `composer.json` is scheduled for removal to align toolchains with this pure JavaScript mandate (see Follow-Up Actions).
+
+---
+
+## 7. The CLI Authority Law (CLI vs. IDE Extension Artifacts)
+
+When diagnosing perceived errors, warnings, or format failures:
+
+1. **Authoritative Source of Truth**:
+   The authoritative judge of repository health, syntax validity, formatting, and test status is the **deterministic CLI toolchain**, NEVER background IDE extension host logs:
+   - Formatting: `npm run format:check` / `npm run format`
+   - Code Style: `./vendor/bin/pint --dirty --test`
+   - Static Analysis & Types: `npm run types:check` and `phpstan analyse`
+   - Unit & Feature Tests: `./vendor/bin/pest`
+   - Asset Compilation: `npm run build`
+
+2. **IDE Extension Host Isolation**:
+   Errors originating from IDE extension hosts (e.g. `esbenp.prettier-vscode` vs. `vue.volar` module transform hooks on dynamic ESM imports) are local editor runtime artifacts. They do NOT constitute repository bugs or broken builds if all CLI checks exit with code `0`.
+   - Resolve local editor conflicts via workspace settings (`.vscode/settings.json`) using concrete module entrypoints (e.g. `prettier.prettierPath`).
+   - Do not perform unnecessary code refactoring or package reinstalls when CLI validation passes cleanly.

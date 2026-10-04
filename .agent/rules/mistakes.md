@@ -273,3 +273,20 @@ $question = QuestionBank::createQuietly($data);
 $question->modules()->attach($moduleIds);
 VectorizeDomainKnowledgeJob::dispatch(questionId: $question->id);
 ```
+
+---
+
+## 12. Viewport Blindness in Paginated Practice Sessions
+
+### 💥 The Symptom
+A candidate on Page 9 of an 85-question test (viewing Questions 81–85) asks the AI Exam Mentor *"Which question am I currently looking at?"* and the AI hallucinates: *"You are on Question 1 about Nishan-e-Haider"*.
+
+### 🔍 What Happened (Root Cause)
+The client frontend tracked pagination internally in the player view, but only emitted a single static or unaligned question index (`index 0`) to the AI drawer. The backend prompt generator only received one question, leaving the LLM blind to the actual paginated view on screen.
+
+### ✅ The Fix & Prevention Rule
+* **Rule**:
+  1. Always emit a reactive `computedPageContext` containing the active page number, visible question range (`showing_from` to `showing_to`), and visible question list.
+  2. Auto-align the active focus question when the candidate switches pages (`currentQuestionIndex = (newPage - 1) * pageSize`).
+  3. Present an Active Test Context ribbon on the chat widget so the candidate has visual feedback on the mentor's active viewport anchor.
+
