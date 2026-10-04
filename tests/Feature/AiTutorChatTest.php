@@ -10,12 +10,12 @@ use App\Models\User;
 use App\Models\UserSubscription;
 use App\Services\Ai\EmbeddingService;
 use App\Services\Ai\KnowledgeVectorizationService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class AiTutorChatTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected Domain $domain;
 

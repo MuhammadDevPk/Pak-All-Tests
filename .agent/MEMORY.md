@@ -8,6 +8,14 @@
 
 ## 📜 Active Rolling Memory Log
 
+### Entry 26 — 2026-10-05: DatabaseSeeder PlatformSeeder Invocation & Test Suite DatabaseTransactions Compliance
+- **Action**: Wired `PlatformSeeder` into `DatabaseSeeder::run()` using `firstOrCreate` for user creation to guarantee idempotency during `php artisan migrate:fresh --seed` or `db:seed`, and eliminated `RefreshDatabase` from 3 feature tests in favor of mandated `DatabaseTransactions`, adjusting `QuestionImportTest` assertions to use relative question counts.
+- **Impact**: Resolves empty database tables and login failure (`admin@paktests.pk` non-existent) after running `php artisan migrate:fresh --seed`; prevents the test suite from wiping seeded database records.
+- **Files Changed**: `database/seeders/DatabaseSeeder.php`, `tests/Feature/DomainKnowledgeVectorizationTest.php`, `tests/Feature/AiTutorChatTest.php`, `tests/Feature/ContentModuleExecutionTest.php`, `tests/Feature/QuestionImportTest.php`, `.agent/MEMORY.md`.
+- **Blast Radius**: Seeder orchestration and test suite transaction lifecycle.
+- **Rollback Path**: `git checkout HEAD~1 -- database/seeders/DatabaseSeeder.php tests/Feature/`.
+- **Lessons**: `DatabaseSeeder` must call domain/platform seeders explicitly; test suites must never use `RefreshDatabase` when sharing persistent local/remote PostgreSQL instances.
+
 ### Entry 25 — 2026-10-04: Codification of Socratic Viewport Synchronization & The CLI Authority Law
 - **Action**: Formalized architectural rules and anti-patterns following `/learn` command execution, codifying Viewport & Multi-Question Page Context Synchronization in `.agent/rules/ai_tutor.md` § 11, Mistake #12 in `.agent/rules/mistakes.md`, and The CLI Authority Law in `.agent/SYSTEM_RULES.md` § 7.
 - **Impact**: Establishes permanent operational guardrails preventing AI mentor viewport blindness during paginated tests, and establishes that the deterministic CLI toolchain (`npm run format:check`, `lint:check`, `types:check`, `pest`) is the sole authoritative standard of repository health over local IDE extension host runtime artifacts.
