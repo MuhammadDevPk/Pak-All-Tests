@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import ReferralCard from '@/components/referral/ReferralCard.vue';
 
 const props = defineProps({
     domain: {
@@ -21,6 +22,10 @@ const props = defineProps({
     },
     suspensionReason: {
         type: String,
+        default: null,
+    },
+    referral: {
+        type: Object,
         default: null,
     },
 });
@@ -280,6 +285,19 @@ const submitReceipt = () => {
                     reference is matched.
                 </div>
 
+                <!-- Instant Access via Referral Alternative (while waiting) -->
+                <div v-if="referral" class="flex flex-col gap-2 pt-2">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                            Instant Access Alternative
+                        </span>
+                        <span class="text-xs font-semibold text-foreground">
+                            Don't want to wait? Invite friends to unlock immediately!
+                        </span>
+                    </div>
+                    <ReferralCard :referral="referral" />
+                </div>
+
                 <div
                     class="flex flex-wrap items-center justify-between gap-4 border-t border-sidebar-border/60 pt-4"
                 >
@@ -305,11 +323,11 @@ const submitReceipt = () => {
                     <div class="flex items-center gap-2">
                         <span
                             class="font-mono text-xs font-bold tracking-wider text-primary uppercase"
-                            >Enrollment Checkout</span
+                            >Enrollment Options</span
                         >
                         <span class="text-xs text-muted-foreground">•</span>
                         <span class="text-xs text-muted-foreground"
-                            >Self-Service Bank Verification</span
+                            >Free Referral or Direct Payment</span
                         >
                     </div>
                     <h1
@@ -320,10 +338,31 @@ const submitReceipt = () => {
                     <p
                         class="text-xs leading-relaxed text-muted-foreground sm:text-sm"
                     >
-                        Complete your payment using any Pakistani gateway below,
-                        then upload your transaction receipt for automated
-                        administrative activation.
+                        Choose how you would like to continue: earn free trial extensions by inviting classmates, or submit your enrollment fee below.
                     </p>
+                </div>
+
+                <!-- OPTION A: Invite Friends (100% Free) -->
+                <div v-if="referral" class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                            Option 1 • 100% Free
+                        </span>
+                        <span class="text-xs font-semibold text-foreground">
+                            Invite friends & get instant access (+7 days per friend, 30 days for 5 friends)
+                        </span>
+                    </div>
+                    <ReferralCard :referral="referral" />
+                </div>
+
+                <!-- Separator: Or Pay via Payment Gateways -->
+                <div class="relative my-2 flex items-center justify-center">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-sidebar-border"></div>
+                    </div>
+                    <div class="relative bg-background px-4 text-xs font-semibold text-muted-foreground uppercase">
+                        Or Option 2: Self-Service Payment
+                    </div>
                 </div>
 
                 <!-- Rejection Notice Banner (if previously rejected) -->

@@ -51,6 +51,8 @@ class DomainDashboardController extends Controller
         if (! $hasAccess) {
             $latestSubscription = $this->subscriptionManager->getLatestSubscription($user, $domain);
 
+            $referralStats = $user ? $this->referralService->getReferralStats($user, $domain) : null;
+
             return Inertia::render('Subscription/PendingOrInactive', [
                 'domain' => [
                     'id' => $domain->id,
@@ -69,6 +71,7 @@ class DomainDashboardController extends Controller
                 'subscriptionStatus' => $latestSubscription ? $latestSubscription->status : 'none',
                 'isSuspended' => (bool) $user?->is_suspended,
                 'suspensionReason' => $user?->suspension_reason,
+                'referral' => $referralStats,
             ]);
         }
 

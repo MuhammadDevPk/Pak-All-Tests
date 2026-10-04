@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { ArrowRight, Sparkles, Target } from '@lucide/vue';
 import GuestBanner from '@/components/auth/GuestBanner.vue';
 import PendingInvitationsModal from '@/components/PendingInvitationsModal.vue';
+import ReferralCard from '@/components/referral/ReferralCard.vue';
 import { dashboard } from '@/routes';
 import type { DashboardInvitation, Team } from '@/types';
 
@@ -13,6 +14,7 @@ defineProps<{
         expires_at?: string;
         expires_in_hours?: number;
     } | null;
+    referral?: Record<string, any> | null;
 }>();
 
 defineOptions({
@@ -155,6 +157,9 @@ const examTracks = [
                 </Link>
             </div>
         </div>
+
+        <!-- Viral Referral Progress & Milestone Card -->
+        <ReferralCard v-if="referral" :referral="referral" />
 
         <!-- 2. Flagship Exam Tracks Grid -->
         <div>

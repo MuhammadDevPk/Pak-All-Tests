@@ -12,9 +12,10 @@ import { login } from '@/routes';
 import { store } from '@/routes/register';
 import type { TeamInvitationContext } from '@/types';
 
-defineProps<{
+const props = defineProps<{
     passwordRules: string;
     teamInvitation?: TeamInvitationContext | null;
+    referralCode?: string | null;
 }>();
 
 defineOptions({
@@ -98,10 +99,31 @@ defineOptions({
                 <InputError :message="errors.password_confirmation" />
             </div>
 
+            <div class="grid gap-2">
+                <div class="flex items-center justify-between">
+                    <Label for="ref">Referral Code</Label>
+                    <span class="text-xs text-muted-foreground">Optional</span>
+                </div>
+                <Input
+                    id="ref"
+                    type="text"
+                    :tabindex="5"
+                    autocomplete="off"
+                    name="ref"
+                    :default-value="props.referralCode || ''"
+                    placeholder="e.g. PAK-HNYK3T"
+                    class="font-mono uppercase tracking-wider placeholder:tracking-normal placeholder:font-sans placeholder:normal-case"
+                />
+                <p v-if="!errors.ref" class="text-[11px] text-muted-foreground">
+                    Have an invitation code from a friend? Enter it to link accounts.
+                </p>
+                <InputError :message="errors.ref" />
+            </div>
+
             <Button
                 type="submit"
                 class="mt-2 w-full"
-                tabindex="5"
+                tabindex="6"
                 :disabled="processing"
                 data-test="register-user-button"
             >

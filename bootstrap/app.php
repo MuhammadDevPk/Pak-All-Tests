@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CaptureReferralCode;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetTeamUrlDefaults;
@@ -17,9 +18,21 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
 
-        $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+        $middleware->encryptCookies(except: ['appearance', 'sidebar_state', 'referral_code', 'referral_domain']);
+
+        $middleware->redirectGuestsTo(function (Request $request): string {
+            if ($request->filled('ref')) {
+                $ref = (string) $request->query('ref');
+                $domain = $request->route('domainSlug') ?? $request->query('domain') ?? $request->query('domain_slug');
+
+                return route('register', array_filter(['ref' => $ref, 'domain' => $domain]));
+            }
+
+            return route('login');
+        });
 
         $middleware->web(append: [
+            CaptureReferralCode::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
             SetTeamUrlDefaults::class,

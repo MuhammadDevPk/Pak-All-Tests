@@ -33,6 +33,15 @@ class CreateNewUser implements CreatesNewUsers
         Validator::make($input, [
             ...$this->profileRules(),
             'password' => $this->passwordRules(),
+            'ref' => ['nullable', 'string', 'max:32', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (! empty($value)) {
+                    $normalized = strtoupper(trim((string) $value));
+                    $exists = User::query()->where('referral_code', $normalized)->exists();
+                    if (! $exists) {
+                        $fail('The provided referral code is invalid or does not exist.');
+                    }
+                }
+            }],
         ])->validate();
 
         return DB::transaction(function () use ($input) {
@@ -51,9 +60,13 @@ class CreateNewUser implements CreatesNewUsers
                 $this->subscriptionManager->grantFreeTrial($user, $domain, 7);
             }
 
-            // Process referral link if present
-            $refCode = $input['ref'] ?? request()->cookie('referral_code') ?? session('referral_code');
-            $refDomainSlug = $input['domain_slug'] ?? request()->cookie('referral_domain') ?? session('referral_domain');
+            // Process referral link if present (normalized uppercase)
+            $rawRefCode = ! empty($input['ref'])
+                ? $input['ref']
+                : (request()->query('ref') ?? request()->cookie('referral_code') ?? session('referral_code'));
+            $refCode = ! empty($rawRefCode) ? strtoupper(trim((string) $rawRefCode)) : null;
+
+            $refDomainSlug = $input['domain_slug'] ?? request()->query('domain_slug') ?? request()->query('domain') ?? request()->cookie('referral_domain') ?? session('referral_domain');
 
             if ($refCode) {
                 $targetDomain = $refDomainSlug

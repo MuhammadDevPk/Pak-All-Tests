@@ -80,6 +80,7 @@ class FortifyServiceProvider extends ServiceProvider
 
         Fortify::registerView(fn (Request $request) => Inertia::render('auth/Register', [
             'teamInvitation' => $this->teamInvitation($request),
+            'referralCode' => $request->query('ref') ?? $request->cookie('referral_code') ?? $request->session()->get('referral_code'),
         ]));
 
         Fortify::confirmPasswordView(fn () => Inertia::render('auth/ConfirmPassword'));

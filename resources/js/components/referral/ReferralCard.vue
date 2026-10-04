@@ -182,5 +182,34 @@ const shareWhatsApp = () => {
                 </button>
             </div>
         </div>
+
+        <!-- Referred Candidates Activity List -->
+        <div
+            v-if="referral.recent_referrals && referral.recent_referrals.length > 0"
+            class="mt-4 border-t border-sky-100 pt-3 dark:border-sky-950/80"
+        >
+            <div class="mb-2 flex items-center justify-between text-[11px]">
+                <span class="font-semibold text-zinc-700 dark:text-zinc-300">
+                    Referred Friends Joined ({{ referral.recent_referrals.length }})
+                </span>
+                <span class="text-zinc-400 dark:text-zinc-500">
+                    +{{ referral.days_earned }} Days Total Unlocked
+                </span>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+                <div
+                    v-for="friend in referral.recent_referrals"
+                    :key="friend.id"
+                    class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/80 px-2.5 py-1 text-[11px] font-medium text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300"
+                >
+                    <span class="flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                    <span class="font-semibold">{{ friend.name }}</span>
+                    <span class="text-[10px] opacity-75">({{ friend.joined_at }})</span>
+                    <span class="rounded-sm bg-emerald-200/60 px-1 text-[9px] font-bold text-emerald-900 dark:bg-emerald-800/80 dark:text-emerald-100">
+                        +{{ friend.reward_days }}d
+                    </span>
+                </div>
+            </div>
+        </div>
     </div>
 </template>

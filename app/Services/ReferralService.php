@@ -61,7 +61,7 @@ class ReferralService
         ?string $deviceFingerprint = null
     ): array {
         /** @var User|null $parent */
-        $parent = User::query()->where('referral_code', trim($referralCode))->first();
+        $parent = User::query()->where('referral_code', strtoupper(trim($referralCode)))->first();
 
         if (! $parent) {
             return [
@@ -89,8 +89,9 @@ class ReferralService
             ];
         }
 
-        // Anti-Abuse 2: Matching registration IP address heuristic
-        if ($ipAddress !== null && $parent->registration_ip !== null && $parent->registration_ip === $ipAddress) {
+        // Anti-Abuse 2: Matching registration IP address heuristic (exempt loopback addresses in development)
+        $isLoopback = in_array($ipAddress, ['127.0.0.1', '::1', 'localhost'], true);
+        if (! $isLoopback && $ipAddress !== null && $parent->registration_ip !== null && $parent->registration_ip === $ipAddress) {
             Referral::create([
                 'referrer_id' => $parent->id,
                 'referred_user_id' => $childUser->id,
@@ -108,11 +109,9 @@ class ReferralService
             ];
         }
 
-        // Idempotency: Prevent duplicate credits for the exact same parent-child-domain triplet
+        // Idempotency: Prevent duplicate credits for the same child registration on the platform
         $alreadyReferred = Referral::query()
-            ->where('referrer_id', $parent->id)
             ->where('referred_user_id', $childUser->id)
-            ->where('domain_id', $domain->id)
             ->exists();
 
         if ($alreadyReferred) {
@@ -122,10 +121,9 @@ class ReferralService
             ];
         }
 
-        // Count parent's previous valid referrals for this domain
+        // Count parent's previous valid referrals across platform
         $approvedCount = Referral::query()
             ->where('referrer_id', $parent->id)
-            ->where('domain_id', $domain->id)
             ->approved()
             ->count();
 
@@ -138,8 +136,11 @@ class ReferralService
             $milestone = null;
         }
 
-        // Credit Parent's subscription
-        $this->subscriptionManager->extendSubscription($parent, $domain, $rewardDays);
+        // Credit Parent's subscription across all active domains (so the parent unlocks the platform)
+        $activeDomains = Domain::query()->where('is_active', true)->get();
+        foreach ($activeDomains as $activeDomain) {
+            $this->subscriptionManager->extendSubscription($parent, $activeDomain, $rewardDays);
+        }
 
         // Record approved referral
         Referral::create([
@@ -167,22 +168,36 @@ class ReferralService
      *
      * @return array<string, mixed>
      */
-    public function getReferralStats(User $user, Domain $domain): array
+    public function getReferralStats(User $user, ?Domain $domain = null): array
     {
         $code = $this->getOrCreateReferralCode($user);
         $link = $this->getReferralLink($user, $domain);
 
         $approvedCount = Referral::query()
             ->where('referrer_id', $user->id)
-            ->where('domain_id', $domain->id)
             ->approved()
             ->count();
 
         $daysEarned = (int) Referral::query()
             ->where('referrer_id', $user->id)
-            ->where('domain_id', $domain->id)
             ->approved()
             ->sum('reward_days');
+
+        $referredFriends = Referral::query()
+            ->where('referrer_id', $user->id)
+            ->approved()
+            ->with('referredUser:id,name,email,created_at')
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(fn (Referral $r) => [
+                'id' => $r->id,
+                'name' => $r->referredUser?->name ?? 'Candidate',
+                'reward_days' => $r->reward_days,
+                'joined_at' => $r->created_at?->diffForHumans() ?? 'Recently',
+            ])
+            ->values()
+            ->all();
 
         return [
             'referral_code' => $code,
@@ -193,6 +208,7 @@ class ReferralService
             'is_milestone_reached' => $approvedCount >= 5,
             'remaining_for_milestone' => max(0, 5 - $approvedCount),
             'milestone_reward_label' => '30 Days Full Access',
+            'recent_referrals' => $referredFriends,
         ];
     }
 }

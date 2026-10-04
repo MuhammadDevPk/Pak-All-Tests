@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\Domain;
 use App\Models\Referral;
 use App\Models\User;
+use App\Models\UserSubscription;
 use App\Services\ReferralService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
@@ -182,5 +183,98 @@ class ReferralSystemTest extends TestCase
         $response = $this->actingAs($user)->get("/d/{$domain->slug}?ref={$code}");
 
         $response->assertSessionHas('warning', 'Notice: You cannot refer yourself using your own link. Share your referral link with classmates and friends to earn free access!');
+    }
+
+    public function test_registration_with_direct_referral_code_input_credits_referrer(): void
+    {
+        $domain = $this->createDomain(['is_active' => true]);
+        $parent = User::factory()->create();
+        $code = $this->referralService->getOrCreateReferralCode($parent);
+
+        $response = $this->post('/register', [
+            'name' => 'Referred Student',
+            'email' => 'student_ref_input@paktests.pk',
+            'password' => 'SecurePass123!',
+            'password_confirmation' => 'SecurePass123!',
+            'ref' => $code,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('referrals', [
+            'referrer_id' => $parent->id,
+            'status' => 'approved',
+        ]);
+    }
+
+    public function test_registration_with_invalid_referral_code_fails_validation(): void
+    {
+        $response = $this->post('/register', [
+            'name' => 'Student Invalid Ref',
+            'email' => 'student_invalid_ref@paktests.pk',
+            'password' => 'SecurePass123!',
+            'password_confirmation' => 'SecurePass123!',
+            'ref' => 'NON-EXISTENT-CODE',
+        ]);
+
+        $response->assertSessionHasErrors(['ref']);
+    }
+
+    public function test_unauthenticated_user_accessing_domain_referral_link_redirects_to_register_with_query_preserved(): void
+    {
+        $domain = $this->createDomain(['is_active' => true]);
+        $parent = User::factory()->create();
+        $code = $this->referralService->getOrCreateReferralCode($parent);
+
+        $response = $this->get("/d/{$domain->slug}?ref={$code}");
+
+        $response->assertRedirect("/register?ref={$code}&domain={$domain->slug}");
+    }
+
+    public function test_expired_parent_automatically_unlocks_all_domains_when_child_registers_with_referral(): void
+    {
+        $domain1 = $this->createDomain(['is_active' => true]);
+        $domain2 = $this->createDomain(['is_active' => true]);
+        $parent = User::factory()->create();
+        $code = $this->referralService->getOrCreateReferralCode($parent);
+
+        // Expire parent subscriptions
+        UserSubscription::create([
+            'user_id' => $parent->id,
+            'domain_id' => $domain1->id,
+            'status' => 'expired',
+            'expires_at' => now()->subDay(),
+        ]);
+        UserSubscription::create([
+            'user_id' => $parent->id,
+            'domain_id' => $domain2->id,
+            'status' => 'expired',
+            'expires_at' => now()->subDay(),
+        ]);
+
+        // Child registers with parent's code in different domain context
+        $response = $this->post('/register', [
+            'name' => 'Ali Student',
+            'email' => 'ali_student@paktests.pk',
+            'password' => 'SecurePass123!',
+            'password_confirmation' => 'SecurePass123!',
+            'ref' => strtolower($code), // verify lowercase tolerance
+        ]);
+
+        $response->assertRedirect();
+
+        // Parent should now be active on BOTH domains
+        $sub1 = UserSubscription::where('user_id', $parent->id)->where('domain_id', $domain1->id)->first();
+        $sub2 = UserSubscription::where('user_id', $parent->id)->where('domain_id', $domain2->id)->first();
+
+        $this->assertSame('active', $sub1->status);
+        $this->assertTrue($sub1->expires_at->isFuture());
+        $this->assertSame('active', $sub2->status);
+        $this->assertTrue($sub2->expires_at->isFuture());
+
+        // Verify parent dashboard stats show the child
+        $stats = $this->referralService->getReferralStats($parent, $domain1);
+        $this->assertSame(1, $stats['referrals_count']);
+        $this->assertSame(7, $stats['days_earned']);
+        $this->assertSame('Ali Student', $stats['recent_referrals'][0]['name']);
     }
 }

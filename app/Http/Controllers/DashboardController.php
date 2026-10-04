@@ -3,12 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\TeamInvitation;
+use App\Services\ReferralService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        protected ReferralService $referralService
+    ) {}
+
     public function __invoke(Request $request): Response
     {
         $email = strtolower($request->user()->email);
@@ -44,9 +49,12 @@ class DashboardController extends Controller
             ];
         }
 
+        $referralStats = $user ? $this->referralService->getReferralStats($user) : null;
+
         return Inertia::render('Dashboard', [
             'pendingInvitations' => $pendingInvitations,
             'guest' => $guestData,
+            'referral' => $referralStats,
         ]);
     }
 }
