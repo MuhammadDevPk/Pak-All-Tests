@@ -19,20 +19,29 @@ const searchQuery = ref('');
 const expandedAnswers = ref({});
 const activeQuestionId = ref(null);
 
-// Initialize all cards as expanded by default if there are 15 or fewer questions for easy scanning,
-// otherwise start collapsed for large sets.
-onMounted(() => {
-    if (props.questions && props.questions.length <= 15) {
+const initExpandedAnswers = (questionsList) => {
+    if (!questionsList || questionsList.length === 0) {
+        return;
+    }
+
+    if (
+        Object.keys(expandedAnswers.value).length === 0 &&
+        questionsList.length <= 15
+    ) {
         const initial = {};
-        props.questions.forEach((q) => {
+        questionsList.forEach((q) => {
             initial[q.id] = true;
         });
         expandedAnswers.value = initial;
     }
 
-    if (props.questions && props.questions.length > 0) {
-        selectQuestion(props.questions[0]);
+    if (!activeQuestionId.value && questionsList.length > 0) {
+        selectQuestion(questionsList[0]);
     }
+};
+
+onMounted(() => {
+    initExpandedAnswers(props.questions);
 });
 
 const filteredQuestions = computed(() => {
@@ -48,7 +57,11 @@ const filteredQuestions = computed(() => {
 
     return props.questions.filter((q) => {
         const text = (q.question_text || '').toLowerCase();
-        const answer = (q.payload?.model_answer || '').toLowerCase();
+        const answer = (
+            q.payload?.model_answer ||
+            q.explanation ||
+            ''
+        ).toLowerCase();
         const code = (q.code || '').toLowerCase();
 
         return (
@@ -88,13 +101,16 @@ const selectQuestion = (question) => {
 
     activeQuestionId.value = question.id;
 
+    const answerText =
+        question.payload?.model_answer || question.explanation || '';
+
     const pageContext = {
         view_mode: 'study_qa',
         total_questions: props.questions.length,
         active_question_number:
             props.questions.findIndex((q) => q.id === question.id) + 1,
         question_text: question.question_text,
-        model_answer: question.payload?.model_answer || '',
+        model_answer: answerText,
     };
 
     emit('question-change', {
@@ -107,12 +123,8 @@ const selectQuestion = (question) => {
 watch(
     () => props.questions,
     (newQuestions) => {
-        if (
-            newQuestions &&
-            newQuestions.length > 0 &&
-            !activeQuestionId.value
-        ) {
-            selectQuestion(newQuestions[0]);
+        if (newQuestions && newQuestions.length > 0) {
+            initExpandedAnswers(newQuestions);
         }
     },
     { immediate: true },
@@ -190,13 +202,21 @@ watch(
         >
             <span class="text-3xl">🔍</span>
             <h3 class="text-senselab-heading text-base font-bold">
-                No matching guidelines or questions
+                {{
+                    searchQuery
+                        ? 'No matching guidelines or questions'
+                        : 'No study content found'
+                }}
             </h3>
             <p class="max-w-md text-xs text-brand-muted">
-                No items match your search term "{{ searchQuery }}". Clear the
-                filter to view all study items.
+                {{
+                    searchQuery
+                        ? `No items match your search term "${searchQuery}". Clear the filter to view all study items.`
+                        : 'No study guidelines or questions have been attached to this module yet.'
+                }}
             </p>
             <button
+                v-if="searchQuery"
                 type="button"
                 @click="searchQuery = ''"
                 class="mt-2 rounded-full border border-zinc-200/90 bg-zinc-50 px-4 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
@@ -301,13 +321,18 @@ watch(
                         >
                             {{
                                 q.payload?.model_answer ||
+                                q.explanation ||
                                 'No specific answer text is required for this guideline.'
                             }}
                         </div>
 
-                        <!-- Additional Explanation / Context Note (if present) -->
+                        <!-- Additional Explanation / Context Note (if present and distinct from answer) -->
                         <div
-                            v-if="q.explanation"
+                            v-if="
+                                q.explanation &&
+                                q.payload?.model_answer &&
+                                q.explanation !== q.payload?.model_answer
+                            "
                             class="mt-1 border-t border-emerald-500/10 pt-2 text-xs text-brand-muted"
                         >
                             <strong

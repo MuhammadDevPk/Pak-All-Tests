@@ -179,6 +179,7 @@ class SduiSchemaValidator
                 break;
 
             case 'McqPlayer':
+            case 'StudyQaPlayer':
             case 'PdfViewer':
             case 'SubjectiveUpload':
                 if (! isset($node['moduleId']) && ! isset($props['moduleId'])) {
@@ -199,7 +200,7 @@ class SduiSchemaValidator
             return;
         }
 
-        $allowedKeys = ['module_type', 'dashboard_section', 'display_mode', 'slug_contains', 'active', 'merge'];
+        $allowedKeys = ['module_type', 'dashboard_section', 'display_mode', 'slug_contains', 'active', 'limit', 'merge'];
         foreach ($query as $key => $value) {
             if (! in_array($key, $allowedKeys, true)) {
                 $errors[] = "Unsupported moduleQuery key '{$key}' at depth {$depth}.";
@@ -214,6 +215,10 @@ class SduiSchemaValidator
 
         if (array_key_exists('active', $query) && ! is_bool($query['active'])) {
             $errors[] = "moduleQuery 'active' at depth {$depth} must be boolean.";
+        }
+
+        if (array_key_exists('limit', $query) && (! is_int($query['limit']) || $query['limit'] <= 0)) {
+            $errors[] = "moduleQuery 'limit' at depth {$depth} must be a positive integer.";
         }
 
         if (array_key_exists('merge', $query) && ! in_array($query['merge'], ['replace', 'append', 'prepend'], true)) {

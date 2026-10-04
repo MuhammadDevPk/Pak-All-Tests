@@ -28,6 +28,7 @@ class SduiPayloadTransformer
         /** @var Collection<int|string, array<string, mixed>> $modules */
         $modules = $domain->contentModules()
             ->where('is_active', true)
+            ->with(['questions' => fn ($q) => $q->select('question_bank.id', 'question_bank.question_type')])
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get()
@@ -151,6 +152,10 @@ class SduiPayloadTransformer
             );
         }
 
+        if (isset($query['limit']) && is_numeric($query['limit']) && (int) $query['limit'] > 0) {
+            $filtered = $filtered->take((int) $query['limit']);
+        }
+
         return $filtered->values();
     }
 
@@ -177,6 +182,7 @@ class SduiPayloadTransformer
             'moduleId' => $module['id'],
             'title' => $module['title'],
             'description' => $meta['description'] ?? '',
+            'durationMinutes' => $meta['duration_minutes'] ?? null,
             'dashboardSection' => $module['dashboard_section'] ?? null,
             'displayMode' => $displayMode,
             'actionLabel' => $actionLabel,

@@ -215,6 +215,7 @@ const SubjectiveUpload = defineAsyncComponent(
             />
             <McqPlayer
                 v-else-if="
+                    activeModule.display_mode === 'mcq_test' ||
                     activeModule.module_type === 'mock_test' ||
                     activeModule.module_type === 'preparation'
                 "
@@ -230,7 +231,10 @@ const SubjectiveUpload = defineAsyncComponent(
                 @page-context-change="(ctx) => (pageContext = ctx)"
             />
             <PdfViewer
-                v-else-if="activeModule.module_type === 'pdf_repo'"
+                v-else-if="
+                    activeModule.display_mode === 'pdf_repo' ||
+                    activeModule.module_type === 'pdf_repo'
+                "
                 :title="activeModule.title"
                 :fileUrl="activeModule.content_meta?.file_url"
                 :description="activeModule.content_meta?.description"

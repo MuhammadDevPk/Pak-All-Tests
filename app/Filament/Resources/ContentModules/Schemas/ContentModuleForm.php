@@ -56,6 +56,7 @@ class ContentModuleForm
                                 ->options([
                                     'preparation' => 'Preparation Module',
                                     'mock_test' => 'Mock Test',
+                                    'subjective' => 'Subjective / Essay Prompt',
                                     'pdf_repo' => 'PDF / Document Repository',
                                 ])
                                 ->required()

@@ -41,6 +41,29 @@ const startItem = (item) => {
     }
 };
 
+const getFeatureChip = (item) => {
+    const mode =
+        item.displayMode || item.display_mode || item.module?.display_mode;
+
+    if (mode === 'study_qa') {
+        return 'Interactive Study & Q&A';
+    }
+
+    if (
+        mode === 'reading_guide' ||
+        mode === 'pdf_repo' ||
+        item.type === 'pdf_repo'
+    ) {
+        return 'Official Guide & PDF';
+    }
+
+    if (mode === 'essay' || item.type === 'subjective') {
+        return 'Subjective Prompt';
+    }
+
+    return 'Threshold Mastery';
+};
+
 const getSubjectMeta = (title) => {
     const t = (title || '').toLowerCase();
 
@@ -229,7 +252,7 @@ const getSubjectMeta = (title) => {
                         <span
                             class="rounded-lg bg-zinc-100/80 px-2.5 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-400"
                         >
-                            Threshold Mastery
+                            {{ getFeatureChip(item) }}
                         </span>
                     </div>
                 </div>
@@ -244,8 +267,9 @@ const getSubjectMeta = (title) => {
                 >
                     <span>⏱️</span>
                     <span>{{
+                        item.durationMinutes ||
                         item.module?.content_meta?.duration_minutes
-                            ? `${item.module.content_meta.duration_minutes} mins`
+                            ? `${item.durationMinutes || item.module.content_meta.duration_minutes} mins`
                             : 'Self-Paced'
                     }}</span>
                 </span>

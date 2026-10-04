@@ -314,13 +314,14 @@ it('filters modules by dashboard_section and display_mode in moduleQuery', funct
         ->and($items[0]['actionLabel'])->toBe('View Details & Q&A');
 });
 
-it('validates dashboard_section and display_mode as supported moduleQuery keys in SduiSchemaValidator', function () {
+it('validates dashboard_section, display_mode, and limit as supported moduleQuery keys in SduiSchemaValidator', function () {
     $result = (new SduiSchemaValidator)->validate([
         'type' => 'SubjectGrid',
         'props' => [
             'moduleQuery' => [
                 'dashboard_section' => 'physical',
                 'display_mode' => 'study_qa',
+                'limit' => 5,
                 'merge' => 'replace',
             ],
         ],
@@ -328,4 +329,84 @@ it('validates dashboard_section and display_mode as supported moduleQuery keys i
 
     expect($result['valid'])->toBeTrue()
         ->and($result['errors'])->toBeEmpty();
+});
+
+it('enforces limit in SduiPayloadTransformer and validates limit constraints in SduiSchemaValidator', function () {
+    $user = User::factory()->create();
+    $domain = Domain::create([
+        'name' => 'Limit Test Domain',
+        'code' => 'PMA_LIMIT_'.uniqid(),
+        'slug' => 'pma-limit-test-'.uniqid(),
+        'is_active' => true,
+    ]);
+
+    DomainFlow::create([
+        'domain_id' => $domain->id,
+        'ui_schema' => [
+            'type' => 'SubjectGrid',
+            'props' => [
+                'moduleQuery' => [
+                    'dashboard_section' => 'academic',
+                    'limit' => 2,
+                    'merge' => 'replace',
+                ],
+            ],
+        ],
+    ]);
+
+    for ($i = 1; $i <= 4; $i++) {
+        ContentModule::create([
+            'domain_id' => $domain->id,
+            'title' => "Academic Subject {$i}",
+            'slug' => "academic-subject-{$i}-".uniqid(),
+            'module_type' => 'preparation',
+            'dashboard_section' => 'academic',
+            'sort_order' => $i,
+            'is_active' => true,
+        ]);
+    }
+
+    $items = (new SduiPayloadTransformer)->transform($domain, $user)['layout']['props']['items'];
+
+    expect($items)->toHaveCount(2);
+
+    $invalidResult = (new SduiSchemaValidator)->validate([
+        'type' => 'SubjectGrid',
+        'props' => [
+            'moduleQuery' => [
+                'limit' => -1,
+            ],
+        ],
+    ]);
+
+    expect($invalidResult['valid'])->toBeFalse()
+        ->and($invalidResult['errors'][0])->toContain('must be a positive integer');
+});
+
+it('validates StudyQaPlayer in SduiSchemaValidator', function () {
+    $validResult = (new SduiSchemaValidator)->validate([
+        'type' => 'StudyQaPlayer',
+        'props' => [
+            'moduleId' => 410,
+        ],
+    ]);
+
+    expect($validResult['valid'])->toBeTrue()
+        ->and($validResult['warnings'])->toBeEmpty();
+
+    $warningResult = (new SduiSchemaValidator)->validate([
+        'type' => 'StudyQaPlayer',
+        'props' => [],
+    ]);
+
+    expect($warningResult['warnings'])->toHaveCount(1)
+        ->and($warningResult['warnings'][0])->toContain("should specify 'moduleId'");
+});
+
+it('resolves subjective module_type to essay display mode', function () {
+    $module = new ContentModule([
+        'module_type' => 'subjective',
+    ]);
+
+    expect($module->resolveDisplayMode())->toBe('essay');
 });

@@ -101,6 +101,10 @@ class ContentModule extends Model
             return 'pdf_repo';
         }
 
+        if ($this->module_type === 'subjective') {
+            return 'essay';
+        }
+
         if ($this->relationLoaded('questions') && $this->questions->isNotEmpty()) {
             $onlyShortAnswer = $this->questions->every(
                 fn (mixed $q): bool => ($q->question_type ?? '') === 'short_answer'

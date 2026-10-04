@@ -124,32 +124,60 @@ final class SubjectModuleProvisioner
      * ("linking only"). Replicates the `creating` hook's sort_order default
      * explicitly and flushes the table cache manually so Filament's cached
      * table data stays coherent.
+     *
+     * @param  array<string, mixed>  $attributes
      */
-    public static function findOrCreateQuietly(Domain $domain, string $subjectKey): ContentModule
+    public static function findOrCreateQuietly(Domain $domain, string $subjectKey, array $attributes = []): ContentModule
     {
         $title = self::titleFor($subjectKey);
         $slug = self::slugFor($title, $domain->id);
+
+        $moduleType = (string) ($attributes['module_type'] ?? 'preparation');
+        $dashboardSection = isset($attributes['dashboard_section']) && filled($attributes['dashboard_section'])
+            ? (string) $attributes['dashboard_section']
+            : null;
+        $displayMode = isset($attributes['display_mode']) && filled($attributes['display_mode'])
+            ? (string) $attributes['display_mode']
+            : null;
 
         $existing = ContentModule::where('domain_id', $domain->id)
             ->where('slug', $slug)
             ->first();
 
         if ($existing instanceof ContentModule) {
+            $updates = [];
+            if ($dashboardSection !== null && $existing->dashboard_section !== $dashboardSection) {
+                $updates['dashboard_section'] = $dashboardSection;
+            }
+            if ($displayMode !== null && $existing->display_mode !== $displayMode) {
+                $updates['display_mode'] = $displayMode;
+            }
+            if (! empty($updates)) {
+                $existing->updateQuietly($updates);
+            }
+
             return $existing;
         }
 
         // Mirrors ContentModule::creating sort_order default (max + 1 per domain).
         $sortOrder = (int) (ContentModule::where('domain_id', $domain->id)->max('sort_order') ?? 0) + 1;
 
+        $contentMeta = ['import_subject_key' => $subjectKey];
+        if (isset($attributes['description']) && filled($attributes['description'])) {
+            $contentMeta['description'] = trim((string) $attributes['description']);
+        }
+
         try {
             $id = DB::table('content_modules')->insertGetId([
                 'domain_id' => $domain->id,
                 'slug' => $slug,
                 'title' => $title,
-                'module_type' => 'preparation',
+                'module_type' => $moduleType,
+                'dashboard_section' => $dashboardSection,
+                'display_mode' => $displayMode,
                 'sort_order' => $sortOrder,
                 'is_active' => true,
-                'content_meta' => json_encode(['import_subject_key' => $subjectKey]),
+                'content_meta' => json_encode($contentMeta),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
