@@ -117,6 +117,46 @@ const getSubjectMeta = (title) => {
         };
     }
 
+    if (
+        t.includes('physical') ||
+        t.includes('fitness') ||
+        t.includes('running')
+    ) {
+        return {
+            icon: '🏃‍♂️',
+            themeBg: 'bg-orange-500/10 dark:bg-orange-950/40',
+            themeBorder: 'border-orange-500/30 dark:border-orange-800/40',
+            themeText: 'text-orange-600 dark:text-orange-400',
+            badgeBg: 'bg-orange-50 dark:bg-orange-950/60',
+            badgeText: 'text-orange-700 dark:text-orange-300',
+            tag: 'Physical Standards & Q&A',
+        };
+    }
+
+    if (t.includes('medical') || t.includes('health') || t.includes('doctor')) {
+        return {
+            icon: '🩺',
+            themeBg: 'bg-rose-500/10 dark:bg-rose-950/40',
+            themeBorder: 'border-rose-500/30 dark:border-rose-800/40',
+            themeText: 'text-rose-600 dark:text-rose-400',
+            badgeBg: 'bg-rose-50 dark:bg-rose-950/60',
+            badgeText: 'text-rose-700 dark:text-rose-300',
+            tag: 'Medical Standards & Q&A',
+        };
+    }
+
+    if (t.includes('interview') || t.includes('viva') || t.includes('panel')) {
+        return {
+            icon: '👔',
+            themeBg: 'bg-indigo-500/10 dark:bg-indigo-950/40',
+            themeBorder: 'border-indigo-500/30 dark:border-indigo-800/40',
+            themeText: 'text-indigo-600 dark:text-indigo-400',
+            badgeBg: 'bg-indigo-50 dark:bg-indigo-950/60',
+            badgeText: 'text-indigo-700 dark:text-indigo-300',
+            tag: 'Interview Prep & Confidence',
+        };
+    }
+
     return {
         icon: '📚',
         themeBg: 'bg-zinc-500/10 dark:bg-zinc-800/50',

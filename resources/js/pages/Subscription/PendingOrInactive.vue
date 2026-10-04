@@ -288,11 +288,14 @@ const submitReceipt = () => {
                 <!-- Instant Access via Referral Alternative (while waiting) -->
                 <div v-if="referral" class="flex flex-col gap-2 pt-2">
                     <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        <span
+                            class="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400"
+                        >
                             Instant Access Alternative
                         </span>
                         <span class="text-xs font-semibold text-foreground">
-                            Don't want to wait? Invite friends to unlock immediately!
+                            Don't want to wait? Invite friends to unlock
+                            immediately!
                         </span>
                     </div>
                     <ReferralCard :referral="referral" />
@@ -338,18 +341,23 @@ const submitReceipt = () => {
                     <p
                         class="text-xs leading-relaxed text-muted-foreground sm:text-sm"
                     >
-                        Choose how you would like to continue: earn free trial extensions by inviting classmates, or submit your enrollment fee below.
+                        Choose how you would like to continue: earn free trial
+                        extensions by inviting classmates, or submit your
+                        enrollment fee below.
                     </p>
                 </div>
 
                 <!-- OPTION A: Invite Friends (100% Free) -->
                 <div v-if="referral" class="flex flex-col gap-2">
                     <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        <span
+                            class="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400"
+                        >
                             Option 1 • 100% Free
                         </span>
                         <span class="text-xs font-semibold text-foreground">
-                            Invite friends & get instant access (+7 days per friend, 30 days for 5 friends)
+                            Invite friends & get instant access (+7 days per
+                            friend, 30 days for 5 friends)
                         </span>
                     </div>
                     <ReferralCard :referral="referral" />
@@ -358,9 +366,13 @@ const submitReceipt = () => {
                 <!-- Separator: Or Pay via Payment Gateways -->
                 <div class="relative my-2 flex items-center justify-center">
                     <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-sidebar-border"></div>
+                        <div
+                            class="w-full border-t border-sidebar-border"
+                        ></div>
                     </div>
-                    <div class="relative bg-background px-4 text-xs font-semibold text-muted-foreground uppercase">
+                    <div
+                        class="relative bg-background px-4 text-xs font-semibold text-muted-foreground uppercase"
+                    >
                         Or Option 2: Self-Service Payment
                     </div>
                 </div>

@@ -251,3 +251,82 @@ it('completes the dry run even when the notifications table is missing', functio
         Artisan::call('migrate', ['--path' => 'database/migrations/2026_10_04_000002_create_notifications_table.php']);
     }
 });
+
+it('imports subjects with rich configuration objects and tags dashboard_section and display_mode', function () {
+    Queue::fake();
+    Storage::fake('local');
+
+    $suffix = uniqid();
+    $domain = importTestDomain($suffix);
+    $admin = User::factory()->create(['email' => 'import-rich-'.$suffix.'@example.com']);
+
+    $payload = [
+        'meta' => ['source' => 'pest'],
+        'default_dashboard_section' => 'general',
+        'subjects' => [
+            'academic-chem' => [
+                'title' => 'Chemistry MCQs '.$suffix,
+                'dashboard_section' => 'academic',
+                'display_mode' => 'mcq_test',
+                'description' => 'Organic & Inorganic chemistry',
+            ],
+            'physical-details' => [
+                'title' => 'Physical Test Details '.$suffix,
+                'dashboard_section' => 'physical',
+                'display_mode' => 'study_qa',
+                'description' => 'Running and pushups standards',
+            ],
+        ],
+        'questions' => [
+            [
+                'code' => 'CHEM-'.$suffix.'-001',
+                'subject' => 'academic-chem',
+                'type' => 'mcq',
+                'question' => 'Formula of water? ('.$suffix.')',
+                'options' => ['H2O', 'CO2', 'NaCl', 'O2'],
+                'answer_index' => 0,
+            ],
+            [
+                'code' => 'PHYS-'.$suffix.'-001',
+                'subject' => 'physical-details',
+                'type' => 'short_answer',
+                'question' => 'Running distance and time? ('.$suffix.')',
+                'answer' => '1.6 km in 8 minutes',
+            ],
+        ],
+    ];
+
+    $reportKey = 'import-rich-'.$suffix;
+    Storage::disk('local')->put('imports/'.$reportKey.'.json', json_encode($payload));
+
+    (new ImportQuestionsJob(
+        filePath: 'imports/'.$reportKey.'.json',
+        domainId: $domain->id,
+        dryRun: false,
+        adminUserId: $admin->id,
+        reportKey: $reportKey,
+    ))->handle(app(StoreGeneratedQuestionsAction::class));
+
+    $report = Cache::get($reportKey);
+    expect($report)->not->toBeNull()
+        ->and($report['totals']['inserted'])->toBe(2);
+
+    $chemModule = ContentModule::where('domain_id', $domain->id)
+        ->where('title', 'Chemistry MCQs '.$suffix)
+        ->first();
+
+    expect($chemModule)->not->toBeNull()
+        ->and($chemModule->dashboard_section)->toBe('academic')
+        ->and($chemModule->display_mode)->toBe('mcq_test')
+        ->and($chemModule->content_meta['description'])->toBe('Organic & Inorganic chemistry');
+
+    $physModule = ContentModule::where('domain_id', $domain->id)
+        ->where('title', 'Physical Test Details '.$suffix)
+        ->first();
+
+    expect($physModule)->not->toBeNull()
+        ->and($physModule->dashboard_section)->toBe('physical')
+        ->and($physModule->display_mode)->toBe('study_qa')
+        ->and($physModule->content_meta['description'])->toBe('Running and pushups standards')
+        ->and($physModule->resolveDisplayMode())->toBe('study_qa');
+});

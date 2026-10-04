@@ -54,7 +54,7 @@ class ImportQuestionsJob implements ShouldQueue
     /**
      * Validate the decoded import payload structure (file-level, before dispatch).
      *
-     * @return array{valid: bool, errors: array<int, string>, subjects: array<string, string>, questions: array<int, mixed>}
+     * @return array{valid: bool, errors: array<int, string>, subjects: array<string, array{title: string, dashboard_section: ?string, display_mode: ?string, module_type: string, description: ?string}>, questions: array<int, mixed>}
      */
     public static function validatePayload(mixed $data): array
     {
@@ -64,14 +64,68 @@ class ImportQuestionsJob implements ShouldQueue
             return ['valid' => false, 'errors' => ['Payload must be a JSON object.'], 'subjects' => [], 'questions' => []];
         }
 
-        $subjects = $data['subjects'] ?? null;
-        if (! is_array($subjects) || $subjects === []) {
-            $errors[] = 'Missing or empty "subjects" map (subject_key => module title).';
-            $subjects = [];
+        $defaultSection = isset($data['default_dashboard_section']) && is_string($data['default_dashboard_section'])
+            ? trim($data['default_dashboard_section'])
+            : null;
+
+        $rawSubjects = $data['subjects'] ?? null;
+        $normalizedSubjects = [];
+
+        if (! is_array($rawSubjects) || $rawSubjects === []) {
+            $errors[] = 'Missing or empty "subjects" map (subject_key => module title or config object).';
         } else {
-            foreach ($subjects as $key => $title) {
-                if (! is_string($key) || $key === '' || ! is_string($title) || trim($title) === '') {
-                    $errors[] = 'Each subject entry must map a non-empty key to a non-empty module title.';
+            foreach ($rawSubjects as $key => $subjectDef) {
+                if (! is_string($key) || trim($key) === '') {
+                    $errors[] = 'Each subject entry must have a non-empty string key.';
+                    break;
+                }
+
+                if (is_string($subjectDef)) {
+                    $title = trim($subjectDef);
+                    if ($title === '') {
+                        $errors[] = "Subject '{$key}' has an empty module title.";
+                        break;
+                    }
+
+                    $normalizedSubjects[$key] = [
+                        'title' => $title,
+                        'dashboard_section' => $defaultSection,
+                        'display_mode' => null,
+                        'module_type' => 'preparation',
+                        'description' => null,
+                    ];
+                } elseif (is_array($subjectDef)) {
+                    $title = trim((string) ($subjectDef['title'] ?? ''));
+                    if ($title === '') {
+                        $errors[] = "Subject '{$key}' configuration is missing a non-empty 'title'.";
+                        break;
+                    }
+
+                    $section = isset($subjectDef['dashboard_section']) && is_string($subjectDef['dashboard_section'])
+                        ? trim($subjectDef['dashboard_section'])
+                        : $defaultSection;
+
+                    $mode = isset($subjectDef['display_mode']) && is_string($subjectDef['display_mode'])
+                        ? trim($subjectDef['display_mode'])
+                        : null;
+
+                    $modType = isset($subjectDef['module_type']) && is_string($subjectDef['module_type'])
+                        ? trim($subjectDef['module_type'])
+                        : 'preparation';
+
+                    $desc = isset($subjectDef['description']) && is_string($subjectDef['description'])
+                        ? trim($subjectDef['description'])
+                        : null;
+
+                    $normalizedSubjects[$key] = [
+                        'title' => $title,
+                        'dashboard_section' => $section,
+                        'display_mode' => $mode,
+                        'module_type' => $modType,
+                        'description' => $desc,
+                    ];
+                } else {
+                    $errors[] = "Subject '{$key}' must be either a string title or a configuration object.";
                     break;
                 }
             }
@@ -86,7 +140,7 @@ class ImportQuestionsJob implements ShouldQueue
         return [
             'valid' => $errors === [],
             'errors' => $errors,
-            'subjects' => $subjects,
+            'subjects' => $normalizedSubjects,
             'questions' => $questions,
         ];
     }
@@ -94,7 +148,7 @@ class ImportQuestionsJob implements ShouldQueue
     /**
      * Validate a single question item and normalize it for StoreGeneratedQuestionsAction.
      *
-     * @param  array<string, string>  $subjects
+     * @param  array<string, mixed>  $subjects
      * @return array{valid: bool, error: ?string, normalized: ?array{question_text: string, question_type: string, options?: array<int, string>, correct_option_index?: int, answer?: string, explanation: ?string, difficulty_level: string, code: ?string}}
      */
     public static function validateQuestion(mixed $item, array $subjects, int $index): array
@@ -212,10 +266,10 @@ class ImportQuestionsJob implements ShouldQueue
         /** @var array<string, array{title: string, module_id: ?int, inserted: int, duplicates_skipped: int, invalid: int, processed: int}> $subjectsReport */
         $subjectsReport = [];
 
-        foreach ($validation['subjects'] as $subjectKey => $subjectTitle) {
+        foreach ($validation['subjects'] as $subjectKey => $subjectMeta) {
             $itemsBySubject[$subjectKey] = [];
             $subjectsReport[$subjectKey] = [
-                'title' => $subjectTitle,
+                'title' => $subjectMeta['title'],
                 'module_id' => null,
                 'inserted' => 0,
                 'duplicates_skipped' => 0,
@@ -251,10 +305,20 @@ class ImportQuestionsJob implements ShouldQueue
         }
 
         // 2. Resolve modules and persist questions in batches per subject
-        foreach ($validation['subjects'] as $subjectKey => $subjectTitle) {
+        foreach ($validation['subjects'] as $subjectKey => $subjectMeta) {
             $module = $this->dryRun
                 ? null
-                : SubjectModuleProvisioner::findOrCreate($domain, $subjectKey, $subjectTitle);
+                : SubjectModuleProvisioner::findOrCreate(
+                    domain: $domain,
+                    subjectKey: $subjectKey,
+                    title: $subjectMeta['title'],
+                    attributes: [
+                        'dashboard_section' => $subjectMeta['dashboard_section'] ?? null,
+                        'display_mode' => $subjectMeta['display_mode'] ?? null,
+                        'module_type' => $subjectMeta['module_type'],
+                        'description' => $subjectMeta['description'] ?? null,
+                    ]
+                );
 
             $items = $itemsBySubject[$subjectKey] ?? [];
             $inserted = 0;
@@ -273,7 +337,7 @@ class ImportQuestionsJob implements ShouldQueue
             }
 
             $subjectsReport[$subjectKey] = [
-                'title' => $subjectTitle,
+                'title' => $subjectMeta['title'],
                 'module_id' => $module?->id,
                 'inserted' => $inserted,
                 'duplicates_skipped' => $reused,

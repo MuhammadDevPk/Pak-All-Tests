@@ -87,4 +87,30 @@ class ContentModule extends Model
     {
         return $this->hasMany(DomainKnowledgeEmbedding::class);
     }
+
+    /**
+     * Resolve the candidate-facing display/player mode.
+     */
+    public function resolveDisplayMode(): string
+    {
+        if (filled($this->display_mode) && $this->display_mode !== 'auto') {
+            return (string) $this->display_mode;
+        }
+
+        if ($this->module_type === 'pdf_repo') {
+            return 'pdf_repo';
+        }
+
+        if ($this->relationLoaded('questions') && $this->questions->isNotEmpty()) {
+            $onlyShortAnswer = $this->questions->every(
+                fn (mixed $q): bool => ($q->question_type ?? '') === 'short_answer'
+            );
+
+            if ($onlyShortAnswer) {
+                return 'study_qa';
+            }
+        }
+
+        return 'mcq_test';
+    }
 }

@@ -74,7 +74,7 @@ app/
 | **`Domain`** | `domains` | `name`, `slug`, `code`, `is_active`, `requires_subscription`, `path` (`ltree`) | `contentModules()`, `flows()`, `knowledgeEmbeddings()`, `referrals()` |
 | **`Referral`** | `referrals` | `referrer_id`, `referred_user_id`, `domain_id`, `referral_code`, `reward_days`, `status` (pending/approved/rejected/flagged_abuse), `abuse_reason`, `ip_address`, `device_fingerprint` | `belongsTo(User, 'referrer_id')`, `belongsTo(User, 'referred_user_id')`, `belongsTo(Domain)` |
 | **`PlatformSetting`** | `platform_settings` | `key`, `value` | Key-value application runtime config store with cache-busting |
-| **`ContentModule`** | `content_modules` | `domain_id`, `title`, `slug`, `module_type`, `sort_order` | `belongsTo(Domain)`, `belongsToMany(QuestionBank)` |
+| **`ContentModule`** | `content_modules` | `domain_id`, `title`, `slug`, `module_type`, `sort_order`, `dashboard_section`, `display_mode` | `belongsTo(Domain)`, `belongsToMany(QuestionBank)` |
 | **`QuestionBank`** | `question_bank` | `code`, `question_text`, `question_type`, `payload` (`jsonb`), `is_active` | `belongsToMany(ContentModule)` via `module_questions` |
 | **`UserSubscription`** | `user_subscriptions` | `user_id`, `domain_id`, `status` (active/pending/rejected/expired), `receipt_url`, `payment_method` | `belongsTo(User)`, `belongsTo(Domain)` |
 | **`UserWeakQuestion`** | `user_weak_questions` | `user_id`, `question_id`, `domain_id`, `consecutive_correct`, `status` (active/mastered) | `belongsTo(User)`, `belongsTo(QuestionBank)` |
@@ -96,6 +96,7 @@ app/
    - Layouts: `VerticalStack`, `TabbedLayout`, `PhaseStepperLayout`, `SubjectGrid`, `ProgressCard`, `ResourceList`, `EmptyStateLayout` (SenseLab design with mesh auras, nested radii, tactile controls).
 2. **Candidate Workspace**:
    - `McqPlayer.vue`: Interactive timed test engine with dual view modes (Page View with 10/25/50/100 pagination vs Focus Mode), Reveal Answer forfeiture, and submission to `/api/modules/{module}/submit`.
+   - `StudyQaPlayer.vue`: Dedicated study reader and interactive accordion for non-MCQ study modules (e.g. Physical/Medical criteria, interview questions), featuring real-time client search, expand/collapse all, and zero forfeiture/test penalties.
    - `WeakQuestions/Index.vue`: Targeted revision portal with subject filters, 2-strike mastery metrics, and direct practice launcher.
    - `Dashboard.vue`: SenseLab Candidate Command Center with active exam tracks and interactive curriculum topology.
 3. **AI Socratic Tutor**:

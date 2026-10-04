@@ -29,7 +29,7 @@ class ContentModulesTable
                 fn () => ContentModule::query()->with('domain')->orderBy('domain_id', 'asc')->orderBy('sort_order', 'asc')->orderBy('id', 'asc')->get(),
                 ['domain'],
                 $search,
-                ['title', 'slug', 'module_type', 'domain.name'],
+                ['title', 'slug', 'module_type', 'dashboard_section', 'domain.name'],
                 $sortColumn,
                 $sortDirection ?? 'asc',
             ))
@@ -55,6 +55,27 @@ class ContentModulesTable
                         default => 'gray',
                     })
                     ->searchable(),
+
+                TextColumn::make('dashboard_section')
+                    ->label('Section')
+                    ->badge()
+                    ->color('primary')
+                    ->placeholder('unassigned')
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('display_mode')
+                    ->label('Mode')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'study_qa' => 'success',
+                        'mcq_test' => 'info',
+                        'essay' => 'warning',
+                        'pdf_repo' => 'gray',
+                        default => 'secondary',
+                    })
+                    ->placeholder('auto')
+                    ->sortable(),
 
                 TextColumn::make('sort_order')
                     ->numeric()

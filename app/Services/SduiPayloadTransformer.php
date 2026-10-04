@@ -37,6 +37,8 @@ class SduiPayloadTransformer
                 'type' => $module->module_type,
                 'title' => $module->title,
                 'slug' => $module->slug,
+                'dashboard_section' => $module->dashboard_section,
+                'display_mode' => $module->resolveDisplayMode(),
                 'sort_order' => $module->sort_order,
                 'content_meta' => $module->content_meta ?? [],
             ]);
@@ -134,6 +136,14 @@ class SduiPayloadTransformer
             $filtered = $filtered->where('type', $query['module_type']);
         }
 
+        if (isset($query['dashboard_section']) && is_string($query['dashboard_section'])) {
+            $filtered = $filtered->where('dashboard_section', $query['dashboard_section']);
+        }
+
+        if (isset($query['display_mode']) && is_string($query['display_mode'])) {
+            $filtered = $filtered->where('display_mode', $query['display_mode']);
+        }
+
         if (isset($query['slug_contains']) && is_string($query['slug_contains'])) {
             $search = mb_strtolower($query['slug_contains']);
             $filtered = $filtered->filter(
@@ -152,13 +162,24 @@ class SduiPayloadTransformer
     {
         $meta = is_array($module['content_meta'] ?? null) ? $module['content_meta'] : [];
         $isPdf = $module['type'] === 'pdf_repo';
+        $displayMode = (string) ($module['display_mode'] ?? 'mcq_test');
         $files = is_array($meta['files'] ?? null) ? $meta['files'] : [];
+
+        $actionLabel = match ($displayMode) {
+            'pdf_repo' => 'View PDF',
+            'study_qa' => 'View Details & Q&A',
+            'reading_guide' => 'Read Guidelines',
+            'essay' => 'View Essay Prompt',
+            default => $isPdf ? 'View PDF' : 'Start Practice',
+        };
 
         return array_filter([
             'moduleId' => $module['id'],
             'title' => $module['title'],
             'description' => $meta['description'] ?? '',
-            'actionLabel' => $isPdf ? 'View PDF' : 'Start Practice',
+            'dashboardSection' => $module['dashboard_section'] ?? null,
+            'displayMode' => $displayMode,
+            'actionLabel' => $actionLabel,
             'fileType' => $meta['file_type'] ?? null,
             'fileSize' => $meta['file_size'] ?? null,
             'fileUrl' => $meta['file_url'] ?? null,

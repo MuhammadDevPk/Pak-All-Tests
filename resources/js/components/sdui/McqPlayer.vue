@@ -1455,82 +1455,105 @@ watch(
 
                     <!-- Right Side Actions: Threshold Mastery Pip + Reveal Answer Button -->
                     <div class="flex shrink-0 items-center gap-2 self-start">
-                        <!-- Mastery Badge (if in Weak MCQs mode or previously tracked) -->
-                        <div
-                            v-if="masteryState[q.id]"
-                            class="flex items-center gap-1.5 rounded-full border border-zinc-200/80 bg-zinc-50 px-3 py-1 text-xs dark:border-zinc-800 dark:bg-zinc-900/60"
-                            :title="
-                                masteryState[q.id].is_mastered
-                                    ? 'Mastered!'
-                                    : 'Answer correctly 2 consecutive times to master'
-                            "
-                        >
-                            <span
-                                class="text-[11px] font-medium text-brand-muted"
-                                >Mastery:</span
-                            >
-                            <div class="flex items-center gap-1">
-                                <span
-                                    :class="[
-                                        'h-2 w-2 rounded-full',
-                                        masteryState[q.id]
-                                            .consecutive_correct >= 1
-                                            ? 'bg-emerald-500'
-                                            : 'bg-zinc-300 dark:bg-zinc-700',
-                                    ]"
-                                />
-                                <span
-                                    :class="[
-                                        'h-2 w-2 rounded-full',
-                                        masteryState[q.id]
-                                            .consecutive_correct >= 2
-                                            ? 'bg-emerald-500'
-                                            : 'bg-zinc-300 dark:bg-zinc-700',
-                                    ]"
-                                />
-                            </div>
-                            <span
-                                v-if="masteryState[q.id].is_mastered"
-                                class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400"
-                            >
-                                ✓ Mastered
-                            </span>
-                            <span
-                                v-else
-                                class="text-[10px] font-medium text-brand-muted"
-                            >
-                                {{ masteryState[q.id].consecutive_correct }}/2
-                            </span>
-                        </div>
-
-                        <!-- Reveal Answer Action Button -->
+                        <!-- Short Answer Toggle Button -->
                         <button
+                            v-if="q.question_type === 'short_answer'"
                             type="button"
-                            @click="revealAnswer(q)"
-                            :disabled="!!revealedAnswers[q.id] || isSubmitted"
-                            :class="[
-                                'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all',
-                                revealedAnswers[q.id]
-                                    ? 'cursor-default border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                                    : 'border border-amber-500/30 bg-amber-500/10 text-amber-700 shadow-2xs hover:bg-amber-500/20 active:scale-95 dark:text-amber-400',
-                            ]"
+                            @click="toggleExplanation(q.id)"
+                            class="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 transition-all hover:bg-emerald-500/20 active:scale-95 dark:text-emerald-400"
                         >
-                            <span
-                                v-if="isRevealing[q.id]"
-                                class="inline-block animate-spin"
-                                >⏳</span
-                            >
-                            <span v-else-if="revealedAnswers[q.id]"
-                                >✓ Answer Revealed</span
-                            >
-                            <span v-else>👁️ Reveal Answer</span>
+                            <span>{{
+                                showExplanations[q.id]
+                                    ? '✓ Hide Answer'
+                                    : '👁️ Show Answer'
+                            }}</span>
                         </button>
+
+                        <template v-else>
+                            <!-- Mastery Badge (if in Weak MCQs mode or previously tracked) -->
+                            <div
+                                v-if="masteryState[q.id]"
+                                class="flex items-center gap-1.5 rounded-full border border-zinc-200/80 bg-zinc-50 px-3 py-1 text-xs dark:border-zinc-800 dark:bg-zinc-900/60"
+                                :title="
+                                    masteryState[q.id].is_mastered
+                                        ? 'Mastered!'
+                                        : 'Answer correctly 2 consecutive times to master'
+                                "
+                            >
+                                <span
+                                    class="text-[11px] font-medium text-brand-muted"
+                                    >Mastery:</span
+                                >
+                                <div class="flex items-center gap-1">
+                                    <span
+                                        :class="[
+                                            'h-2 w-2 rounded-full',
+                                            masteryState[q.id]
+                                                .consecutive_correct >= 1
+                                                ? 'bg-emerald-500'
+                                                : 'bg-zinc-300 dark:bg-zinc-700',
+                                        ]"
+                                    />
+                                    <span
+                                        :class="[
+                                            'h-2 w-2 rounded-full',
+                                            masteryState[q.id]
+                                                .consecutive_correct >= 2
+                                                ? 'bg-emerald-500'
+                                                : 'bg-zinc-300 dark:bg-zinc-700',
+                                        ]"
+                                    />
+                                </div>
+                                <span
+                                    v-if="masteryState[q.id].is_mastered"
+                                    class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400"
+                                >
+                                    ✓ Mastered
+                                </span>
+                                <span
+                                    v-else
+                                    class="text-[10px] font-medium text-brand-muted"
+                                >
+                                    {{
+                                        masteryState[q.id].consecutive_correct
+                                    }}/2
+                                </span>
+                            </div>
+
+                            <!-- Reveal Answer Action Button -->
+                            <button
+                                type="button"
+                                @click="revealAnswer(q)"
+                                :disabled="
+                                    !!revealedAnswers[q.id] || isSubmitted
+                                "
+                                :class="[
+                                    'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all',
+                                    revealedAnswers[q.id]
+                                        ? 'cursor-default border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                        : 'border border-amber-500/30 bg-amber-500/10 text-amber-700 shadow-2xs hover:bg-amber-500/20 active:scale-95 dark:text-amber-400',
+                                ]"
+                            >
+                                <span
+                                    v-if="isRevealing[q.id]"
+                                    class="inline-block animate-spin"
+                                    >⏳</span
+                                >
+                                <span v-else-if="revealedAnswers[q.id]"
+                                    >✓ Answer Revealed</span
+                                >
+                                <span v-else>👁️ Reveal Answer</span>
+                            </button>
+                        </template>
                     </div>
                 </div>
 
                 <!-- Answer Revealed Notice Banner (Explaining mark forfeiture) -->
                 <div
-                    v-if="forfeitedQuestions[q.id]"
+                    v-if="
+                        forfeitedQuestions[q.id] &&
+                        q.question_type !== 'short_answer'
+                    "
                     class="flex items-center gap-2 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 text-xs text-amber-700 dark:text-amber-400"
                 >
                     <span>⚠️</span>
@@ -1542,8 +1565,34 @@ watch(
                     </span>
                 </div>
 
-                <!-- Options List -->
-                <div class="flex flex-col gap-2.5">
+                <!-- Short Answer Question Card -->
+                <div
+                    v-if="q.question_type === 'short_answer'"
+                    class="flex flex-col gap-3"
+                >
+                    <div
+                        v-if="showExplanations[q.id]"
+                        class="rounded-2xl border border-emerald-500/20 bg-linear-to-br from-emerald-50/60 via-white to-sky-50/30 p-4 sm:p-5 dark:border-emerald-900/40 dark:from-emerald-950/20 dark:via-zinc-900/60 dark:to-sky-950/20"
+                    >
+                        <div
+                            class="flex items-center gap-2 text-xs font-bold tracking-wide text-emerald-800 uppercase dark:text-emerald-300"
+                        >
+                            <span>✓</span>
+                            <span>Model Answer / Criteria</span>
+                        </div>
+                        <p
+                            class="mt-2 text-sm leading-relaxed whitespace-pre-line text-zinc-800 dark:text-zinc-100"
+                        >
+                            {{
+                                q.payload?.model_answer ||
+                                'No answer text provided.'
+                            }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- MCQ Options List -->
+                <div v-else class="flex flex-col gap-2.5">
                     <button
                         v-for="(option, idx) in q.payload?.options || []"
                         :key="idx"

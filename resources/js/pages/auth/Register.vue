@@ -112,10 +112,11 @@ defineOptions({
                     name="ref"
                     :default-value="props.referralCode || ''"
                     placeholder="e.g. PAK-HNYK3T"
-                    class="font-mono uppercase tracking-wider placeholder:tracking-normal placeholder:font-sans placeholder:normal-case"
+                    class="font-mono tracking-wider uppercase placeholder:font-sans placeholder:tracking-normal placeholder:normal-case"
                 />
                 <p v-if="!errors.ref" class="text-[11px] text-muted-foreground">
-                    Have an invitation code from a friend? Enter it to link accounts.
+                    Have an invitation code from a friend? Enter it to link
+                    accounts.
                 </p>
                 <InputError :message="errors.ref" />
             </div>

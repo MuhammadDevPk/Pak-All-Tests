@@ -66,6 +66,9 @@ provide('sduiContext', {
 const McqPlayer = defineAsyncComponent(
     () => import('@/components/sdui/McqPlayer.vue'),
 );
+const StudyQaPlayer = defineAsyncComponent(
+    () => import('@/components/sdui/StudyQaPlayer.vue'),
+);
 const PdfViewer = defineAsyncComponent(
     () => import('@/components/sdui/PdfViewer.vue'),
 );
@@ -195,8 +198,23 @@ const SubjectiveUpload = defineAsyncComponent(
             </div>
 
             <!-- Player Components -->
-            <McqPlayer
+            <StudyQaPlayer
                 v-if="
+                    activeModule.display_mode === 'study_qa' ||
+                    activeModule.display_mode === 'reading_guide'
+                "
+                :module="activeModule"
+                :questions="activeQuestions"
+                @question-change="
+                    (q) => {
+                        activeQuestion = q;
+                        if (q?.page_context) pageContext = q.page_context;
+                    }
+                "
+                @page-context-change="(ctx) => (pageContext = ctx)"
+            />
+            <McqPlayer
+                v-else-if="
                     activeModule.module_type === 'mock_test' ||
                     activeModule.module_type === 'preparation'
                 "

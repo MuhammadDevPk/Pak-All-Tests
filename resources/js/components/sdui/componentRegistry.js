@@ -20,6 +20,7 @@ export const componentRegistry = {
 
     // Sub-Phase 3.4 Interactive Components
     McqPlayer: defineAsyncComponent(() => import('./McqPlayer.vue')),
+    StudyQaPlayer: defineAsyncComponent(() => import('./StudyQaPlayer.vue')),
     PdfViewer: defineAsyncComponent(() => import('./PdfViewer.vue')),
     SubjectiveUpload: defineAsyncComponent(
         () => import('./SubjectiveUpload.vue'),

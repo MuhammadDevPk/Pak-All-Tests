@@ -15,6 +15,7 @@ class SduiSchemaValidator
         'ResourceList',
         'VerticalStack',
         'McqPlayer',
+        'StudyQaPlayer',
         'PdfViewer',
         'SubjectiveUpload',
         'ProgressCard',
@@ -198,14 +199,14 @@ class SduiSchemaValidator
             return;
         }
 
-        $allowedKeys = ['module_type', 'slug_contains', 'active', 'merge'];
+        $allowedKeys = ['module_type', 'dashboard_section', 'display_mode', 'slug_contains', 'active', 'merge'];
         foreach ($query as $key => $value) {
             if (! in_array($key, $allowedKeys, true)) {
                 $errors[] = "Unsupported moduleQuery key '{$key}' at depth {$depth}.";
             }
         }
 
-        foreach (['module_type', 'slug_contains'] as $key) {
+        foreach (['module_type', 'dashboard_section', 'display_mode', 'slug_contains'] as $key) {
             if (array_key_exists($key, $query) && (! is_string($query[$key]) || trim($query[$key]) === '')) {
                 $errors[] = "moduleQuery '{$key}' at depth {$depth} must be a non-empty string.";
             }

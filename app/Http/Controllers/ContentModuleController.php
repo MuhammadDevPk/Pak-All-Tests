@@ -48,6 +48,8 @@ class ContentModuleController extends Controller
                 'id' => $module->id,
                 'title' => $module->title,
                 'module_type' => $module->module_type,
+                'dashboard_section' => $module->dashboard_section,
+                'display_mode' => $module->resolveDisplayMode(),
                 'content_meta' => $module->content_meta,
             ],
             'questions' => $module->questions->map(function ($q) use ($isMockTest) {

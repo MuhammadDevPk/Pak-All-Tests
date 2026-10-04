@@ -62,6 +62,32 @@ class ContentModuleForm
                                 ->live()
                                 ->native(false),
 
+                            TextInput::make('dashboard_section')
+                                ->label('Dashboard Section')
+                                ->placeholder('e.g. academic, physical, medical, interview')
+                                ->helperText('Categorizes which dashboard section/phase this module belongs to.')
+                                ->datalist(fn (): array => ContentModule::query()
+                                    ->whereNotNull('dashboard_section')
+                                    ->distinct()
+                                    ->pluck('dashboard_section')
+                                    ->filter()
+                                    ->values()
+                                    ->all()
+                                ),
+
+                            Select::make('display_mode')
+                                ->label('Display / Player Mode')
+                                ->options([
+                                    'auto' => '⚡ Auto-Detect (based on questions)',
+                                    'study_qa' => '📖 Study & Q&A Cards (Guidelines, FAQs, Tips)',
+                                    'mcq_test' => '🎯 MCQ Practice & Exam Player',
+                                    'essay' => '✍️ Essay & Subjective Submission',
+                                    'pdf_repo' => '📑 PDF / Document Viewer',
+                                ])
+                                ->default('auto')
+                                ->helperText('Determines the candidate-facing interactive player experience.')
+                                ->native(false),
+
                             TextInput::make('title')
                                 ->required()
                                 ->maxLength(255)

@@ -257,3 +257,75 @@ it('rejects unsupported moduleQuery configuration', function () {
     expect($result['valid'])->toBeFalse()
         ->and($result['errors'])->toContain("Unsupported moduleQuery key 'unknown' at depth 1.");
 });
+
+it('filters modules by dashboard_section and display_mode in moduleQuery', function () {
+    $user = User::factory()->create();
+    $uid = uniqid();
+    $domain = Domain::create([
+        'name' => 'PMA Test Track '.$uid,
+        'slug' => 'pma-test-track-'.$uid,
+        'code' => 'PMA_'.$uid,
+        'is_active' => true,
+    ]);
+
+    $academic = ContentModule::create([
+        'domain_id' => $domain->id,
+        'title' => 'Islamic Studies',
+        'slug' => 'islamic-studies-'.$domain->id,
+        'module_type' => 'preparation',
+        'dashboard_section' => 'academic',
+        'display_mode' => 'mcq_test',
+        'sort_order' => 1,
+        'is_active' => true,
+        'content_meta' => [],
+    ]);
+
+    $physical = ContentModule::create([
+        'domain_id' => $domain->id,
+        'title' => 'Physical Test Details',
+        'slug' => 'physical-test-details-'.$domain->id,
+        'module_type' => 'preparation',
+        'dashboard_section' => 'physical',
+        'display_mode' => 'study_qa',
+        'sort_order' => 2,
+        'is_active' => true,
+        'content_meta' => [],
+    ]);
+
+    DomainFlow::create([
+        'domain_id' => $domain->id,
+        'ui_schema' => [
+            'type' => 'SubjectGrid',
+            'props' => [
+                'moduleQuery' => [
+                    'dashboard_section' => 'physical',
+                    'merge' => 'replace',
+                ],
+            ],
+        ],
+    ]);
+
+    $items = (new SduiPayloadTransformer)->transform($domain, $user)['layout']['props']['items'];
+
+    expect($items)->toHaveCount(1)
+        ->and($items[0]['moduleId'])->toBe($physical->id)
+        ->and($items[0]['dashboardSection'])->toBe('physical')
+        ->and($items[0]['displayMode'])->toBe('study_qa')
+        ->and($items[0]['actionLabel'])->toBe('View Details & Q&A');
+});
+
+it('validates dashboard_section and display_mode as supported moduleQuery keys in SduiSchemaValidator', function () {
+    $result = (new SduiSchemaValidator)->validate([
+        'type' => 'SubjectGrid',
+        'props' => [
+            'moduleQuery' => [
+                'dashboard_section' => 'physical',
+                'display_mode' => 'study_qa',
+                'merge' => 'replace',
+            ],
+        ],
+    ]);
+
+    expect($result['valid'])->toBeTrue()
+        ->and($result['errors'])->toBeEmpty();
+});
