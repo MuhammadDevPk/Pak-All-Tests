@@ -109,6 +109,20 @@ const drawerStyle = computed(() => {
     return style;
 });
 
+let pointerCaptured = false;
+let lastToggleTime = 0;
+
+const triggerToggle = () => {
+    const now = Date.now();
+
+    if (now - lastToggleTime < 250) {
+        return;
+    }
+
+    lastToggleTime = now;
+    toggleOpen();
+};
+
 const onFabPointerDown = (e) => {
     if (e.button !== 0 && e.pointerType === 'mouse') {
         return;
@@ -127,10 +141,7 @@ const onFabPointerDown = (e) => {
     fabInitialY = rect.top;
     fabHasMoved = false;
     isDraggingFab.value = true;
-
-    try {
-        fabEl.setPointerCapture(e.pointerId);
-    } catch {}
+    pointerCaptured = false;
 };
 
 const onFabPointerMove = (e) => {
@@ -143,6 +154,14 @@ const onFabPointerMove = (e) => {
 
     if (!fabHasMoved && (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4)) {
         fabHasMoved = true;
+        const fabEl = fabRef.value;
+
+        if (fabEl && fabEl.setPointerCapture) {
+            try {
+                fabEl.setPointerCapture(e.pointerId);
+                pointerCaptured = true;
+            } catch {}
+        }
     }
 
     if (fabHasMoved) {
@@ -177,7 +196,7 @@ const handleClick = (e) => {
         return;
     }
 
-    toggleOpen();
+    triggerToggle();
 };
 
 const onFabPointerUp = (e) => {
@@ -188,6 +207,7 @@ const onFabPointerUp = (e) => {
     const fabEl = fabRef.value;
 
     if (
+        pointerCaptured &&
         fabEl &&
         fabEl.hasPointerCapture &&
         fabEl.hasPointerCapture(e.pointerId)
@@ -199,6 +219,7 @@ const onFabPointerUp = (e) => {
 
     const wasDragged = fabHasMoved;
     isDraggingFab.value = false;
+    pointerCaptured = false;
 
     if (wasDragged) {
         justDragged = true;
@@ -212,6 +233,8 @@ const onFabPointerUp = (e) => {
                 JSON.stringify(fabPosition.value),
             );
         } catch {}
+    } else {
+        triggerToggle();
     }
 };
 
@@ -785,18 +808,22 @@ const formatContent = (text) => {
         @pointermove="onFabPointerMove"
         @pointerup="onFabPointerUp"
         @pointercancel="onFabPointerUp"
+        @click="handleClick"
     >
         <button
             type="button"
             @click="handleClick"
-            class="group relative flex h-14 cursor-grab items-center gap-2.5 rounded-full border border-emerald-500/30 bg-card/95 px-4 py-3 text-sm font-semibold text-foreground shadow-2xl backdrop-blur-md transition-shadow duration-200 hover:border-emerald-500 hover:bg-card hover:shadow-emerald-500/10 active:cursor-grabbing sm:px-5 dark:bg-zinc-900/95 dark:hover:border-emerald-400"
+            class="group relative flex h-14 cursor-pointer items-center gap-2.5 rounded-full border border-emerald-500/30 bg-card/95 px-4 py-3 text-sm font-semibold text-foreground shadow-2xl backdrop-blur-md transition-shadow duration-200 hover:border-emerald-500 hover:bg-card hover:shadow-emerald-500/10 active:scale-[0.98] sm:px-5 dark:bg-zinc-900/95 dark:hover:border-emerald-400"
             :class="{ 'ring-2 ring-emerald-500/40': isOpen }"
             aria-label="Toggle AI Exam Mentor (Drag to reposition)"
             title="Drag to reposition anywhere on screen • Click to toggle AI Exam Mentor"
+            @keydown.enter.prevent="triggerToggle"
+            @keydown.space.prevent="triggerToggle"
         >
             <!-- Grip Drag Indicator Dots -->
             <span
-                class="flex flex-col gap-0.5 opacity-40 transition-opacity group-hover:opacity-80"
+                class="flex cursor-grab flex-col gap-0.5 opacity-40 transition-opacity group-hover:opacity-80 active:cursor-grabbing"
+                title="Drag to reposition"
             >
                 <span class="flex gap-0.5">
                     <span class="h-1 w-1 rounded-full bg-current"></span>
