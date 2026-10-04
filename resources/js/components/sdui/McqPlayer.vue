@@ -17,7 +17,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['question-change']);
+const emit = defineEmits(['question-change', 'page-context-change']);
 
 // View Mode: 'page' (scrollable 10, 25, 50, 100 per page) vs 'focus' (1 at a time)
 const viewMode = ref('page');
@@ -86,8 +86,117 @@ const currentFocusQuestion = computed(
     () => props.questions[currentQuestionIndex.value] || null,
 );
 
+const computedPageContext = computed(() => {
+    const total = props.questions.length;
+
+    if (viewMode.value === 'focus') {
+        const idx = currentQuestionIndex.value;
+        const q = props.questions[idx] || null;
+        let userSelectedText = null;
+
+        if (q) {
+            const selectedIdx = selectedAnswers.value[q.id];
+
+            if (selectedIdx !== undefined && selectedIdx !== null) {
+                const letter = String.fromCharCode(65 + Number(selectedIdx));
+                const opts = q.payload?.options || [];
+                const rawOpt = opts[selectedIdx];
+                const text =
+                    typeof rawOpt === 'object'
+                        ? rawOpt?.text || ''
+                        : String(rawOpt ?? '');
+                userSelectedText = `${letter}) ${text.replace(/<[^>]*>?/gm, '').trim()}`;
+            }
+        }
+
+        return {
+            view_mode: 'focus',
+            current_page: 1,
+            total_pages: total,
+            page_size: 1,
+            showing_from: total > 0 ? idx + 1 : 0,
+            showing_to: total > 0 ? idx + 1 : 0,
+            total_questions: total,
+            active_question_number: total > 0 ? idx + 1 : null,
+            visible_questions: q
+                ? [
+                      {
+                          number: idx + 1,
+                          id: q.id,
+                          statement: (q.question_text || '')
+                              .replace(/<[^>]*>?/gm, '')
+                              .trim(),
+                          options: (q.payload?.options || []).map((opt, i) => {
+                              const letter = String.fromCharCode(65 + i);
+                              const rawText =
+                                  typeof opt === 'object'
+                                      ? opt?.text || ''
+                                      : String(opt ?? '');
+
+                              return `${letter}) ${rawText.replace(/<[^>]*>?/gm, '').trim()}`;
+                          }),
+                          user_selected: userSelectedText,
+                          is_answered: userSelectedText !== null,
+                      },
+                  ]
+                : [],
+        };
+    }
+
+    const start = (currentPage.value - 1) * pageSize.value;
+    const end = Math.min(start + pageSize.value, total);
+    const visible = props.questions.slice(start, end).map((q, i) => {
+        const globalIdx = start + i;
+        const selectedIdx = selectedAnswers.value[q.id];
+        let userSelectedText = null;
+
+        if (selectedIdx !== undefined && selectedIdx !== null) {
+            const letter = String.fromCharCode(65 + Number(selectedIdx));
+            const opts = q.payload?.options || [];
+            const rawOpt = opts[selectedIdx];
+            const text =
+                typeof rawOpt === 'object'
+                    ? rawOpt?.text || ''
+                    : String(rawOpt ?? '');
+            userSelectedText = `${letter}) ${text.replace(/<[^>]*>?/gm, '').trim()}`;
+        }
+
+        return {
+            number: globalIdx + 1,
+            id: q.id,
+            statement: (q.question_text || '').replace(/<[^>]*>?/gm, '').trim(),
+            options: (q.payload?.options || []).map((opt, optIdx) => {
+                const letter = String.fromCharCode(65 + optIdx);
+                const rawText =
+                    typeof opt === 'object'
+                        ? opt?.text || ''
+                        : String(opt ?? '');
+
+                return `${letter}) ${rawText.replace(/<[^>]*>?/gm, '').trim()}`;
+            }),
+            user_selected: userSelectedText,
+            is_answered: userSelectedText !== null,
+        };
+    });
+
+    return {
+        view_mode: 'page',
+        current_page: currentPage.value,
+        total_pages: totalPages.value,
+        page_size: pageSize.value,
+        showing_from: total > 0 ? start + 1 : 0,
+        showing_to: end,
+        total_questions: total,
+        active_question_number: currentQuestionIndex.value + 1,
+        visible_questions: visible,
+    };
+});
+
 const emitQuestionChange = () => {
     const q = currentFocusQuestion.value;
+    const pageCtx = computedPageContext.value;
+
+    emit('page-context-change', pageCtx);
 
     if (!q) {
         emit('question-change', null);
@@ -111,17 +220,37 @@ const emitQuestionChange = () => {
 
     emit('question-change', {
         ...q,
+        _globalIndex: currentQuestionIndex.value,
+        number: currentQuestionIndex.value + 1,
         user_selected: userSelectedText,
         user_selected_index: selectedIdx ?? null,
         attempts_made:
             selectedIdx !== undefined && selectedIdx !== null ? 1 : 0,
         was_revealed: !!revealedAnswers.value[q.id],
+        page_context: pageCtx,
     });
+};
+
+const setFocusedQuestion = (index) => {
+    if (
+        index >= 0 &&
+        index < props.questions.length &&
+        currentQuestionIndex.value !== index
+    ) {
+        currentQuestionIndex.value = index;
+        emitQuestionChange();
+    }
 };
 
 const selectOption = async (question, optionIndex) => {
     if (isSubmitted.value || !question) {
         return;
+    }
+
+    const qIdx = props.questions.findIndex((item) => item.id === question.id);
+
+    if (qIdx !== -1) {
+        currentQuestionIndex.value = qIdx;
     }
 
     selectedAnswers.value[question.id] = optionIndex;
@@ -223,6 +352,13 @@ const toggleExplanation = (questionId) => {
 const setPage = (page) => {
     if (page >= 1 && page <= totalPages.value) {
         currentPage.value = page;
+        const startIdx = (page - 1) * pageSize.value;
+
+        if (startIdx >= 0 && startIdx < props.questions.length) {
+            currentQuestionIndex.value = startIdx;
+        }
+
+        emitQuestionChange();
         document
             .querySelector('#mcq-player-container')
             ?.scrollIntoView({ behavior: 'smooth' });
@@ -638,9 +774,48 @@ onUnmounted(() => {
     }
 });
 
+watch(currentPage, (newPage) => {
+    if (viewMode.value === 'page') {
+        const startIdx = (newPage - 1) * pageSize.value;
+
+        if (startIdx >= 0 && startIdx < props.questions.length) {
+            if (
+                currentQuestionIndex.value < startIdx ||
+                currentQuestionIndex.value >= startIdx + pageSize.value
+            ) {
+                currentQuestionIndex.value = startIdx;
+            }
+        }
+    }
+
+    emitQuestionChange();
+});
+
+watch(pageSize, () => {
+    currentPage.value = 1;
+    currentQuestionIndex.value = 0;
+    emitQuestionChange();
+});
+
+watch(viewMode, (newMode) => {
+    if (newMode === 'page') {
+        currentPage.value =
+            Math.floor(currentQuestionIndex.value / pageSize.value) + 1;
+    }
+
+    emitQuestionChange();
+});
+
 watch(currentQuestionIndex, () => {
     emitQuestionChange();
 });
+
+watch(
+    () => props.questions,
+    () => {
+        emitQuestionChange();
+    },
+);
 </script>
 
 <template>
@@ -1252,7 +1427,14 @@ watch(currentQuestionIndex, () => {
                 v-for="q in paginatedQuestions"
                 :key="q.id || q._globalIndex"
                 :id="'question-card-' + q._globalIndex"
-                class="shadow-senselab-card flex flex-col gap-5 rounded-3xl border border-zinc-200/90 bg-white/95 p-6 transition-all hover:border-zinc-300 sm:p-7 dark:border-zinc-800 dark:bg-zinc-950/90"
+                @click="setFocusedQuestion(q._globalIndex)"
+                class="shadow-senselab-card flex flex-col gap-5 rounded-3xl border bg-white/95 p-6 transition-all sm:p-7 dark:bg-zinc-950/90"
+                :class="[
+                    currentQuestionIndex === q._globalIndex &&
+                    viewMode === 'page'
+                        ? 'border-sky-500/80 shadow-md ring-2 ring-sky-500/20 dark:border-sky-400/80'
+                        : 'border-zinc-200/90 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700',
+                ]"
             >
                 <!-- Question Header: Number + Text on Left, Reveal Button & Mastery on Right -->
                 <div

@@ -14,6 +14,7 @@ defineProps({
 const activeModule = ref(null);
 const activeQuestions = ref([]);
 const activeQuestion = ref(null);
+const pageContext = ref(null);
 const isLoadingModule = ref(false);
 
 const launchModule = async (moduleId) => {
@@ -45,6 +46,7 @@ const closePlayer = () => {
     activeModule.value = null;
     activeQuestions.value = [];
     activeQuestion.value = null;
+    pageContext.value = null;
 };
 
 provide('sduiContext', {
@@ -185,7 +187,13 @@ const SubjectiveUpload = defineAsyncComponent(
                 :module="activeModule"
                 :questions="activeQuestions"
                 mode="practice"
-                @question-change="(q) => (activeQuestion = q)"
+                @question-change="
+                    (q) => {
+                        activeQuestion = q;
+                        if (q?.page_context) pageContext = q.page_context;
+                    }
+                "
+                @page-context-change="(ctx) => (pageContext = ctx)"
             />
             <PdfViewer
                 v-else-if="activeModule.module_type === 'pdf_repo'"
@@ -232,6 +240,7 @@ const SubjectiveUpload = defineAsyncComponent(
             :domain="sdui.meta.domain"
             :active-module="activeModule"
             :active-question="activeQuestion"
+            :page-context="pageContext"
         />
     </div>
 </template>

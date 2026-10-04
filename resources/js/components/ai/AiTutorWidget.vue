@@ -14,6 +14,14 @@ const props = defineProps({
         type: Object,
         default: null,
     },
+    pageContext: {
+        type: Object,
+        default: null,
+    },
+});
+
+const effectivePageContext = computed(() => {
+    return props.pageContext || props.activeQuestion?.page_context || null;
 });
 
 const isOpen = ref(false);
@@ -367,9 +375,16 @@ const sendMessage = async (presetText = null) => {
     await scrollToBottom();
 
     // Prepare active candidate context matching agent_architecture_guidelines contract
+    const qNum =
+        props.activeQuestion?.number ||
+        (props.activeQuestion?._globalIndex !== undefined
+            ? props.activeQuestion._globalIndex + 1
+            : null);
+
     const activeMcq = props.activeQuestion
         ? {
               id: props.activeQuestion.id,
+              number: qNum,
               statement: props.activeQuestion.question_text
                   ? props.activeQuestion.question_text
                         .replace(/<[^>]*>?/gm, '')
@@ -402,6 +417,7 @@ const sendMessage = async (presetText = null) => {
         active_module_id: props.activeModule?.id || null,
         active_question_id: props.activeQuestion?.id || null,
         active_question_text: activeMcq?.statement || null,
+        page_context: effectivePageContext.value,
     };
 
     const chatHistoryPayload = messages.value.slice(-6).map((m) => ({
@@ -1058,16 +1074,42 @@ const formatContent = (text) => {
 
                 <!-- Active Test Context Ribbon -->
                 <div
-                    v-if="activeModule || activeQuestion"
+                    v-if="
+                        activeModule || activeQuestion || effectivePageContext
+                    "
                     class="flex items-center gap-2 border-b border-sidebar-border/50 bg-emerald-500/5 px-4 py-1.5 text-xs text-emerald-600 dark:border-zinc-800/60 dark:text-emerald-400"
                 >
                     <span
                         class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"
                     ></span>
                     <span class="truncate font-medium">
-                        {{ activeModule?.title || 'Active Module' }}
+                        {{ activeModule?.title || 'Active Test' }}
+                        <template v-if="effectivePageContext">
+                            <span
+                                v-if="effectivePageContext.view_mode === 'page'"
+                                class="font-normal text-zinc-600 dark:text-zinc-400"
+                            >
+                                • Page
+                                {{ effectivePageContext.current_page }}/{{
+                                    effectivePageContext.total_pages
+                                }}
+                                (Q{{ effectivePageContext.showing_from }}–{{
+                                    effectivePageContext.showing_to
+                                }})
+                            </span>
+                            <span
+                                v-else
+                                class="font-normal text-zinc-600 dark:text-zinc-400"
+                            >
+                                • Focus Q{{
+                                    effectivePageContext.active_question_number
+                                }}
+                                of
+                                {{ effectivePageContext.total_questions }}
+                            </span>
+                        </template>
                         <span
-                            v-if="activeQuestion?.code"
+                            v-else-if="activeQuestion?.code"
                             class="font-mono text-muted-foreground"
                         >
                             ({{ activeQuestion.code }})

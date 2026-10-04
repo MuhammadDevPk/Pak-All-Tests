@@ -287,4 +287,131 @@ class AiTutorChatTest extends TestCase
         // Subscriber's messages in other domain are NOT deleted
         $this->assertSame(1, DomainChatMessage::where('domain_id', $otherDomain->id)->where('user_id', $this->subscriber->id)->count());
     }
+
+    public function test_ai_tutor_accurately_identifies_current_page_and_visible_questions_in_page_view(): void
+    {
+        $response = $this->actingAs($this->subscriber)
+            ->postJson("/api/domains/{$this->domain->slug}/ai-tutor/ask", [
+                'message' => "Now I'm on which question? what content/questions are on my page",
+                'context' => [
+                    'active_module_id' => null,
+                    'active_mcq' => [
+                        'id' => 697,
+                        'number' => 81,
+                        'statement' => 'In which year was Dr. Abdus Salam awarded the Nobel Prize in Physics?',
+                        'options' => ['A) 1974', 'B) 1979', 'C) 1984', 'D) 1998'],
+                        'user_selected' => 'B) 1979',
+                        'attempts_made' => 0,
+                    ],
+                    'page_context' => [
+                        'view_mode' => 'page',
+                        'current_page' => 9,
+                        'total_pages' => 9,
+                        'page_size' => 10,
+                        'showing_from' => 81,
+                        'showing_to' => 85,
+                        'total_questions' => 85,
+                        'active_question_number' => 81,
+                        'visible_questions' => [
+                            [
+                                'number' => 81,
+                                'id' => 697,
+                                'statement' => 'In which year was Dr. Abdus Salam awarded the Nobel Prize in Physics?',
+                                'options' => ['A) 1974', 'B) 1979', 'C) 1984', 'D) 1998'],
+                                'user_selected' => 'B) 1979',
+                                'is_answered' => true,
+                            ],
+                            [
+                                'number' => 82,
+                                'id' => 698,
+                                'statement' => 'Which national football team won the FIFA World Cup 2022 in Qatar?',
+                                'options' => ['A) France', 'B) Argentina', 'C) Brazil', 'D) Morocco'],
+                                'user_selected' => null,
+                                'is_answered' => false,
+                            ],
+                        ],
+                    ],
+                ],
+                'stream' => true,
+            ]);
+
+        $response->assertOk();
+        $streamedContent = $response->streamedContent();
+
+        $this->assertStringContainsString('data: {"token":', $streamedContent);
+        $this->assertStringContainsString('data: [DONE]', $streamedContent);
+
+        // Verify assistant message content in database
+        $assistantMsg = DomainChatMessage::where('domain_id', $this->domain->id)
+            ->where('user_id', $this->subscriber->id)
+            ->where('role', 'assistant')
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($assistantMsg);
+        $this->assertStringContainsString('Page 9 of 9', $assistantMsg->content);
+        $this->assertStringContainsString('Questions 81 to 85', $assistantMsg->content);
+        $this->assertStringContainsString('Question 81', $assistantMsg->content);
+
+        // Verify persisted context
+        $savedMessage = DomainChatMessage::where('domain_id', $this->domain->id)
+            ->where('user_id', $this->subscriber->id)
+            ->where('role', 'user')
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($savedMessage);
+        $this->assertSame(9, $savedMessage->context_metadata['page_context']['current_page']);
+        $this->assertSame(81, $savedMessage->context_metadata['page_context']['showing_from']);
+        $this->assertSame(85, $savedMessage->context_metadata['page_context']['showing_to']);
+    }
+
+    public function test_ai_tutor_accurately_identifies_question_in_focus_mode(): void
+    {
+        $response = $this->actingAs($this->subscriber)
+            ->postJson("/api/domains/{$this->domain->slug}/ai-tutor/ask", [
+                'message' => 'Which question am I on right now?',
+                'context' => [
+                    'active_mcq' => [
+                        'id' => 697,
+                        'number' => 81,
+                        'statement' => 'In which year was Dr. Abdus Salam awarded the Nobel Prize in Physics?',
+                    ],
+                    'page_context' => [
+                        'view_mode' => 'focus',
+                        'current_page' => 1,
+                        'total_pages' => 85,
+                        'page_size' => 1,
+                        'showing_from' => 81,
+                        'showing_to' => 81,
+                        'total_questions' => 85,
+                        'active_question_number' => 81,
+                        'visible_questions' => [
+                            [
+                                'number' => 81,
+                                'id' => 697,
+                                'statement' => 'In which year was Dr. Abdus Salam awarded the Nobel Prize in Physics?',
+                            ],
+                        ],
+                    ],
+                ],
+                'stream' => true,
+            ]);
+
+        $response->assertOk();
+        $streamedContent = $response->streamedContent();
+
+        $this->assertStringContainsString('data: {"token":', $streamedContent);
+        $this->assertStringContainsString('data: [DONE]', $streamedContent);
+
+        $assistantMsg = DomainChatMessage::where('domain_id', $this->domain->id)
+            ->where('user_id', $this->subscriber->id)
+            ->where('role', 'assistant')
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($assistantMsg);
+        $this->assertStringContainsString('Focus Mode', $assistantMsg->content);
+        $this->assertStringContainsString('Question 81', $assistantMsg->content);
+    }
 }

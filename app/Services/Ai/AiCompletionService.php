@@ -108,7 +108,31 @@ class AiCompletionService
         elseif (str_contains($lastLower, 'passing') || str_contains($lastLower, 'score') || str_contains($lastLower, 'criteria') || str_contains($lastLower, 'time')) {
             $response = '**Exam Strategy & Criteria**: For this examination, time discipline is paramount. Aim for an average of 20–25 seconds per question. Never get stuck on a single item—flag difficult questions, bank the quick marks first, and return with a fresh perspective.';
         }
-        // 9. Conversational default
+        // 9. Active Question / Viewport Query (e.g., "Now I'm on which question?", "what content is on my page")
+        elseif (preg_match('/\b(which question|what question|on my page|current question|what content)\b/i', $lastLower)) {
+            if (str_contains($systemPrompt, 'CANDIDATE VIEWPORT / SCREEN STATE:')) {
+                // Parse page & visible questions from system prompt if present
+                if (preg_match('/Candidate is looking at Page (\d+) of (\d+), displaying Questions (\d+) to (\d+)/i', $systemPrompt, $pageMatches)) {
+                    $page = $pageMatches[1];
+                    $totalPages = $pageMatches[2];
+                    $from = $pageMatches[3];
+                    $to = $pageMatches[4];
+                    $response = "You are currently viewing **Page {$page} of {$totalPages}** (Questions {$from} to {$to}) in Page View mode.";
+                    if (preg_match('/Primary focused question on this page: Question (\d+)/i', $systemPrompt, $focusedMatch)) {
+                        $response .= " Your active focus on this page is **Question {$focusedMatch[1]}**.";
+                    }
+                } elseif (preg_match('/Candidate is focused on Question (\d+)/i', $systemPrompt, $focusMatches)) {
+                    $response = "You are currently in Focus Mode on **Question {$focusMatches[1]}**.";
+                } else {
+                    $response = 'You are currently active in your exam session with multiple questions on your screen.';
+                }
+            } elseif (preg_match('/PRIMARY FOCUSED MCQ Question #(\d+)/i', $systemPrompt, $mcqMatches)) {
+                $response = "You are currently working on **Question {$mcqMatches[1]}**.";
+            } else {
+                $response = "You are currently in your active test module. Let me know which question you'd like guidance on!";
+            }
+        }
+        // 10. Conversational default
         else {
             $response = "In competitive examinations, clarity and strategic discipline are key to scoring top percentiles.\n\nCould you specify whether you would like to practice **Intelligence Tests** (Verbal/Non-Verbal), review **Academic concepts**, or get a step-by-step hint on a specific question?";
         }

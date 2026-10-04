@@ -164,6 +164,11 @@ class AiTutorService
             '   - NO HASHTAG HEADINGS: Under NO circumstances should you output markdown heading hashtags (#, ##, ###, ####). Never write headings with hashes. Use bold text for inline emphasis instead.',
             '   - NO FILLER INTROS: Do not start with conversational fluff like "Certainly! Let us break down..." or "Sure thing! Here is...". Start directly with the answer.',
             '   - Language: Seamlessly reply in the language the candidate used (English, Urdu, or Roman Urdu).',
+            '',
+            '5. ACTIVE SCREEN & VIEWPORT AWARENESS:',
+            '   - If the candidate asks which question they are on, what is on their page, or what questions are visible on their screen, refer directly to CANDIDATE VIEWPORT / SCREEN STATE.',
+            '   - Accurately state their active page number, the visible questions range (e.g. Questions 81 to 85 on Page 9 of 9), and list or summarize the questions currently on their screen.',
+            '   - Never claim they are on Question 1 or another page unless they are actually on that page.',
         ];
 
         // Specific Domain Deep Knowledge Injection
@@ -206,10 +211,62 @@ class AiTutorService
             }
         }
 
+        // Candidate Viewport & Page Context
+        if (! empty($context['page_context']) && is_array($context['page_context'])) {
+            $pc = $context['page_context'];
+            $viewMode = $pc['view_mode'] ?? 'page';
+            $lines[] = '';
+            $lines[] = 'CANDIDATE VIEWPORT / SCREEN STATE:';
+
+            if ($viewMode === 'page') {
+                $currentPage = $pc['current_page'] ?? 1;
+                $totalPages = $pc['total_pages'] ?? 1;
+                $pageSize = $pc['page_size'] ?? 10;
+                $showingFrom = $pc['showing_from'] ?? 1;
+                $showingTo = $pc['showing_to'] ?? $showingFrom;
+                $totalQuestions = $pc['total_questions'] ?? null;
+                $activeQNum = $pc['active_question_number'] ?? $showingFrom;
+
+                $totalStr = $totalQuestions ? " of {$totalQuestions}" : '';
+                $lines[] = "- Mode: Multi-Question Page View ({$pageSize} questions per page)";
+                $lines[] = "- Screen: Candidate is looking at Page {$currentPage} of {$totalPages}, displaying Questions {$showingFrom} to {$showingTo}{$totalStr}.";
+                $lines[] = "- Primary focused question on this page: Question {$activeQNum}.";
+
+                if (! empty($pc['visible_questions']) && is_array($pc['visible_questions'])) {
+                    $lines[] = "- The exact questions visible on the candidate's screen right now are:";
+                    foreach ($pc['visible_questions'] as $vq) {
+                        $vNum = $vq['number'] ?? '';
+                        $vStmt = $vq['statement'] ?? '';
+                        $statusStr = '';
+                        if (! empty($vq['user_selected'])) {
+                            $statusStr = " [Candidate Selected: {$vq['user_selected']}]";
+                        } elseif (! empty($vq['is_answered'])) {
+                            $statusStr = ' [Answered]';
+                        } else {
+                            $statusStr = ' [Unanswered]';
+                        }
+                        $lines[] = "  * Question {$vNum}: {$vStmt}{$statusStr}";
+                        if (! empty($vq['options']) && is_array($vq['options'])) {
+                            foreach ($vq['options'] as $optStr) {
+                                $lines[] = "      {$optStr}";
+                            }
+                        }
+                    }
+                }
+            } elseif ($viewMode === 'focus') {
+                $activeQNum = $pc['active_question_number'] ?? ($pc['showing_from'] ?? 1);
+                $totalQuestions = $pc['total_questions'] ?? null;
+                $totalStr = $totalQuestions ? " of {$totalQuestions}" : '';
+                $lines[] = '- Mode: Focus Mode (Single question view)';
+                $lines[] = "- Screen: Candidate is focused on Question {$activeQNum}{$totalStr}.";
+            }
+        }
+
         if (! empty($context['active_mcq']) && is_array($context['active_mcq'])) {
             $mcq = $context['active_mcq'];
             $lines[] = '';
-            $lines[] = "CURRENT ACTIVE MCQ [ID #{$mcq['id']}]: {$mcq['statement']}";
+            $qNumStr = ! empty($mcq['number']) ? "Question #{$mcq['number']} [ID #{$mcq['id']}]" : "[ID #{$mcq['id']}]";
+            $lines[] = "PRIMARY FOCUSED MCQ {$qNumStr}: {$mcq['statement']}";
             if (! empty($mcq['options']) && is_array($mcq['options'])) {
                 $lines[] = 'Question Choices:';
                 foreach ($mcq['options'] as $opt) {
@@ -238,7 +295,7 @@ class AiTutorService
             if ($question instanceof QuestionBank) {
                 $promptText = strip_tags((string) ($question->question_text ?? ''));
                 $lines[] = '';
-                $lines[] = "CURRENT ACTIVE QUESTION [{$question->code}]: {$promptText}";
+                $lines[] = "PRIMARY FOCUSED QUESTION [{$question->code}]: {$promptText}";
                 if (! empty($question->payload['options'])) {
                     $lines[] = 'Question Choices:';
                     foreach ($question->payload['options'] as $idx => $opt) {

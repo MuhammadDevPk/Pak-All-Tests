@@ -8,6 +8,14 @@
 
 ## 📜 Active Rolling Memory Log
 
+### Entry 24 — 2026-10-04: Full Viewport & Multi-Question Page Context Synchronization for AI Exam Mentor
+- **Action**: Synchronized active page and visible questions state across `McqPlayer.vue`, `Dashboard.vue`, `AiTutorWidget.vue`, `AiTutorService.php`, and `AiCompletionService.php`, adding `computedPageContext` and auto-aligning active question indices on page/pagination changes so the Socratic mentor has accurate awareness of the candidate's exact viewport in both Page View (10/25/50/100 per page) and Focus Mode.
+- **Impact**: Resolves the screen disconnect where the AI mentor defaulted to Question 1 (Nishan-e-Haider) regardless of the active page (e.g. Page 9 displaying Questions 81–85); displays dynamic context ribbons in the chat drawer and enables the mentor to accurately answer queries about the candidate's current page and questions while upholding Zero-Knowledge answer security.
+- **Files Changed**: `resources/js/components/sdui/McqPlayer.vue`, `resources/js/pages/Domain/Dashboard.vue`, `resources/js/components/ai/AiTutorWidget.vue`, `app/Services/Ai/AiTutorService.php`, `app/Services/Ai/AiCompletionService.php`, `tests/Feature/AiTutorChatTest.php`.
+- **Blast Radius**: `McqPlayer.vue`, `Dashboard.vue`, `AiTutorWidget.vue`, `AiTutorService.php`, `AiCompletionService.php`.
+- **Rollback Path**: `git checkout HEAD~1 -- resources/js/components/sdui/McqPlayer.vue resources/js/pages/Domain/Dashboard.vue resources/js/components/ai/AiTutorWidget.vue app/Services/Ai/AiTutorService.php app/Services/Ai/AiCompletionService.php tests/Feature/AiTutorChatTest.php`.
+- **Lessons**: When pagination or scrolling views partition data, client state must emit structured viewport metadata (`page_context`) rather than relying on a static index pointer (`index 0`), and AI prompt builders must explicitly represent candidate screen state so LLMs do not hallucinate earlier pages.
+
 ### Entry 23 — 2026-10-04: PR #5 Merge Conflict Resolution & Critical Feature Preservation
 - **Action**: Resolved three-way merge conflicts across `resources/js/components/sdui/McqPlayer.vue`, `resources/js/components/ai/AiTutorWidget.vue`, and `.agent/MEMORY_ARCHIVE.md`, preserving top and bottom submit buttons, bottom Page View pagination, draggable AI Exam Mentor pointer capture, weak-mode submission endpoints, and strict ESLint/Prettier formatting standards.
 - **Impact**: Eliminates all git conflict blocks while preserving 100% of candidate UI features, spaced repetition mastery flows, and notification table crash mitigations.
