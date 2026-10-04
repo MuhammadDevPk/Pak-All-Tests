@@ -11,13 +11,13 @@ use App\Models\QuestionBank;
 use App\Models\User;
 use App\Services\Ai\EmbeddingService;
 use App\Services\Ai\KnowledgeVectorizationService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Livewire\Livewire;
 use Tests\TestCase;
 
 class DomainKnowledgeVectorizationTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected EmbeddingService $embeddingService;
 

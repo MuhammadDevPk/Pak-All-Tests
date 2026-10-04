@@ -77,11 +77,12 @@ it('dry-run previews counts without writing anything to the database', function 
 
     $suffix = uniqid();
     $domain = importTestDomain($suffix);
+    $initialQuestions = QuestionBank::count();
     $reportKey = 'import-dryrun-'.$suffix;
 
     runImportJobForTest(importTestPayload($suffix), $domain, true, $reportKey);
 
-    expect(QuestionBank::count())->toBe(0)
+    expect(QuestionBank::count())->toBe($initialQuestions)
         ->and(ContentModule::where('domain_id', $domain->id)->count())->toBe(0);
 
     $report = Cache::get($reportKey);
@@ -100,11 +101,12 @@ it('inserts mcqs and short answers into their correct subject modules', function
 
     $suffix = uniqid();
     $domain = importTestDomain($suffix);
+    $initialQuestions = QuestionBank::count();
     $reportKey = 'import-live-'.$suffix;
 
     runImportJobForTest(importTestPayload($suffix), $domain, false, $reportKey);
 
-    expect(QuestionBank::count())->toBe(3);
+    expect(QuestionBank::count())->toBe($initialQuestions + 3);
 
     $mcq = QuestionBank::where('code', 'PMA-T-'.$suffix.'-001')->first();
     expect($mcq)->not->toBeNull()
@@ -147,13 +149,14 @@ it('skips exact duplicates when the same file is imported twice', function () {
 
     $suffix = uniqid();
     $domain = importTestDomain($suffix);
+    $initialQuestions = QuestionBank::count();
     $payload = importTestPayload($suffix);
 
     runImportJobForTest($payload, $domain, false, 'import-dedupe-a-'.$suffix);
-    expect(QuestionBank::count())->toBe(3);
+    expect(QuestionBank::count())->toBe($initialQuestions + 3);
 
     runImportJobForTest($payload, $domain, false, 'import-dedupe-b-'.$suffix);
-    expect(QuestionBank::count())->toBe(3);
+    expect(QuestionBank::count())->toBe($initialQuestions + 3);
 
     $report = Cache::get('import-dedupe-b-'.$suffix);
     expect($report['totals']['inserted'])->toBe(0)
@@ -184,9 +187,10 @@ it('rejects malformed items and reports them without inserting', function () {
         ],
     ];
 
+    $initialQuestions = QuestionBank::count();
     runImportJobForTest($payload, $domain, false, $reportKey);
 
-    expect(QuestionBank::count())->toBe(1)
+    expect(QuestionBank::count())->toBe($initialQuestions + 1)
         ->and(QuestionBank::where('code', 'GOOD-1')->exists())->toBeTrue();
 
     $report = Cache::get($reportKey);
@@ -221,6 +225,7 @@ it('completes the dry run even when the notifications table is missing', functio
     // Simulate production, where the notifications table was never migrated.
     Schema::dropIfExists('notifications');
 
+    $initialQuestions = QuestionBank::count();
     $reportKey = 'import-no-notif-table-'.$suffix;
     Storage::disk('local')->put('imports/'.$reportKey.'.json', json_encode(importTestPayload($suffix)));
 
@@ -241,7 +246,7 @@ it('completes the dry run even when the notifications table is missing', functio
             ->and($report['totals']['inserted'])->toBe(3)
             ->and($report['totals']['duplicates_skipped'])->toBe(0)
             ->and($report['totals']['invalid'])->toBe(0)
-            ->and(QuestionBank::count())->toBe(0);
+            ->and(QuestionBank::count())->toBe($initialQuestions);
     } finally {
         Artisan::call('migrate', ['--path' => 'database/migrations/2026_10_04_000002_create_notifications_table.php']);
     }

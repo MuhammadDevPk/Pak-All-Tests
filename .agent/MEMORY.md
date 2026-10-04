@@ -1,7 +1,7 @@
 # MEMORY.md — Rolling Project Memory & Operational Knowledge
 
-> **Status**: ACTIVE ROLLING RECORD  
-> **Repository**: Pak-All-Tests (Laravel 13 • Vue 3 / Inertia 3 • PostgreSQL 16+ Supabase)  
+> **Status**: ACTIVE ROLLING RECORD
+> **Repository**: Pak-All-Tests (Laravel 13 • Vue 3 / Inertia 3 • PostgreSQL 16+ Supabase)
 > **Archive**: Older entries (11–16) archived to [`.agent/MEMORY_ARCHIVE.md`](file:///.agent/MEMORY_ARCHIVE.md)
 
 ---
@@ -15,6 +15,13 @@
 - **Blast Radius**: `SubscriptionManager`, `CreateNewUser`, `DomainDashboardController`, `DomainForm`, `DomainsTable`, `User`, `Domain`.
 - **Rollback Path**: `php artisan migrate:rollback --step=4` and `git checkout HEAD~1 -- app/ routes/ resources/ database/`.
 - **Lessons**: Model default attributes in Eloquent must be explicitly defined in `protected $attributes = [...]` rather than assuming database column defaults populate on in-memory freshly instantiated models; and environment-aware default fallbacks (`app()->runningUnitTests()`) guarantee existing gating test suites remain deterministic while production defaults to friction-free growth.
+### Entry 26 — 2026-10-05: DatabaseSeeder PlatformSeeder Invocation & Test Suite DatabaseTransactions Compliance
+- **Action**: Wired `PlatformSeeder` into `DatabaseSeeder::run()` using `firstOrCreate` for user creation to guarantee idempotency during `php artisan migrate:fresh --seed` or `db:seed`, and eliminated `RefreshDatabase` from 3 feature tests in favor of mandated `DatabaseTransactions`, adjusting `QuestionImportTest` assertions to use relative question counts.
+- **Impact**: Resolves empty database tables and login failure (`admin@paktests.pk` non-existent) after running `php artisan migrate:fresh --seed`; prevents the test suite from wiping seeded database records.
+- **Files Changed**: `database/seeders/DatabaseSeeder.php`, `tests/Feature/DomainKnowledgeVectorizationTest.php`, `tests/Feature/AiTutorChatTest.php`, `tests/Feature/ContentModuleExecutionTest.php`, `tests/Feature/QuestionImportTest.php`, `.agent/MEMORY.md`.
+- **Blast Radius**: Seeder orchestration and test suite transaction lifecycle.
+- **Rollback Path**: `git checkout HEAD~1 -- database/seeders/DatabaseSeeder.php tests/Feature/`.
+- **Lessons**: `DatabaseSeeder` must call domain/platform seeders explicitly; test suites must never use `RefreshDatabase` when sharing persistent local/remote PostgreSQL instances.
 
 ### Entry 25 — 2026-10-04: Codification of Socratic Viewport Synchronization & The CLI Authority Law
 - **Action**: Formalized architectural rules and anti-patterns following `/learn` command execution, codifying Viewport & Multi-Question Page Context Synchronization in `.agent/rules/ai_tutor.md` § 11, Mistake #12 in `.agent/rules/mistakes.md`, and The CLI Authority Law in `.agent/SYSTEM_RULES.md` § 7.

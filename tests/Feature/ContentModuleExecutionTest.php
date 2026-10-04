@@ -7,12 +7,12 @@ use App\Models\Domain;
 use App\Models\QuestionBank;
 use App\Models\User;
 use App\Models\UserSubscription;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class ContentModuleExecutionTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected Domain $domain;
 
