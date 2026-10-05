@@ -208,6 +208,18 @@ const cloudTags = [
                                 />
                             </svg>
                         </Link>
+
+                        <button
+                            type="button"
+                            @click="router.post('/guest-login')"
+                            class="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-amber-300/80 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-800 shadow-xs transition-all hover:bg-amber-500/20 active:scale-95 dark:border-amber-500/40 dark:bg-amber-950/40 dark:text-amber-300"
+                        >
+                            <span
+                                >⚡ Instant 1-Day Guest Pass (No
+                                Registration)</span
+                            >
+                            <span>→</span>
+                        </button>
                     </template>
                 </div>
 
@@ -280,6 +292,21 @@ const cloudTags = [
                     <div
                         class="flex flex-col gap-2 border-t border-zinc-100 pt-2 dark:border-zinc-800"
                     >
+                        <button
+                            v-if="!isAuthenticated"
+                            type="button"
+                            @click="
+                                mobileMenuOpen = false;
+                                router.post('/guest-login');
+                            "
+                            class="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border border-amber-300/80 bg-amber-500/10 py-2.5 text-center text-xs font-semibold text-amber-800 shadow-xs transition-all hover:bg-amber-500/20 active:scale-95 dark:border-amber-500/40 dark:bg-amber-950/40 dark:text-amber-300"
+                        >
+                            <span
+                                >⚡ Instant 1-Day Guest Pass (No
+                                Registration)</span
+                            >
+                            <span>→</span>
+                        </button>
                         <Link
                             href="/login"
                             class="w-full rounded-full border border-zinc-300 py-2.5 text-center text-xs font-medium text-zinc-800 dark:border-zinc-700 dark:text-zinc-200"
