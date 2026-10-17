@@ -20,7 +20,7 @@ Route::get('/ping', function () {
     return 'Ping is working without database queries!';
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auto.guest'])->group(function () {
     Route::post('/convert-guest', ConvertGuestAccountController::class)->name('guest.convert');
 
     Route::get('dashboard', function (Request $request) {
