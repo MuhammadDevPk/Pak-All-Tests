@@ -43,6 +43,19 @@ const examTracks = [
         themeBorder: 'hover:border-sky-500/50',
     },
     {
+        title: 'GD Pilot (PAF)',
+        category: 'Armed Forces & Defense',
+        badge: 'PAF Selection Track',
+        slug: 'gd-pilot',
+        icon: '✈️',
+        description:
+            'PAF GD Pilot academics: English, Mathematics, and Physics question banks with timed practice tests.',
+        stat: '336 Verified MCQs',
+        status: 'Active Track',
+        href: '/d/gd-pilot',
+        themeBorder: 'hover:border-emerald-500/50',
+    },
+    {
         title: 'Revision & Weak MCQs Bank',
         category: 'Adaptive Spaced Repetition',
         badge: 'Threshold Mastery',
@@ -60,6 +73,7 @@ const examTracks = [
         category: 'Competitive Examinations',
         badge: 'FPSC MPT Syllabus',
         slug: 'css-exam-2027',
+        note: 'Currently empty — the question bank is being built and courses are on the way.',
         icon: '🏛️',
         description:
             'Comprehensive general knowledge, Islamic studies, English comprehension, and national affairs dossiers.',
@@ -216,6 +230,13 @@ const examTracks = [
                                 class="mt-2 text-xs leading-relaxed text-brand-muted"
                             >
                                 {{ track.description }}
+                            </p>
+                            <p
+                                v-if="track.note"
+                                class="mt-2 flex items-start gap-1.5 text-[11px] leading-relaxed text-amber-700 dark:text-amber-400"
+                            >
+                                <span aria-hidden="true">ⓘ</span>
+                                <span>{{ track.note }}</span>
                             </p>
                         </div>
                     </div>
@@ -493,3 +514,4 @@ const examTracks = [
         </div>
     </div>
 </template>
+
