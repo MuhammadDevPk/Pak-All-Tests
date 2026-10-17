@@ -32,11 +32,26 @@ const examCategories = [
         actionLabel: 'Launch PMA Course',
     },
     {
+        title: 'GD Pilot — Pakistan Air Force',
+        badge: 'PAF / GD Pilot',
+        description:
+            'Pakistan Air Force GD Pilot course: academic question banks for English, Mathematics, and Physics with timed practice tests.',
+        slug: 'gd-pilot',
+        features: [
+            'English, Mathematics & Physics MCQ banks',
+            '336 verified questions',
+            'Timed practice with instant scoring',
+            '60% / 45-minute phase gating',
+        ],
+        actionLabel: 'Launch GD Pilot Course',
+    },
+    {
         title: 'Civil Services (CSS / PMS)',
         badge: 'FPSC Competitive Examination',
         description:
             'Rigorous preparation for compulsory and optional papers with rubric-driven subjective evaluations.',
         slug: 'css-exam-2027',
+        note: 'Currently empty — the question bank is being built and courses are on the way.',
         features: [
             '2,500-Word English Essay Evaluation Workspace',
             'General Science & Ability (MPT) MCQs',
@@ -1486,6 +1501,13 @@ const cloudTags = [
                                     <span>{{ feat }}</span>
                                 </li>
                             </ul>
+                            <p
+                                v-if="cat.note"
+                                class="mb-2 flex items-start gap-1.5 text-[11px] leading-relaxed text-amber-700 dark:text-amber-400"
+                            >
+                                <span aria-hidden="true">ⓘ</span>
+                                <span>{{ cat.note }}</span>
+                            </p>
                         </div>
 
                         <div>
@@ -2181,3 +2203,4 @@ const cloudTags = [
     scrollbar-width: none;
 }
 </style>
+
