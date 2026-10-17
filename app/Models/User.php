@@ -54,8 +54,8 @@ class User extends Authenticatable implements FilamentUser, PasskeyUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        // Suspended users cannot access the panel
-        if ($this->is_suspended) {
+        // Suspended and ephemeral guest users cannot access the admin panel
+        if ($this->is_suspended || $this->is_guest) {
             return false;
         }
 

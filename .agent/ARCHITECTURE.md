@@ -107,8 +107,9 @@ app/
 ## 5. Security, Gating & Environment Constraints
 
 1. **Subscription Gating (`SubscriptionManager`)**: Access to `/d/{domainSlug}` and `/api/modules/{module}` is strictly gated via `SubscriptionManager::hasActiveAccess($user, $domain)`. Unsubscribed users receive `Subscription/PendingOrInactive.vue`.
-2. **Reverse Proxy & SSL**: Trust proxies (`*`) configured in `bootstrap/app.php` and `URL::forceScheme('https')` in `AppServiceProvider.php` for Azure/Cloudflare edge SSL termination.
-3. **Upload Limits**: Synchronized across Nginx (`client_max_body_size 64M`) and PHP-FPM (`upload_max_filesize = 64M`, `post_max_size = 64M`).
+2. **Frictionless Candidate Auto-Guest Access (`AutoAuthenticateGuest`)**: Direct visits to student learning routes (`/d/{domainSlug}`, `/dashboard`, `/revision-weak-questions`) automatically provision and log in an ephemeral guest user with 24 hours of trial access via `GuestAuthService` on the initial request without redirects. Governed by 1-click admin toggle `PlatformSetting::isAutoGuestLoginEnabled()`. If visiting via `?ref=...`, triggers native registration flow so referring parent is credited. Filament admin panel access is denied to guests (`User::canAccessPanel`).
+3. **Reverse Proxy & SSL**: Trust proxies (`*`) configured in `bootstrap/app.php` and `URL::forceScheme('https')` in `AppServiceProvider.php` for Azure/Cloudflare edge SSL termination.
+4. **Upload Limits**: Synchronized across Nginx (`client_max_body_size 64M`) and PHP-FPM (`upload_max_filesize = 64M`, `post_max_size = 64M`).
 
 ---
 

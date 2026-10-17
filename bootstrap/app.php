@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AutoAuthenticateGuest;
 use App\Http\Middleware\CaptureReferralCode;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -16,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'auto.guest' => AutoAuthenticateGuest::class,
+        ]);
+
         $middleware->trustProxies(at: '*');
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state', 'referral_code', 'referral_domain']);

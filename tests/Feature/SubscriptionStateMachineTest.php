@@ -73,6 +73,9 @@ class SubscriptionStateMachineTest extends TestCase
             'is_active' => true,
         ]);
 
+        // Expire any preexisting lapsed subscriptions so test batch count is strictly deterministic
+        $manager->expireLapsedSubscriptions();
+
         // Subscription that expired yesterday
         $lapsedSubscription = UserSubscription::create([
             'user_id' => $user->id,

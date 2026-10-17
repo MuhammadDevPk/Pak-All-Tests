@@ -48,4 +48,17 @@ class PlatformSetting extends Model
 
         return in_array($value, [true, 1, '1', 'true'], true);
     }
+
+    /**
+     * Determine if unauthenticated visitors should automatically be signed in as ephemeral guests.
+     * Defaults to true in production/local for instant frictionless student onboarding,
+     * while defaulting to false during unit testing so unauthenticated route guards remain testable.
+     */
+    public static function isAutoGuestLoginEnabled(): bool
+    {
+        $default = app()->runningUnitTests() ? '0' : '1';
+        $value = static::get('auto_guest_login', $default);
+
+        return in_array($value, [true, 1, '1', 'true'], true);
+    }
 }
