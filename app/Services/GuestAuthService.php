@@ -26,12 +26,15 @@ class GuestAuthService
             $uniqueId = strtolower((string) Str::ulid());
             $guestNumber = mt_rand(1000, 9999);
 
+            $guestDomain = (string) config('platform.trials.guest_email_domain', 'guest.pakalltests.local');
+            $guestHours = (int) config('platform.trials.guest_pass_hours', 24);
+
             $user = User::create([
                 'name' => "Guest Candidate #{$guestNumber}",
-                'email' => "guest_{$uniqueId}@guest.pakalltests.local",
+                'email' => "guest_{$uniqueId}@{$guestDomain}",
                 'password' => Hash::make(Str::random(32)),
                 'is_guest' => true,
-                'guest_expires_at' => now()->addHours(24),
+                'guest_expires_at' => now()->addHours($guestHours),
                 'registration_ip' => $ipAddress,
             ]);
 

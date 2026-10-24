@@ -46,9 +46,10 @@ class DomainDashboardController extends Controller
             ])
             ->firstOrFail();
 
-        // On-Demand: Grant initial 1-day pass for guests opening an interactive domain flow
+        // On-Demand: Grant initial pass for guests opening an interactive domain flow
         if ($user && $user->is_guest && ($domain->flow || $domain->children()->doesntExist()) && ! $user->subscriptions()->where('domain_id', $domain->id)->exists()) {
-            $this->subscriptionManager->grantFreeTrial($user, $domain, 1);
+            $guestDomainPassDays = (int) config('platform.trials.guest_domain_pass_days', 1);
+            $this->subscriptionManager->grantFreeTrial($user, $domain, $guestDomainPassDays);
         }
 
         $hasAccess = $this->subscriptionManager->hasActiveAccess($user, $domain);

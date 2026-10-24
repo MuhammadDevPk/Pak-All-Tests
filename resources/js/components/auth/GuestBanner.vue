@@ -1,6 +1,13 @@
 <script setup>
-import { useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { useForm, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+
+const page = usePage();
+const platform = computed(() => page.props.platform || {});
+const guestHours = computed(
+    () => platform.value?.trials?.guest_pass_hours || 24,
+);
+const trialDays = computed(() => platform.value?.trials?.free_trial_days || 7);
 
 defineProps({
     guest: {
@@ -55,7 +62,7 @@ const submitConversion = () => {
                         <span
                             class="text-xs font-bold tracking-wide text-amber-800 uppercase dark:text-amber-300"
                         >
-                            24-Hour Guest Pass Active
+                            {{ guestHours }}-Hour Guest Pass Active
                         </span>
                         <span
                             v-if="guest.expires_in_hours !== null"
@@ -67,7 +74,7 @@ const submitConversion = () => {
                     <p class="mt-0.5 text-xs text-zinc-600 dark:text-zinc-400">
                         Create a free permanent account to save your test
                         records, bookmark weak MCQs, and unlock a
-                        <strong>7-Day Free Trial</strong>.
+                        <strong>{{ trialDays }}-Day Free Trial</strong>.
                     </p>
                 </div>
             </div>
@@ -77,7 +84,7 @@ const submitConversion = () => {
                 class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-amber-600 focus:ring-2 focus:ring-amber-500/40 focus:outline-hidden dark:bg-amber-600 dark:hover:bg-amber-500"
                 @click="openModal"
             >
-                <span>Save Progress & Unlock 7 Days</span>
+                <span>Save Progress & Unlock {{ trialDays }} Days</span>
                 <span>→</span>
             </button>
         </div>
@@ -101,8 +108,8 @@ const submitConversion = () => {
                             Keep Your Test Progress
                         </h3>
                         <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                            Create your free account to unlock your 7-Day Free
-                            Trial.
+                            Create your free account to unlock your
+                            {{ trialDays }}-Day Free Trial.
                         </p>
                     </div>
                     <button
@@ -208,7 +215,9 @@ const submitConversion = () => {
                             class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-sky-500 disabled:opacity-50 dark:bg-sky-500 dark:hover:bg-sky-400"
                         >
                             <span v-if="form.processing">Saving...</span>
-                            <span v-else>Save & Activate 7-Day Trial</span>
+                            <span v-else
+                                >Save & Activate {{ trialDays }}-Day Trial</span
+                            >
                         </button>
                     </div>
                 </form>
