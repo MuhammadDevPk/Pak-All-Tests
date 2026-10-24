@@ -70,8 +70,8 @@ class CreateNewUser implements CreatesNewUsers
 
             if ($refCode) {
                 $targetDomain = $refDomainSlug
-                    ? Domain::query()->has('flow')->where('slug', $refDomainSlug)->where('is_active', true)->first()
-                    : Domain::query()->has('flow')->where('is_active', true)->first();
+                    ? Domain::query()->eligibleForSubscription()->where('slug', $refDomainSlug)->first()
+                    : Domain::query()->eligibleForSubscription()->first();
 
                 if ($targetDomain) {
                     $this->subscriptionManager->grantFreeTrial($user, $targetDomain, 7);
