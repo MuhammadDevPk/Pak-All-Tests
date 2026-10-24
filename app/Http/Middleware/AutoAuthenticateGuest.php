@@ -32,7 +32,12 @@ class AutoAuthenticateGuest
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check()) {
+        // Defensive guard: Admin panel routes must never auto-authenticate as guests
+        if ($request->is('admin*')) {
+            return $next($request);
+        }
+
+        if (Auth::guard('web')->check()) {
             return $next($request);
         }
 

@@ -37,7 +37,7 @@ class GuestAuthService
 
             $this->createTeam->handle($user, $user->name."'s Workspace", isPersonal: true);
 
-            Auth::login($user, remember: true);
+            Auth::guard('web')->login($user, remember: false);
 
             return $user;
         });
