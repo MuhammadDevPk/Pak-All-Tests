@@ -35,6 +35,7 @@ class UserSubscription extends Model
      * Scope query to only include active, non-expired subscriptions.
      *
      * @param  Builder<UserSubscription>  $query
+     * @return Builder<UserSubscription>
      */
     public function scopeActive(Builder $query): Builder
     {
@@ -49,6 +50,7 @@ class UserSubscription extends Model
      * Scope query to pending verification subscriptions.
      *
      * @param  Builder<UserSubscription>  $query
+     * @return Builder<UserSubscription>
      */
     public function scopePending(Builder $query): Builder
     {
@@ -59,6 +61,7 @@ class UserSubscription extends Model
      * Scope query to rejected subscriptions.
      *
      * @param  Builder<UserSubscription>  $query
+     * @return Builder<UserSubscription>
      */
     public function scopeRejected(Builder $query): Builder
     {
@@ -69,6 +72,7 @@ class UserSubscription extends Model
      * Scope query to expired subscriptions.
      *
      * @param  Builder<UserSubscription>  $query
+     * @return Builder<UserSubscription>
      */
     public function scopeExpired(Builder $query): Builder
     {

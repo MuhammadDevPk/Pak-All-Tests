@@ -129,6 +129,19 @@ Every backend endpoint or feature mutation must strictly follow this structure:
 
 ---
 
+## 6. The Mandatory CI Pre-Flight Gate (`composer ci:check`)
+Before completing any task, recommending a commit, or pushing code to any branch, the agent **MUST** run the full CI suite via `composer ci:check`.
+- **What it enforces**:
+  1. `npm run lint:check` (ESLint on all JavaScript / Vue)
+  2. `npm run format:check` (Prettier on all resources)
+  3. `npm run types:check` (vue-tsc type safety)
+  4. `./vendor/bin/pint --parallel --test` (Laravel Pint code style)
+  5. `./vendor/bin/phpstan analyse` (Larastan / PHPStan Level 7)
+  6. `./vendor/bin/pest` (Automated backend test suite)
+- **Zero Tolerance**: Never push unverified code or assume a change is too small to break formatting or static analysis. Every PR or push recommendation must be preceded by a clean `composer ci:check` run.
+
+---
+
 # 📐 Tier 2: CONVENTIONS (Quality & Consistency Standards)
 
 ## 1. 🎨 Anti-AI Visual Laws & Mathematical Design System (SenseLab Aesthetic)
@@ -205,15 +218,28 @@ Evaluate in this exact order:
 ---
 
 ## 4. Code Style & Tooling Commands
-- **Formatting**: Laravel Pint (`preset: "laravel"`):
+- **Mandatory Pre-Flight CI Suite**:
   ```bash
-  ./vendor/bin/pint --dirty
-  # Verification:
-  ./vendor/bin/pint --dirty --test
+  composer ci:check
   ```
-- **Static Analysis**: Larastan / PHPStan Level 6:
+- **Formatting**:
   ```bash
-  ./vendor/bin/phpstan analyse <modified-files>
+  # Backend formatting
+  ./vendor/bin/pint --dirty
+  ./vendor/bin/pint --dirty --test
+
+  # Frontend formatting
+  npm run format:check
+  npm run format
+  ```
+- **Static Analysis**:
+  ```bash
+  # Frontend types & lint
+  npm run lint:check
+  npm run types:check
+
+  # Backend types (Larastan / PHPStan Level 7)
+  ./vendor/bin/phpstan analyse
   ```
 - **Test Suite**: Pest test suite:
   ```bash

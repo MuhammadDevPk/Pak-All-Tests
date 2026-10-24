@@ -2,11 +2,19 @@
 
 > **Status**: ACTIVE ROLLING RECORD (Strict Max 10 Entries Law)  
 > **Repository**: Pak-All-Tests (Laravel 13 • Vue 3 / Inertia 3 • PostgreSQL 16+ Supabase)  
-> **Archive**: Older entries (01–21) archived to [`.agent/MEMORY_ARCHIVE.md`](file:///MEMORY_ARCHIVE.md)
+> **Archive**: Older entries (01–22) archived to [`.agent/MEMORY_ARCHIVE.md`](file:///MEMORY_ARCHIVE.md)
 
 ---
 
-## 📜 Active Rolling Memory Log (Entries 22–31)
+## 📜 Active Rolling Memory Log (Entries 23–32)
+
+### Entry 32 — 2026-10-25: CI Pre-Flight Gate Harness Mandate & Zero-Tolerance PHPStan / Prettier Hardening
+- **Action**: (1) Fixed Prettier trailing newline formatting in `Dashboard.vue` and `Welcome.vue`; (2) resolved all 20 PHPStan Level 7 errors across `HandlesModuleFiles.php`, `EditUserSubscription.php`, `SubscriptionReceiptController.php`, `DomainChatMessage.php`, `DomainKnowledgeEmbedding.php`, `UserSubscription.php`, and `ReferralService.php`; (3) updated `AGENTS.md` and `.agent/PATTERNS.md` enshrining Mandate 6: Mandatory CI Pre-Flight Gate (`composer ci:check`) before any commit or push; (4) verified complete local CI pipeline passing with 0 warnings, 0 type errors, and 212 tests.
+- **Impact**: Guarantees future agent tasks and human developers catch formatting, typing, and testing errors locally before pushing to remote CI, eliminating broken GitHub Actions runs.
+- **Files Changed**: `resources/js/pages/Dashboard.vue`, `resources/js/pages/Welcome.vue`, `app/Filament/Resources/ContentModules/Concerns/HandlesModuleFiles.php`, `app/Filament/Resources/UserSubscriptions/Pages/EditUserSubscription.php`, `app/Http/Controllers/SubscriptionReceiptController.php`, `app/Models/DomainChatMessage.php`, `app/Models/DomainKnowledgeEmbedding.php`, `app/Models/UserSubscription.php`, `app/Services/ReferralService.php`, `AGENTS.md`, `.agent/PATTERNS.md`, `.agent/MEMORY.md`, `.agent/MEMORY_ARCHIVE.md`.
+- **Blast Radius**: CI verification workflow, model generic annotations, Filament subscription edit page, module file handling trait.
+- **Rollback Path**: `git checkout HEAD~1`.
+- **Lessons**: Relying only on dirty-file linting misses repository-wide static analysis and Prettier errors; every workflow harness must enforce running the full CI test harness (`composer ci:check`) as an inviolable pre-flight gate.
 
 ### Entry 31 — 2026-10-25: On-Demand Flow-Scoped Subscriptions & Filament Candidate Tabs
 - **Action**: (1) Added `scopeEligibleForSubscription` to `Domain` model filtering out non-flow parent categories (`Pakistan Army`, `Civil Services`, `Armed Forces`, `Pakistan Air Force`); (2) scoped user registration (`CreateNewUser`), account conversion (`ConvertGuestAccountController`), and guest authentication (`GuestLoginController`, `AutoAuthenticateGuest`) so domain trials attach strictly to leaf interactive flows (`PMA Long Course Initial`, `GD Pilot`, `CSS Competitive Exam 2027`); (3) implemented on-demand 1-day pass provisioning in `DomainDashboardController` when guests visit interactive domain flows; (4) added `registered` and `guests` filter tabs with dynamic counts and rich candidate metrics (Candidate Type badge, Referrals count badge, Account Age) to Filament `UserSubscriptionsTable`; (5) migrated database to safely delete 11 orphan parent-category subscriptions.
@@ -79,11 +87,3 @@
 - **Blast Radius**: SDUI schema parsing and domain dashboards.
 - **Rollback Path**: Revert transformer changes.
 - **Lessons**: Layout engines must validate schema contracts defensively with sensible fallbacks to prevent empty state renders on partial schemas.
-
-### Entry 22 — 2026-09-28: EasyPaisa & JazzCash Manual Receipt Verification Queue
-- **Action**: Built Filament administrative verification resource for candidate payment receipts (`UserSubscriptionReviewResource`) with image modal previews, 1-click approvals, and reject reason notifications.
-- **Impact**: Accelerated manual review turnaround times for un-banked Pakistani candidates paying via OTC agent slips.
-- **Files Changed**: `app/Filament/Resources/UserSubscriptions/UserSubscriptionReviewResource.php`, `tests/Feature/FilamentUserSubscriptionReviewTest.php`.
-- **Blast Radius**: `user_subscriptions` approval workflow.
-- **Rollback Path**: Deactivate resource.
-- **Lessons**: Manual financial verification requires immutable audit logs tracking which admin approved or rejected each receipt.

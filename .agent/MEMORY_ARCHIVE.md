@@ -5,6 +5,14 @@
 
 ---
 
+### Entry 22 — 2026-09-28: EasyPaisa & JazzCash Manual Receipt Verification Queue
+- **Action**: Built Filament administrative verification resource for candidate payment receipts (`UserSubscriptionReviewResource`) with image modal previews, 1-click approvals, and reject reason notifications.
+- **Impact**: Accelerated manual review turnaround times for un-banked Pakistani candidates paying via OTC agent slips.
+- **Files Changed**: `app/Filament/Resources/UserSubscriptions/UserSubscriptionReviewResource.php`, `tests/Feature/FilamentUserSubscriptionReviewTest.php`.
+- **Blast Radius**: `user_subscriptions` approval workflow.
+- **Rollback Path**: Deactivate resource.
+- **Lessons**: Manual financial verification requires immutable audit logs tracking which admin approved or rejected each receipt.
+
 ### Entry 21 — 2026-09-23: Spaced Learning Weak Question Bank & Two-Strike Mastery Protocol
 - **Action**: Engineered `UserWeakQuestion` tracking system capturing missed MCQs, prioritizing them in revision playlists, and requiring candidates to answer correctly twice across distinct sessions to achieve mastery status.
 - **Impact**: Boosts candidate retention on critical screening questions by automating targeted retrieval practice.

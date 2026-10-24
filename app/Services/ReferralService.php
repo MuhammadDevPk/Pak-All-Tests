@@ -192,7 +192,7 @@ class ReferralService
             ->get()
             ->map(fn (Referral $r) => [
                 'id' => $r->id,
-                'name' => $r->referredUser?->name ?? 'Candidate',
+                'name' => $r->referredUser->name,
                 'reward_days' => $r->reward_days,
                 'joined_at' => $r->created_at?->diffForHumans() ?? 'Recently',
             ])
