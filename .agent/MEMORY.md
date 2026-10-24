@@ -2,11 +2,19 @@
 
 > **Status**: ACTIVE ROLLING RECORD (Strict Max 10 Entries Law)  
 > **Repository**: Pak-All-Tests (Laravel 13 • Vue 3 / Inertia 3 • PostgreSQL 16+ Supabase)  
-> **Archive**: Older entries (01–22) archived to [`.agent/MEMORY_ARCHIVE.md`](file:///MEMORY_ARCHIVE.md)
+> **Archive**: Older entries (01–23) archived to [`.agent/MEMORY_ARCHIVE.md`](file:///MEMORY_ARCHIVE.md)
 
 ---
 
-## 📜 Active Rolling Memory Log (Entries 23–32)
+## 📜 Active Rolling Memory Log (Entries 24–33)
+
+### Entry 33 — 2026-10-25: Centralized Platform Configuration Engine & Global Reactive State
+- **Action**: Centralized all scattered, hardcoded static business variables, texts, brand identities, support channels, trial durations, referral reward numbers, and payment accounts into a single global configuration file (`config/platform.php`). Injected it globally into Inertia via `HandleInertiaRequests::share` and typed in `global.d.ts`. Refactored backend services (`CreateNewUser`, `ConvertGuestAccountController`, `DomainDashboardController`, `GuestAuthService`, `ReferralService`) and frontend components (`PendingOrInactive.vue`, `GuestBanner.vue`, `ReferralCard.vue`, `AppLogo.vue`, `AuthCardLayout.vue`, `AuthSimpleLayout.vue`, `Welcome.vue`) to reactively consume `config('platform.*')` and `$page.props.platform`. Added comprehensive test coverage in `PlatformConfigCentralizationTest.php`.
+- **Impact**: Eliminates duplicated, hardcoded values across frontend Vue templates and backend controllers; changing any parameter in `config/platform.php` or `.env` automatically cascades across the entire platform in real time.
+- **Files Changed**: `config/platform.php`, `app/Http/Middleware/HandleInertiaRequests.php`, `app/Actions/Fortify/CreateNewUser.php`, `app/Http/Controllers/Auth/ConvertGuestAccountController.php`, `app/Http/Controllers/DomainDashboardController.php`, `app/Services/GuestAuthService.php`, `app/Services/ReferralService.php`, `resources/js/types/global.d.ts`, `resources/js/components/AppLogo.vue`, `resources/js/components/auth/GuestBanner.vue`, `resources/js/components/referral/ReferralCard.vue`, `resources/js/layouts/auth/AuthCardLayout.vue`, `resources/js/layouts/auth/AuthSimpleLayout.vue`, `resources/js/pages/Subscription/PendingOrInactive.vue`, `resources/js/pages/Welcome.vue`, `tests/Feature/PlatformConfigCentralizationTest.php`, `.agent/MEMORY.md`, `.agent/MEMORY_ARCHIVE.md`.
+- **Blast Radius**: Platform branding, guest pass duration, registration trial duration, referral reward calculations, and subscription payment details.
+- **Rollback Path**: `git checkout HEAD~1`.
+- **Lessons**: Hardcoding business numbers in Vue templates creates silent drift from backend enforcement logic; binding shared platform configuration via Inertia guarantees zero-fetch synchronization between Laravel services and Vue UI components.
 
 ### Entry 32 — 2026-10-25: CI Pre-Flight Gate Harness Mandate & Zero-Tolerance PHPStan / Prettier Hardening
 - **Action**: (1) Fixed Prettier trailing newline formatting in `Dashboard.vue` and `Welcome.vue`; (2) resolved all 20 PHPStan Level 7 errors across `HandlesModuleFiles.php`, `EditUserSubscription.php`, `SubscriptionReceiptController.php`, `DomainChatMessage.php`, `DomainKnowledgeEmbedding.php`, `UserSubscription.php`, and `ReferralService.php`; (3) updated `AGENTS.md` and `.agent/PATTERNS.md` enshrining Mandate 6: Mandatory CI Pre-Flight Gate (`composer ci:check`) before any commit or push; (4) verified complete local CI pipeline passing with 0 warnings, 0 type errors, and 212 tests.
@@ -79,11 +87,3 @@
 - **Blast Radius**: `AiTutorService`, `AiTutorWidget.vue`.
 - **Rollback Path**: `git revert` SSE changes.
 - **Lessons**: Long-lived SSE connections over mobile networks require explicit server heartbeat comments (`: ping\n\n`) to prevent carrier gateway timeouts.
-
-### Entry 23 — 2026-10-02: Server-Driven UI (SDUI) Dynamic Phase Layout Engine
-- **Action**: Implemented `PhaseStepperLayout.vue` and dynamic module schema ingestion within `SduiPayloadTransformer` to render military multi-phase screening paths (Screening $\rightarrow$ Physical $\rightarrow$ Academic $\rightarrow$ ISSB).
-- **Impact**: Permitted arbitrary curriculum branching without hardcoded frontend router changes.
-- **Files Changed**: `app/Services/SduiPayloadTransformer.php`, `resources/js/components/sdui/PhaseStepperLayout.vue`.
-- **Blast Radius**: SDUI schema parsing and domain dashboards.
-- **Rollback Path**: Revert transformer changes.
-- **Lessons**: Layout engines must validate schema contracts defensively with sensible fallbacks to prevent empty state renders on partial schemas.

@@ -54,10 +54,11 @@ class CreateNewUser implements CreatesNewUsers
 
             $this->createTeam->handle($user, $user->name."'s Workspace", isPersonal: true);
 
-            // Provision 7-Day Free Trial for active domain flows only (not parent category folders)
+            // Provision Free Trial for active domain flows only (not parent category folders)
+            $trialDays = (int) config('platform.trials.free_trial_days', 7);
             $flowDomains = Domain::query()->eligibleForSubscription()->get();
             foreach ($flowDomains as $domain) {
-                $this->subscriptionManager->grantFreeTrial($user, $domain, 7);
+                $this->subscriptionManager->grantFreeTrial($user, $domain, $trialDays);
             }
 
             // Process referral link if present (normalized uppercase)
@@ -74,7 +75,7 @@ class CreateNewUser implements CreatesNewUsers
                     : Domain::query()->eligibleForSubscription()->first();
 
                 if ($targetDomain) {
-                    $this->subscriptionManager->grantFreeTrial($user, $targetDomain, 7);
+                    $this->subscriptionManager->grantFreeTrial($user, $targetDomain, $trialDays);
 
                     $result = $this->referralService->processReferral(
                         childUser: $user,

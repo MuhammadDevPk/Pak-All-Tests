@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { home } from '@/routes';
 
@@ -7,6 +8,11 @@ defineProps<{
     title?: string;
     description?: string;
 }>();
+
+const page = usePage();
+const platformName = computed(
+    () => (page.props as any).platform?.name || 'Pak-All-Tests',
+);
 </script>
 
 <template>
@@ -34,9 +40,9 @@ defineProps<{
                         >
                             <AppLogoIcon class="h-9 w-9" />
                         </div>
-                        <span class="text-sm font-bold text-brand-heading"
-                            >Pak-All-Tests</span
-                        >
+                        <span class="text-sm font-bold text-brand-heading">
+                            {{ platformName }}
+                        </span>
                     </Link>
                     <div class="space-y-1.5 text-center">
                         <h1

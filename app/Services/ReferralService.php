@@ -127,12 +127,16 @@ class ReferralService
             ->approved()
             ->count();
 
-        // Referrals 1 to 4: +7 days each; 5th Referral Milestone: 30 days access
-        if ($approvedCount === 4) {
-            $rewardDays = 30;
-            $milestone = '30_days_milestone';
+        $milestoneTarget = (int) config('platform.referrals.milestone_target', 5);
+        $milestoneDays = (int) config('platform.referrals.milestone_days', 30);
+        $perReferralDays = (int) config('platform.referrals.days_per_referral', 7);
+
+        // Referrals below milestone: standard days each; milestone referral: bonus access
+        if ($approvedCount === ($milestoneTarget - 1)) {
+            $rewardDays = $milestoneDays;
+            $milestone = "{$milestoneDays}_days_milestone";
         } else {
-            $rewardDays = 7;
+            $rewardDays = $perReferralDays;
             $milestone = null;
         }
 

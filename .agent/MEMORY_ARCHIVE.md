@@ -5,6 +5,14 @@
 
 ---
 
+### Entry 23 — 2026-10-02: Server-Driven UI (SDUI) Dynamic Phase Layout Engine
+- **Action**: Implemented `PhaseStepperLayout.vue` and dynamic module schema ingestion within `SduiPayloadTransformer` to render military multi-phase screening paths (Screening $\rightarrow$ Physical $\rightarrow$ Academic $\rightarrow$ ISSB).
+- **Impact**: Permitted arbitrary curriculum branching without hardcoded frontend router changes.
+- **Files Changed**: `app/Services/SduiPayloadTransformer.php`, `resources/js/components/sdui/PhaseStepperLayout.vue`.
+- **Blast Radius**: SDUI schema parsing and domain dashboards.
+- **Rollback Path**: Revert transformer changes.
+- **Lessons**: Layout engines must validate schema contracts defensively with sensible fallbacks to prevent empty state renders on partial schemas.
+
 ### Entry 22 — 2026-09-28: EasyPaisa & JazzCash Manual Receipt Verification Queue
 - **Action**: Built Filament administrative verification resource for candidate payment receipts (`UserSubscriptionReviewResource`) with image modal previews, 1-click approvals, and reject reason notifications.
 - **Impact**: Accelerated manual review turnaround times for un-banked Pakistani candidates paying via OTC agent slips.

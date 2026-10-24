@@ -22,6 +22,30 @@ declare module '@inertiajs/core' {
             sidebarOpen: boolean;
             currentTeam: Team | null;
             teams: Team[];
+            platform?: {
+                name?: string;
+                portal_name?: string;
+                tagline?: string;
+                subtitle?: string;
+                description?: string;
+                support_email?: string;
+                support_phone?: string;
+                whatsapp_support_number?: string;
+                whatsapp_support_url?: string;
+                trials?: {
+                    free_trial_days?: number;
+                    guest_pass_hours?: number;
+                    guest_domain_pass_days?: number;
+                    guest_email_domain?: string;
+                };
+                referrals?: {
+                    days_per_referral?: number;
+                    milestone_target?: number;
+                    milestone_days?: number;
+                    share_message_template?: string;
+                };
+                payment_accounts?: Record<string, any>;
+            };
             [key: string]: unknown;
         };
     }

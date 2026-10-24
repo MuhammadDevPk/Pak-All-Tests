@@ -1,5 +1,19 @@
 <script setup>
-import { ref } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+
+const page = usePage();
+const platform = computed(() => page.props.platform || {});
+const appName = computed(() => platform.value?.name || 'Pak-All-Tests');
+const daysPerReferral = computed(
+    () => platform.value?.referrals?.days_per_referral || 7,
+);
+const milestoneTarget = computed(
+    () => platform.value?.referrals?.milestone_target || 5,
+);
+const milestoneDays = computed(
+    () => platform.value?.referrals?.milestone_days || 30,
+);
 
 const props = defineProps({
     referral: {
@@ -49,7 +63,13 @@ const shareWhatsApp = () => {
         return;
     }
 
-    const message = `Join me on Pak-All-Tests! Practice authentic past-paper MCQs, take timed exams, and get instant Socratic AI mentorship: ${props.referral.referral_link}`;
+    const template =
+        platform.value?.referrals?.share_message_template ||
+        'Join me on :platform! Practice authentic past-paper MCQs, take timed exams, and get instant Socratic AI mentorship: :link';
+    const message = template
+        .replace(':platform', appName.value)
+        .replace(':link', props.referral.referral_link);
+
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
 };
@@ -74,9 +94,12 @@ const shareWhatsApp = () => {
                         Invite Friends & Unlock Extended Access
                     </h2>
                     <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                        Earn <strong>+7 Days</strong> for every friend who
-                        registers. Reach 5 friends to unlock
-                        <strong>30 Days Full Course Access</strong>!
+                        Earn <strong>+{{ daysPerReferral }} Days</strong> for
+                        every friend who registers. Reach
+                        {{ milestoneTarget }} friends to unlock
+                        <strong
+                            >{{ milestoneDays }} Days Full Course Access</strong
+                        >!
                     </p>
                 </div>
             </div>

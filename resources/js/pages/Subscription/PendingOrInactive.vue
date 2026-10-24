@@ -1,7 +1,10 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
 import ReferralCard from '@/components/referral/ReferralCard.vue';
+
+const page = usePage();
+const platform = computed(() => page.props.platform || {});
 
 const props = defineProps({
     domain: {
@@ -30,8 +33,8 @@ const props = defineProps({
     },
 });
 
-// Payment Accounts Data
-const paymentAccounts = {
+// Payment Accounts Data (centralized with fallbacks)
+const defaultPaymentAccounts = {
     easypaisa: {
         name: 'EasyPaisa Mobile Account',
         accountTitle: 'Pak-All-Tests Academy',
@@ -55,6 +58,10 @@ const paymentAccounts = {
             'Make an IBFT transfer to Meezan Bank. Attach the digital receipt screenshot or PDF bank statement.',
     },
 };
+
+const paymentAccounts = computed(
+    () => platform.value.payment_accounts || defaultPaymentAccounts,
+);
 
 const selectedGateway = ref('easypaisa');
 const copiedField = ref(null);
@@ -142,8 +149,9 @@ const submitReceipt = () => {
                 >
                     P
                 </div>
-                <span class="text-sm font-bold tracking-tight text-foreground"
-                    >Pak-All-Tests Portal</span
+                <span
+                    class="text-sm font-bold tracking-tight text-foreground"
+                    >{{ platform.portal_name || 'Pak-All-Tests Portal' }}</span
                 >
             </Link>
             <div class="flex items-center gap-3 text-xs">
@@ -729,8 +737,9 @@ const submitReceipt = () => {
         <footer
             class="mx-auto w-full max-w-5xl border-t border-sidebar-border/70 pt-6 text-center text-xs text-muted-foreground"
         >
-            Pak-All-Tests Verification Support Desk • Queries:
-            support@paktests.pk
+            {{ platform.portal_name || 'Pak-All-Tests' }} Verification Support
+            Desk • Queries:
+            {{ platform.support_email || 'support@paktests.pk' }}
         </footer>
     </div>
 </template>

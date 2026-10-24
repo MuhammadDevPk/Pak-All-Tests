@@ -4,6 +4,7 @@ import { ref, computed } from 'vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 
 const page = usePage();
+const platform = computed(() => page.props.platform || {});
 const isAuthenticated = computed(() => !!page.props.auth?.user);
 
 const mobileMenuOpen = ref(false);
@@ -96,7 +97,9 @@ const cloudTags = [
 </script>
 
 <template>
-    <Head title="Pak-All-Tests — Build Knowledge That Improves Itself" />
+    <Head
+        :title="`${platform.name || 'Pak-All-Tests'} — ${platform.tagline || 'Build Knowledge That Improves Itself'}`"
+    />
 
     <div
         class="relative min-h-screen overflow-x-hidden bg-brand-canvas font-sans text-brand-body selection:bg-sky-500/20 selection:text-sky-600"
@@ -129,7 +132,7 @@ const cloudTags = [
                     <span
                         class="text-lg font-bold tracking-tight text-brand-heading transition-colors group-hover:text-sky-600"
                     >
-                        Pak-All-Tests
+                        {{ platform.name || 'Pak-All-Tests' }}
                     </span>
                 </Link>
 
@@ -2072,9 +2075,9 @@ const cloudTags = [
                     >
                         P
                     </div>
-                    <span class="font-bold text-brand-heading"
-                        >Pak-All-Tests</span
-                    >
+                    <span class="font-bold text-brand-heading">{{
+                        platform.name || 'Pak-All-Tests'
+                    }}</span>
                     <span class="text-zinc-300 dark:text-zinc-700">•</span>
                     <span
                         >All Rights Reserved &copy;
