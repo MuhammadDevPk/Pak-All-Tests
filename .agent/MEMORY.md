@@ -2,11 +2,19 @@
 
 > **Status**: ACTIVE ROLLING RECORD (Strict Max 10 Entries Law)  
 > **Repository**: Pak-All-Tests (Laravel 13 • Vue 3 / Inertia 3 • PostgreSQL 16+ Supabase)  
-> **Archive**: Older entries (01–23) archived to [`.agent/MEMORY_ARCHIVE.md`](file:///MEMORY_ARCHIVE.md)
+> **Archive**: Older entries (01–24) archived to [`.agent/MEMORY_ARCHIVE.md`](file:///MEMORY_ARCHIVE.md)
 
 ---
 
-## 📜 Active Rolling Memory Log (Entries 24–33)
+## 📜 Active Rolling Memory Log (Entries 25–34)
+
+### Entry 34 — 2026-10-25: Mobile Responsive Layout Hardening for Test Player, Palette & AI Tutor
+- **Action**: (1) Fixed Question Palette popover in `McqPlayer.vue` on mobile viewports (<640px) by transitioning from left-overflowing `absolute right-0` to a centered `fixed inset-x-4 top-1/2 -translate-y-1/2 max-h-[85vh]` modal sheet with dimmed backdrop, preventing column/text truncation; (2) streamlined back navigation banner in `Dashboard.vue` with `shrink-0 whitespace-nowrap` on back button and `min-w-0 truncate` on active module title, eliminating multi-line text wrapping; (3) refactored `AiTutorWidget.vue` drawer positioning with reactive `windowWidth`, setting `left: 1rem; right: 1rem; width: auto; max-width: calc(100vw - 2rem)` on mobile screens to ensure symmetric 16px margins matching all other cards on the page, and hidden horizontal resize handles on touch viewports; (4) verified complete CI pre-flight gate passing via `composer ci:check`.
+- **Impact**: Provides pixel-perfect, responsive layout and navigation on 375px mobile screens without clipped question numbers, bloated wrapped buttons, or asymmetric edge flush.
+- **Files Changed**: `resources/js/components/sdui/McqPlayer.vue`, `resources/js/pages/Domain/Dashboard.vue`, `resources/js/components/ai/AiTutorWidget.vue`, `.agent/MEMORY.md`, `.agent/MEMORY_ARCHIVE.md`.
+- **Blast Radius**: MCQ test player UI, course dashboard back navigation, floating AI exam mentor drawer on mobile.
+- **Rollback Path**: `git checkout HEAD~1 -- resources/js/`.
+- **Lessons**: Fixed-width floating drawer popovers must switch to inset-bound modal or sheet configurations on mobile viewports rather than relying on parent-anchored absolute positioning with desktop widths.
 
 ### Entry 33 — 2026-10-25: Centralized Platform Configuration Engine & Global Reactive State
 - **Action**: Centralized all scattered, hardcoded static business variables, texts, brand identities, support channels, trial durations, referral reward numbers, and payment accounts into a single global configuration file (`config/platform.php`). Injected it globally into Inertia via `HandleInertiaRequests::share` and typed in `global.d.ts`. Refactored backend services (`CreateNewUser`, `ConvertGuestAccountController`, `DomainDashboardController`, `GuestAuthService`, `ReferralService`) and frontend components (`PendingOrInactive.vue`, `GuestBanner.vue`, `ReferralCard.vue`, `AppLogo.vue`, `AuthCardLayout.vue`, `AuthSimpleLayout.vue`, `Welcome.vue`) to reactively consume `config('platform.*')` and `$page.props.platform`. Added comprehensive test coverage in `PlatformConfigCentralizationTest.php`.
@@ -79,11 +87,3 @@
 - **Blast Radius**: `module_questions` pivot associations.
 - **Rollback Path**: `php artisan db:seed --class=PmaLongCourseSeeder`.
 - **Lessons**: Data repair workflows must be designed as resumable chunked background jobs rather than long-running web requests.
-
-### Entry 24 — 2026-10-03: Real-Time Socratic AI Tutor Drawer & SSE Streaming Resiliency
-- **Action**: Hardened `AiTutorService` SSE pipeline with heartbeat events every 15s, auto-reconnection headers, client pointer-capture resize handles on mobile, and prompt length calibration.
-- **Impact**: Fixed streaming dropouts on mobile data connections and eliminated chat layout shift on candidate devices.
-- **Files Changed**: `app/Services/Ai/AiTutorService.php`, `resources/js/components/ai/AiTutorWidget.vue`, `tests/Feature/AiTutorChatTest.php`.
-- **Blast Radius**: `AiTutorService`, `AiTutorWidget.vue`.
-- **Rollback Path**: `git revert` SSE changes.
-- **Lessons**: Long-lived SSE connections over mobile networks require explicit server heartbeat comments (`: ping\n\n`) to prevent carrier gateway timeouts.

@@ -170,30 +170,35 @@ const SubjectiveUpload = defineAsyncComponent(
         <div v-if="activeModule" class="flex flex-1 flex-col gap-4">
             <!-- Sleek Back Navigation Banner -->
             <div
-                class="shadow-senselab-card flex items-center justify-between rounded-2xl border border-zinc-200/80 bg-white/90 p-3 backdrop-blur-md sm:p-4 dark:border-zinc-800 dark:bg-zinc-950/80"
+                class="shadow-senselab-card flex items-center justify-between gap-2.5 rounded-2xl border border-zinc-200/80 bg-white/90 p-3 backdrop-blur-md sm:gap-4 sm:p-4 dark:border-zinc-800 dark:bg-zinc-950/80"
             >
                 <button
                     type="button"
                     @click="closePlayer"
-                    class="group inline-flex items-center gap-2 rounded-full border border-zinc-200/90 bg-white px-4 py-2 text-xs font-semibold text-zinc-800 shadow-xs transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                    class="group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-zinc-200/90 bg-white px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-zinc-800 shadow-xs transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95 sm:gap-2 sm:px-4 sm:py-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
                 >
                     <span
                         class="transition-transform duration-200 group-hover:-translate-x-0.5"
                         >←</span
                     >
-                    <span>Back to Course Dashboard</span>
+                    <span
+                        >Back<span class="hidden sm:inline">
+                            to Course Dashboard</span
+                        ></span
+                    >
                 </button>
 
                 <div
-                    class="flex items-center gap-2 text-xs font-medium text-brand-muted"
+                    class="flex min-w-0 items-center gap-1.5 text-xs font-medium text-brand-muted"
                 >
                     <span
-                        class="inline-block h-2 w-2 animate-pulse rounded-full bg-emerald-500"
+                        class="inline-block h-2 w-2 shrink-0 animate-pulse rounded-full bg-emerald-500"
                     ></span>
                     <span class="hidden sm:inline">Active Module:</span>
-                    <strong class="text-senselab-heading font-semibold">{{
-                        activeModule.title
-                    }}</strong>
+                    <strong
+                        class="text-senselab-heading truncate font-semibold"
+                        >{{ activeModule.title }}</strong
+                    >
                 </div>
             </div>
 
