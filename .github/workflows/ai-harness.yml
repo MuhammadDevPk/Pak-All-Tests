@@ -1,0 +1,83 @@
+name: AI Harness Verification
+
+on:
+  push:
+    branches:
+      - main
+      - 'fix/**'
+      - 'feat/**'
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  harness-audit:
+    name: Harness & Quality Gate
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: testing
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: testing
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_pgsql, pgsql, bcmath, redis
+          coverage: none
+
+      - name: Verify AI Harness Governance
+        run: |
+          chmod +x scripts/*.sh .agent/hooks/*.sh || true
+          ./scripts/harness-check.sh
+
+      - name: Install Composer Dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare Application Environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan migrate --force
+
+      - name: Execute Code Style Linter (Pint)
+        run: ./vendor/bin/pint --test
+
+      - name: Execute Automated Test Suite (Pest)
+        run: ./vendor/bin/pest
