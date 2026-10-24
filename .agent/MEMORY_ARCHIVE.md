@@ -5,6 +5,22 @@
 
 ---
 
+### Entry 22 — 2026-09-28: EasyPaisa & JazzCash Manual Receipt Verification Queue
+- **Action**: Built Filament administrative verification resource for candidate payment receipts (`UserSubscriptionReviewResource`) with image modal previews, 1-click approvals, and reject reason notifications.
+- **Impact**: Accelerated manual review turnaround times for un-banked Pakistani candidates paying via OTC agent slips.
+- **Files Changed**: `app/Filament/Resources/UserSubscriptions/UserSubscriptionReviewResource.php`, `tests/Feature/FilamentUserSubscriptionReviewTest.php`.
+- **Blast Radius**: `user_subscriptions` approval workflow.
+- **Rollback Path**: Deactivate resource.
+- **Lessons**: Manual financial verification requires immutable audit logs tracking which admin approved or rejected each receipt.
+
+### Entry 21 — 2026-09-23: Spaced Learning Weak Question Bank & Two-Strike Mastery Protocol
+- **Action**: Engineered `UserWeakQuestion` tracking system capturing missed MCQs, prioritizing them in revision playlists, and requiring candidates to answer correctly twice across distinct sessions to achieve mastery status.
+- **Impact**: Boosts candidate retention on critical screening questions by automating targeted retrieval practice.
+- **Files Changed**: `app/Models/UserWeakQuestion.php`, `app/Http/Controllers/WeakQuestionsController.php`, `resources/js/pages/WeakQuestions/Index.vue`, `tests/Feature/WeakQuestionsTest.php`.
+- **Blast Radius**: MCQ grading pipeline and candidate revision dashboard.
+- **Rollback Path**: `git revert` weak questions migration and controller.
+- **Lessons**: Single correct answers on previously failed questions are often lucky guesses; mastery confirmation requires two consecutive successes across distinct attempts.
+
 ### Entry 16 — 2026-10-03: One-Time PMA Subject-Module Link Repair
 - **Action**: Added a repair workflow on the Filament "Import Questions" page ("Link Questions to Modules" header action + dry-run toggle) backed by `LinkPmaSubjectModulesJob`: reads `database/data/pma_academic_subject_map.json`, creates five flat `preparation` subject modules under the domain if missing, and attaches existing PMA-ACAD questions via duplicate-safe `insertOrIgnore` pivot writes in 100-row chunks. Extracted shared `SubjectModuleProvisioner`. Added Pest coverage (`tests/Feature/LinkPmaSubjectModulesTest.php`).
 - **Impact**: Repaired production state where PR #3 inserted questions without subject modules; all PMA Academic questions resolve per-subject through standard `module_questions` pivot.

@@ -37,24 +37,27 @@ Before planning, editing files, running terminal commands, or generating solutio
    - Write tests that actively try to break your implementation under unexpected, concurrent, or hostile real-world inputs.
 5. **Staff Engineer PR Review**:
    - Conduct a rigorous pre-conclusion self-audit before declaring any task complete.
+6. **Mandatory CI Pre-Flight Gate (`composer ci:check`)**:
+   - Before completing any task, recommending a commit, or pushing code, you **MUST** run the full CI suite via `composer ci:check`.
+   - This validates ESLint (`lint:check`), Prettier (`format:check`), Vue/TS types (`types:check`), Pint (`lint:check`), PHPStan Level 7 (`types:check`), and the Pest test suite (`@test`). Never push unverified code.
 
 ---
 
 ## 📋 Standard Verification Commands
 
 ```bash
-# Code style formatting (modified files only)
-./vendor/bin/pint --dirty
+# Mandatory Full CI Pre-Flight Gate (Run before every commit/push)
+composer ci:check
 
-# Code style verification
-./vendor/bin/pint --dirty --test
-
-# Static analysis (modified files only)
-./vendor/bin/phpstan analyse <files>
-
-# Automated testing suite
-./vendor/bin/pest <path/to/Test.php>
-
-# Frontend bundle verification
+# Granular Frontend Checks
+npm run lint:check
+npm run format:check
+npm run types:check
 npm run build
+
+# Granular Backend Checks
+./vendor/bin/pint --dirty
+./vendor/bin/pint --dirty --test
+./vendor/bin/phpstan analyse
+./vendor/bin/pest <path/to/Test.php>
 ```

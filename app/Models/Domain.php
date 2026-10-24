@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Concerns\CachesTableData;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -122,6 +123,21 @@ class Domain extends Model
                 'expires_at',
             ])
             ->withTimestamps();
+    }
+
+    /**
+     * Scope query to interactive domains eligible for user subscriptions,
+     * excluding purely structural parent category domains without a flow.
+     *
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeEligibleForSubscription(Builder $query): Builder
+    {
+        return $query->where('is_active', true)
+            ->where(function (Builder $q) {
+                $q->has('flow')->orWhereDoesntHave('children');
+            });
     }
 
     protected static function booted()

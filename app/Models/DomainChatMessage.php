@@ -13,7 +13,7 @@ use Illuminate\Support\Carbon;
  * @property int $domain_id
  * @property string $role
  * @property string $content
- * @property array|null $context_metadata
+ * @property array<string, mixed>|null $context_metadata
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */

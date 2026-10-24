@@ -6,6 +6,9 @@ trait HandlesModuleFiles
 {
     /**
      * Hydrate the Repeater 'files' state from the model's 'content_meta' JSON.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
      */
     protected function mutateFormDataBeforeFill(array $data): array
     {
@@ -53,6 +56,9 @@ trait HandlesModuleFiles
     /**
      * Synchronize uploaded file paths into 'content_meta.files' and 'content_meta.file_url'
      * before Eloquent updates or creates the ContentModule record.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
      */
     protected function processFilesBeforeSave(array $data): array
     {
@@ -94,7 +100,7 @@ trait HandlesModuleFiles
         // Ensure top-level file_url is updated with the active document
         if (count($cleanFiles) > 0 && ! empty($cleanFiles[0]['file_url'])) {
             $meta['file_url'] = $cleanFiles[0]['file_url'];
-            $meta['file_type'] = $cleanFiles[0]['file_type'] ?? 'PDF Document';
+            $meta['file_type'] = $cleanFiles[0]['file_type'];
             $meta['file_size'] = $cleanFiles[0]['file_size'] ?? null;
         }
 

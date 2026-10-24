@@ -57,7 +57,7 @@ class AutoAuthenticateGuest
             ?? $request->query('domain_slug');
 
         if ($domainSlug) {
-            $domain = Domain::query()->where('slug', (string) $domainSlug)->where('is_active', true)->first();
+            $domain = Domain::query()->eligibleForSubscription()->where('slug', (string) $domainSlug)->first();
             if ($domain) {
                 $this->subscriptionManager->grantFreeTrial($guest, $domain, 1);
             }

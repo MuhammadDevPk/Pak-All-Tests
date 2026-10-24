@@ -17,6 +17,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 
 class UserSubscriptionsTable
@@ -25,7 +26,12 @@ class UserSubscriptionsTable
     {
         return $table
             ->deferLoading()
-            ->query(UserSubscription::query()->with(['user', 'domain']))
+            ->query(
+                UserSubscription::query()->with([
+                    'user' => fn ($query) => $query->withCount('referralsGiven'),
+                    'domain',
+                ])
+            )
             ->paginationMode(PaginationMode::Simple)
             ->defaultSort('id', 'desc')
             ->columns([
@@ -35,6 +41,13 @@ class UserSubscriptionsTable
                     ->sortable()
                     ->weight('bold')
                     ->description(fn ($record) => $record->user?->email),
+
+                TextColumn::make('user.is_guest')
+                    ->label('Type')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state ? 'Guest' : 'Registered')
+                    ->color(fn ($state) => $state ? 'warning' : 'success')
+                    ->sortable(),
 
                 TextColumn::make('domain.name')
                     ->label('Exam Domain')
@@ -62,9 +75,17 @@ class UserSubscriptionsTable
                         'easypaisa' => 'EasyPaisa',
                         'jazzcash' => 'JazzCash',
                         'bank_transfer' => 'IBFT Bank',
+                        'free_trial' => 'Free Trial',
                         default => $state ?? '—',
                     })
                     ->placeholder('—'),
+
+                TextColumn::make('user.referrals_given_count')
+                    ->label('Referrals')
+                    ->badge()
+                    ->color('primary')
+                    ->formatStateUsing(fn ($state) => $state > 0 ? "{$state} referred" : '0')
+                    ->sortable(),
 
                 TextColumn::make('transaction_id')
                     ->label('TRX ID')
@@ -94,12 +115,32 @@ class UserSubscriptionsTable
                     ->sortable()
                     ->placeholder('Lifetime / None'),
 
+                TextColumn::make('user.created_at')
+                    ->label('Account Age')
+                    ->since()
+                    ->sortable()
+                    ->toggleable(),
+
                 TextColumn::make('created_at')
                     ->label('Submitted')
                     ->since()
                     ->sortable(),
             ])
             ->filters([
+                SelectFilter::make('is_guest')
+                    ->label('Candidate Type')
+                    ->options([
+                        'registered' => 'Registered Candidates',
+                        'guest' => 'Guest Passes',
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        if (($data['value'] ?? null) === 'registered') {
+                            $query->whereHas('user', fn ($q) => $q->where('is_guest', false));
+                        } elseif (($data['value'] ?? null) === 'guest') {
+                            $query->whereHas('user', fn ($q) => $q->where('is_guest', true));
+                        }
+                    }),
+
                 SelectFilter::make('status')
                     ->options([
                         'pending' => 'Pending Verification',
