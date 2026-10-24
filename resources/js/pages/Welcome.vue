@@ -196,7 +196,7 @@ const cloudTags = [
                 </nav>
 
                 <!-- Right Action: SenseLab Black Pill Button (Screenshot 1) -->
-                <div class="hidden items-center gap-3 sm:flex">
+                <div class="hidden items-center gap-3 md:flex">
                     <template v-if="isAuthenticated">
                         <Link
                             href="/d/pma-initial-course"
@@ -299,7 +299,7 @@ const cloudTags = [
                         href="#architecture"
                         @click="mobileMenuOpen = false"
                         class="py-2 text-zinc-700 dark:text-zinc-300"
-                        >Architecture</a
+                        >Solutions</a
                     >
                     <a
                         href="#pricing"
@@ -308,35 +308,58 @@ const cloudTags = [
                         >Pricing</a
                     >
                     <div
-                        class="flex flex-col gap-2 border-t border-zinc-100 pt-2 dark:border-zinc-800"
+                        class="flex flex-col gap-2.5 border-t border-zinc-100 pt-3 dark:border-zinc-800"
                     >
-                        <button
-                            v-if="!isAuthenticated"
-                            type="button"
-                            @click="
-                                mobileMenuOpen = false;
-                                router.post('/guest-login');
-                            "
-                            class="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border border-amber-300/80 bg-amber-500/10 py-2.5 text-center text-xs font-semibold text-amber-800 shadow-xs transition-all hover:bg-amber-500/20 active:scale-95 dark:border-amber-500/40 dark:bg-amber-950/40 dark:text-amber-300"
-                        >
-                            <span
-                                >⚡ Instant 1-Day Guest Pass (No
-                                Registration)</span
+                        <!-- Authenticated: Exam Dashboard -->
+                        <template v-if="isAuthenticated">
+                            <Link
+                                href="/d/pma-initial-course"
+                                @click="mobileMenuOpen = false"
+                                class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-zinc-950 py-2.5 text-center text-xs font-semibold text-white shadow-xs transition-all hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
                             >
-                            <span>→</span>
-                        </button>
-                        <Link
-                            href="/login"
-                            class="w-full rounded-full border border-zinc-300 py-2.5 text-center text-xs font-medium text-zinc-800 dark:border-zinc-700 dark:text-zinc-200"
-                        >
-                            Sign In
-                        </Link>
-                        <Link
-                            href="/register"
-                            class="w-full rounded-full bg-zinc-950 py-2.5 text-center text-xs font-semibold text-white dark:bg-white dark:text-zinc-950"
-                        >
-                            Get Started Free
-                        </Link>
+                                <span>Exam Dashboard</span>
+                                <span>→</span>
+                            </Link>
+                        </template>
+
+                        <!-- Logged Out: Identical buttons to Desktop Header -->
+                        <template v-else>
+                            <Link
+                                href="/login"
+                                @click="mobileMenuOpen = false"
+                                class="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-zinc-950 py-2.5 text-center text-xs font-semibold text-white shadow-xs transition-all hover:bg-zinc-800 active:scale-95 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+                            >
+                                <span>Login</span>
+                                <svg
+                                    class="h-3.5 w-3.5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                    />
+                                </svg>
+                            </Link>
+
+                            <button
+                                type="button"
+                                @click="
+                                    mobileMenuOpen = false;
+                                    router.post('/guest-login');
+                                "
+                                class="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border border-amber-300/80 bg-amber-500/10 py-2.5 text-center text-xs font-semibold text-amber-800 shadow-xs transition-all hover:bg-amber-500/20 active:scale-95 dark:border-amber-500/40 dark:bg-amber-950/40 dark:text-amber-300"
+                            >
+                                <span
+                                    >⚡ Instant 1-Day Guest Pass (No
+                                    Registration)</span
+                                >
+                                <span>→</span>
+                            </button>
+                        </template>
                     </div>
                 </nav>
             </div>

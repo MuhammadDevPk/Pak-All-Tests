@@ -5,6 +5,14 @@
 
 ---
 
+### Entry 25 — 2026-10-04: Automated PMA Long Course Subject Module Linking & Question Bank Repair
+- **Action**: Engineered background linking job `LinkPmaSubjectModulesJob` resolving PMA Academic questions to dedicated subject modules via `module_questions` pivot table, backed by `database/data/pma_academic_subject_map.json`.
+- **Impact**: Guaranteed 100% PMA Long Course questions are discoverable under respective subjects without requiring full database wipe or destructive re-imports.
+- **Files Changed**: `app/Jobs/LinkPmaSubjectModulesJob.php`, `tests/Feature/LinkPmaSubjectModulesTest.php`.
+- **Blast Radius**: `module_questions` pivot associations.
+- **Rollback Path**: `php artisan db:seed --class=PmaLongCourseSeeder`.
+- **Lessons**: Data repair workflows must be designed as resumable chunked background jobs rather than long-running web requests.
+
 ### Entry 24 — 2026-10-03: Real-Time Socratic AI Tutor Drawer & SSE Streaming Resiliency
 - **Action**: Hardened `AiTutorService` SSE pipeline with heartbeat events every 15s, auto-reconnection headers, client pointer-capture resize handles on mobile, and prompt length calibration.
 - **Impact**: Fixed streaming dropouts on mobile data connections and eliminated chat layout shift on candidate devices.

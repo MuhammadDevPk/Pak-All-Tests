@@ -2,11 +2,19 @@
 
 > **Status**: ACTIVE ROLLING RECORD (Strict Max 10 Entries Law)  
 > **Repository**: Pak-All-Tests (Laravel 13 • Vue 3 / Inertia 3 • PostgreSQL 16+ Supabase)  
-> **Archive**: Older entries (01–24) archived to [`.agent/MEMORY_ARCHIVE.md`](file:///MEMORY_ARCHIVE.md)
+> **Archive**: Older entries (01–25) archived to [`.agent/MEMORY_ARCHIVE.md`](file:///MEMORY_ARCHIVE.md)
 
 ---
 
-## 📜 Active Rolling Memory Log (Entries 25–34)
+## 📜 Active Rolling Memory Log (Entries 26–35)
+
+### Entry 35 — 2026-10-25: Welcome Landing Mobile Header Auth Synchronization & Button Parity
+- **Action**: (1) Fixed mobile menu drawer in `Welcome.vue` to respect `isAuthenticated`, displaying the full-width black pill button `Exam Dashboard →` when logged in instead of unconditionally rendering `Sign In` and `Get Started Free`; (2) unified logged-out button layout, styling, and text between desktop header and mobile menu drawer to both display `Login 🔒` (black pill) and `⚡ Instant 1-Day Guest Pass (No Registration) →` (amber border pill); (3) synchronized breakpoint gating to `md:flex` / `md:hidden` across desktop navigation and hamburger button; (4) verified complete CI pre-flight gate passing via `composer ci:check`.
+- **Impact**: Eliminates mobile authentication state mismatch where logged-in users saw sign-in buttons on small screens, and provides 100% visual and functional parity between desktop and mobile guest/login entry points.
+- **Files Changed**: `resources/js/pages/Welcome.vue`, `.agent/MEMORY.md`, `.agent/MEMORY_ARCHIVE.md`.
+- **Blast Radius**: Public landing page navigation header and mobile menu drawer.
+- **Rollback Path**: `git checkout HEAD~1 -- resources/js/pages/Welcome.vue`.
+- **Lessons**: Mobile navigation drawers must replicate desktop conditional auth branching (`v-if="isAuthenticated"` vs `v-else`) and reuse identical action button hierarchies rather than introducing disparate fallback CTA templates.
 
 ### Entry 34 — 2026-10-25: Mobile Responsive Layout Hardening for Test Player, Palette & AI Tutor
 - **Action**: (1) Fixed Question Palette popover in `McqPlayer.vue` on mobile viewports (<640px) by transitioning from left-overflowing `absolute right-0` to a centered `fixed inset-x-4 top-1/2 -translate-y-1/2 max-h-[85vh]` modal sheet with dimmed backdrop, preventing column/text truncation; (2) streamlined back navigation banner in `Dashboard.vue` with `shrink-0 whitespace-nowrap` on back button and `min-w-0 truncate` on active module title, eliminating multi-line text wrapping; (3) refactored `AiTutorWidget.vue` drawer positioning with reactive `windowWidth`, setting `left: 1rem; right: 1rem; width: auto; max-width: calc(100vw - 2rem)` on mobile screens to ensure symmetric 16px margins matching all other cards on the page, and hidden horizontal resize handles on touch viewports; (4) verified complete CI pre-flight gate passing via `composer ci:check`.
@@ -77,13 +85,5 @@
 - **Impact**: Enables friction-free candidate trial onboarding, gives admin instant switches to open/close paywalls, and deploys viral referral loops tailored for Pakistani competitive exam cohorts.
 - **Files Changed**: `app/Models/PlatformSetting.php`, `app/Services/GuestAuthService.php`, `app/Services/ReferralService.php`, `app/Services/SubscriptionManager.php`, `app/Models/Referral.php`, `app/Filament/Resources/PlatformSettings/PlatformSettingResource.php`, `resources/js/components/auth/GuestBanner.vue`, `resources/js/components/referral/ReferralCard.vue`, `tests/Feature/PaymentBypassTest.php`, `tests/Feature/GuestAccessTest.php`, `tests/Feature/ReferralSystemTest.php`.
 - **Blast Radius**: `SubscriptionManager`, `PlatformSetting`, `UserSubscription`, `User`, registration pipeline.
-- **Rollback Path**: `git checkout HEAD~1 -- app/ database/ migrations/ resources/js/ tests/`.
-- **Lessons**: Abuse prevention must balance security with student UX: strict IP checks falsely flag students on shared university Wi-Fi, necessitating composite device fingerprints and administrative review queues.
-
-### Entry 25 — 2026-10-04: Automated PMA Long Course Subject Module Linking & Question Bank Repair
-- **Action**: Engineered background linking job `LinkPmaSubjectModulesJob` resolving PMA Academic questions to dedicated subject modules via `module_questions` pivot table, backed by `database/data/pma_academic_subject_map.json`.
-- **Impact**: Guaranteed 100% PMA Long Course questions are discoverable under respective subjects without requiring full database wipe or destructive re-imports.
-- **Files Changed**: `app/Jobs/LinkPmaSubjectModulesJob.php`, `tests/Feature/LinkPmaSubjectModulesTest.php`.
-- **Blast Radius**: `module_questions` pivot associations.
 - **Rollback Path**: `php artisan db:seed --class=PmaLongCourseSeeder`.
-- **Lessons**: Data repair workflows must be designed as resumable chunked background jobs rather than long-running web requests.
+- **Lessons**: Abuse prevention must balance security with student UX: strict IP checks falsely flag students on shared university Wi-Fi, necessitating composite device fingerprints and administrative review queues.
