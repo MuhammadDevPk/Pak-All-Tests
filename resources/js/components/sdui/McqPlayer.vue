@@ -953,14 +953,14 @@ watch(
                     <!-- Backdrop to dismiss on outside click -->
                     <div
                         v-if="isNavigatorOpen"
-                        class="fixed inset-0 z-40 bg-black/10 backdrop-blur-xs"
+                        class="fixed inset-0 z-40 bg-black/30 backdrop-blur-xs transition-opacity sm:bg-black/15"
                         @click="isNavigatorOpen = false"
                     />
 
                     <!-- Collapsible Question Palette Modal / Popover -->
                     <div
                         v-if="isNavigatorOpen"
-                        class="absolute top-full right-0 z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-zinc-200/90 bg-white/98 p-4 shadow-2xl backdrop-blur-xl sm:w-96 dark:border-zinc-800 dark:bg-zinc-900/98"
+                        class="fixed inset-x-4 top-1/2 z-50 max-h-[85vh] -translate-y-1/2 overflow-y-auto rounded-2xl border border-zinc-200/90 bg-white/98 p-4 shadow-2xl backdrop-blur-xl sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:mt-2 sm:max-h-[80vh] sm:w-96 sm:translate-y-0 dark:border-zinc-800 dark:bg-zinc-900/98"
                     >
                         <!-- Header with Title & Close -->
                         <div
@@ -982,6 +982,7 @@ watch(
                                 type="button"
                                 @click="isNavigatorOpen = false"
                                 class="rounded-lg p-1 text-xs text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+                                aria-label="Close question palette"
                             >
                                 ✕
                             </button>
@@ -1012,7 +1013,7 @@ watch(
                             </div>
                             <button
                                 type="submit"
-                                class="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+                                class="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90"
                             >
                                 Jump ➔
                             </button>

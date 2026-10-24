@@ -50,6 +50,9 @@ let startH = 620;
 // Floating Action Button (FAB) Drag State
 const fabPosition = ref({ x: null, y: null });
 const isDraggingFab = ref(false);
+const windowWidth = ref(
+    typeof window !== 'undefined' ? window.innerWidth : 1024,
+);
 let fabDragStartX = 0;
 let fabDragStartY = 0;
 let fabInitialX = 0;
@@ -58,10 +61,12 @@ let fabHasMoved = false;
 const fabRef = ref(null);
 
 const fabStyle = computed(() => {
+    const isMobile = windowWidth.value < 640;
+
     if (fabPosition.value.x === null || fabPosition.value.y === null) {
         return {
-            bottom: '5.5rem',
-            right: '1.5rem',
+            bottom: isMobile ? '4.75rem' : '5.5rem',
+            right: isMobile ? '1rem' : '1.5rem',
         };
     }
 
@@ -74,6 +79,40 @@ const fabStyle = computed(() => {
 });
 
 const drawerStyle = computed(() => {
+    const isMobile = windowWidth.value < 640;
+
+    if (isMobile) {
+        if (isMaximized.value) {
+            return {
+                left: '1rem',
+                right: '1rem',
+                top: '1rem',
+                bottom: '1rem',
+                width: 'auto',
+                height: 'auto',
+                maxWidth: 'calc(100vw - 2rem)',
+                maxHeight: 'calc(100vh - 2rem)',
+            };
+        }
+
+        const fabY =
+            fabPosition.value.x !== null && fabPosition.value.y !== null
+                ? fabPosition.value.y
+                : null;
+        const bottomOffset =
+            fabY !== null ? Math.max(16, window.innerHeight - fabY + 12) : 136;
+
+        return {
+            left: '1rem',
+            right: '1rem',
+            width: 'auto',
+            height: `${drawerHeight.value}px`,
+            maxWidth: 'calc(100vw - 2rem)',
+            bottom: `${bottomOffset}px`,
+            maxHeight: `calc(100vh - ${bottomOffset + 24}px)`,
+        };
+    }
+
     const base = {
         width: `${drawerWidth.value}px`,
         height: `${drawerHeight.value}px`,
@@ -592,12 +631,18 @@ const initDrawerDimensions = () => {
         return;
     }
 
-    const maxW = Math.min(880, window.innerWidth - 24);
+    const isMobile = window.innerWidth < 640;
+    const maxW = isMobile
+        ? window.innerWidth - 32
+        : Math.min(880, window.innerWidth - 24);
 
-    drawerWidth.value = Math.min(440, maxW);
+    drawerWidth.value = isMobile ? maxW : Math.min(440, maxW);
     drawerHeight.value = Math.min(
         620,
-        Math.max(380, Math.floor(window.innerHeight * 0.78)),
+        Math.max(
+            340,
+            Math.floor(window.innerHeight * (isMobile ? 0.68 : 0.78)),
+        ),
     );
 };
 
@@ -606,10 +651,15 @@ const handleWindowResize = () => {
         return;
     }
 
-    const maxW = Math.min(880, window.innerWidth - 24);
-    const maxH = window.innerHeight - 110;
+    windowWidth.value = window.innerWidth;
 
-    if (drawerWidth.value > maxW) {
+    const isMobile = window.innerWidth < 640;
+    const maxW = isMobile
+        ? window.innerWidth - 32
+        : Math.min(880, window.innerWidth - 24);
+    const maxH = window.innerHeight - (isMobile ? 80 : 110);
+
+    if (drawerWidth.value > maxW || isMobile) {
         drawerWidth.value = maxW;
     }
 
@@ -671,9 +721,11 @@ const onPointerMove = (event) => {
 
     // deltaX: dragging LEFT (decreasing clientX) increases drawer width
     if (dragType === 'left' || dragType === 'corner') {
-        const deltaX = startPointerX - event.clientX;
-        const newW = Math.max(minW, Math.min(maxW, startW + deltaX));
-        drawerWidth.value = Math.round(newW);
+        if (windowWidth.value >= 640) {
+            const deltaX = startPointerX - event.clientX;
+            const newW = Math.max(minW, Math.min(maxW, startW + deltaX));
+            drawerWidth.value = Math.round(newW);
+        }
     }
 };
 
@@ -693,13 +745,17 @@ const onPointerUp = () => {
 const toggleMaximize = () => {
     isMaximized.value = !isMaximized.value;
 
+    const isMobile = windowWidth.value < 640;
+
     if (isMaximized.value) {
         savedDimensions.value = {
             width: drawerWidth.value,
             height: drawerHeight.value,
         };
-        drawerWidth.value = Math.min(860, window.innerWidth - 24);
-        drawerHeight.value = window.innerHeight - 105;
+        drawerWidth.value = isMobile
+            ? window.innerWidth - 32
+            : Math.min(860, window.innerWidth - 24);
+        drawerHeight.value = window.innerHeight - (isMobile ? 40 : 105);
     } else {
         drawerWidth.value = savedDimensions.value.width;
         drawerHeight.value = savedDimensions.value.height;
@@ -714,6 +770,10 @@ const onKeydown = (e) => {
 };
 
 onMounted(() => {
+    if (typeof window !== 'undefined') {
+        windowWidth.value = window.innerWidth;
+    }
+
     initDrawerDimensions();
 
     try {
@@ -929,7 +989,7 @@ const formatContent = (text) => {
             <!-- Left Resize & Swipe Handle (Mouse drag + Touch swipe) -->
             <div
                 @pointerdown="startResize('left', $event)"
-                class="group absolute top-4 bottom-4 -left-2 z-30 flex w-4 cursor-ew-resize touch-none items-center justify-center"
+                class="group absolute top-4 bottom-4 -left-2 z-30 hidden w-4 cursor-ew-resize touch-none items-center justify-center sm:flex"
                 title="Drag or swipe horizontally to resize width"
             >
                 <div
@@ -940,7 +1000,7 @@ const formatContent = (text) => {
             <!-- Top-Left Corner Resize Handle -->
             <div
                 @pointerdown="startResize('corner', $event)"
-                class="group absolute -top-2 -left-2 z-40 flex h-6 w-6 cursor-nwse-resize touch-none items-center justify-center"
+                class="group absolute -top-2 -left-2 z-40 hidden h-6 w-6 cursor-nwse-resize touch-none items-center justify-center sm:flex"
                 title="Drag or swipe diagonally to resize height and width"
             >
                 <div
@@ -976,7 +1036,7 @@ const formatContent = (text) => {
                         </div>
                         <div>
                             <h3
-                                class="text-sm font-bold tracking-tight text-foreground"
+                                class="max-w-[170px] truncate text-sm font-bold tracking-tight text-foreground sm:max-w-none"
                             >
                                 {{ domain.name }} Mentor
                             </h3>

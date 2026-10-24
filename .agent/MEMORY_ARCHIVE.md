@@ -5,6 +5,14 @@
 
 ---
 
+### Entry 24 — 2026-10-03: Real-Time Socratic AI Tutor Drawer & SSE Streaming Resiliency
+- **Action**: Hardened `AiTutorService` SSE pipeline with heartbeat events every 15s, auto-reconnection headers, client pointer-capture resize handles on mobile, and prompt length calibration.
+- **Impact**: Fixed streaming dropouts on mobile data connections and eliminated chat layout shift on candidate devices.
+- **Files Changed**: `app/Services/Ai/AiTutorService.php`, `resources/js/components/ai/AiTutorWidget.vue`, `tests/Feature/AiTutorChatTest.php`.
+- **Blast Radius**: `AiTutorService`, `AiTutorWidget.vue`.
+- **Rollback Path**: `git revert` SSE changes.
+- **Lessons**: Long-lived SSE connections over mobile networks require explicit server heartbeat comments (`: ping\n\n`) to prevent carrier gateway timeouts.
+
 ### Entry 23 — 2026-10-02: Server-Driven UI (SDUI) Dynamic Phase Layout Engine
 - **Action**: Implemented `PhaseStepperLayout.vue` and dynamic module schema ingestion within `SduiPayloadTransformer` to render military multi-phase screening paths (Screening $\rightarrow$ Physical $\rightarrow$ Academic $\rightarrow$ ISSB).
 - **Impact**: Permitted arbitrary curriculum branching without hardcoded frontend router changes.
