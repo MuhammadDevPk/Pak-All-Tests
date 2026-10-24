@@ -17,7 +17,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $title
  * @property string $content
  * @property string $embedding
- * @property array|null $metadata
+ * @property array<string, mixed>|null $metadata
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property float|null $similarity

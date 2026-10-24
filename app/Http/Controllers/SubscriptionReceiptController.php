@@ -24,10 +24,15 @@ class SubscriptionReceiptController extends Controller
         ]);
 
         $user = $request->user();
-        $domain = Domain::findOrFail($validated['domain_id']);
+        /** @var Domain $domain */
+        $domain = Domain::query()->findOrFail((int) $validated['domain_id']);
 
         // Store file securely in public storage disk
-        $path = $request->file('receipt_file')->store('receipts', 'public');
+        $file = $request->file('receipt_file');
+        $path = $file?->store('receipts', 'public');
+        if (! is_string($path)) {
+            return back()->withErrors(['receipt_file' => 'Failed to upload receipt file. Please try again.']);
+        }
 
         // Find existing subscription or create new
         $subscription = UserSubscription::firstOrNew([
