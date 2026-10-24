@@ -114,25 +114,17 @@ app/
 
 ---
 
-## 6. Sub-Architectural Rule Index (`.agent/rules/`)
+## 6. AI Harness & Operational Governance Index
 
-| Rule File | Core Scope & Mandatory Standards |
+| Harness File | Core Scope & Architectural Mandate |
 | :--- | :--- |
-| [`.agent/SYSTEM_RULES.md`](file:///.agent/SYSTEM_RULES.md) | Persona, Radical simplicity (YAGNI), zero assumptions, clean code hygiene, pure JavaScript in Vue. |
-| [`.agent/QA.md`](file:///.agent/QA.md) | Mandatory forensic line-by-line QA protocol: 6 defect hunting categories and real-user walkthroughs. |
-| [`.agent/UI_REFERENCE.md`](file:///.agent/UI_REFERENCE.md) | Design token memory, provisional palettes, typography, and reference screenshot registry. |
-| [`.agent/rules/ui_design.md`](file:///.agent/rules/ui_design.md) | SenseLab aesthetic, Anti-AI visual laws, no dead clicks, nested radius formula ($R_{\text{inner}} = \max(0, R_{\text{outer}} - P)$). |
-| [`.agent/rules/ai_tutor.md`](file:///.agent/rules/ai_tutor.md) | Socratic AI Tutor SSE streaming, intent routing, tool calling limits (max 2 rounds), zero correct answer leakage. |
-| [`.agent/rules/user_subscriptions.md`](file:///.agent/rules/user_subscriptions.md) | EasyPaisa / JazzCash / Bank Wire payment state machine (`pending` $\rightarrow$ `active`/`rejected`/`expired`). |
-| [`.agent/rules/domains.md`](file:///.agent/rules/domains.md) | PostgreSQL `ltree` paths, GiST index, sub-millisecond tree updates, Redis caching hooks. |
-| [`.agent/rules/domain_flows.md`](file:///.agent/rules/domain_flows.md) | Multi-phase exam workflows, prerequisites dependency evaluation, SDUI phase stepper synthesis. |
-| [`.agent/rules/content_modules.md`](file:///.agent/rules/content_modules.md) | Content module polymorphic types (`mcq_test`, `pdf_resource`, `subjective_prompt`), file handling. |
-| [`.agent/rules/question_bank.md`](file:///.agent/rules/question_bank.md) | Question schema, JSONB options, answer-key scrubbing, pgvector semantic search embedding storage. |
-| [`.agent/rules/database_performance.md`](file:///.agent/rules/database_performance.md) | Sub-millisecond queries, single round-trip batching, zero N+1, Sub-200ms transaction law, Cache-Pointer pattern. |
-| [`.agent/rules/security_gating.md`](file:///.agent/rules/security_gating.md) | Controller-level `SubscriptionManager` gating, Fortify auth, tenant isolation, CSRF protection. |
-| [`.agent/rules/testing_validation.md`](file:///.agent/rules/testing_validation.md) | Pest test execution, `DatabaseTransactions` (banning `migrate:fresh` in tests), zero dynamic properties. |
-| [`.agent/rules/sdui_blueprints.md`](file:///.agent/rules/sdui_blueprints.md) | SDUI JSON schema definitions, component registry contracts, server-side layout compilation. |
-| [`.agent/rules/mistakes.md`](file:///.agent/rules/mistakes.md) | Catalog of 11 known engineering pitfalls and historical root-cause analyses (RCA). |
+| [`/AGENTS.md`](file:///AGENTS.md) | Universal entry point importing core `.agent/` specifications. |
+| [`.agent/AGENT.md`](file:///.agent/AGENT.md) | Staff Systems Architect persona, Offensive Security Mindset, SDD plan reviews, destructive guardrails. |
+| [`.agent/PATTERNS.md`](file:///.agent/PATTERNS.md) | 3-Tier standards: Mandates (Legacy Baseline, Chaos Testing, Staff PR Review, 5-Phase Lifecycle), Conventions, and Observations. |
+| [`.agent/QUIRKS.md`](file:///.agent/QUIRKS.md) | Infrastructure and environment quirks: Supabase WAN latency, PgBouncer prepared statements, Azure buffers, and upload synchronization. |
+| [`.agent/MEMORY.md`](file:///.agent/MEMORY.md) | Active rolling memory log strictly adhering to the 10-entry maximum rule. |
+| [`.agent/LIBRARIAN.md`](file:///.agent/LIBRARIAN.md) | Governance indexer, documentation lifecycle manager, and automated harness auditing. |
+| [`.agent/UI_REFERENCE.md`](file:///.agent/UI_REFERENCE.md) | Visual tokens, anti-AI aesthetics, tactile controls, and typography specifications. |
 
 ---
 

@@ -1,17 +1,109 @@
-# .agent/PATTERNS.md — Engineering Patterns & Architectural Standards
+# .agent/PATTERNS.md — Engineering Patterns, Mandates, Conventions & Domain Intelligence
 
-> **Status**: STRICT IMPLEMENTATION CONTRACT  
-> **Applicability**: All backend feature development, frontend components, and refactors  
-> **Location**: `.agent/PATTERNS.md`
+> **Status**: MANDATORY ARCHITECTURAL CONTRACT — ALWAYS ACTIVE  
+> **Applicability**: All backend feature development, frontend components, database queries, and automated testing  
+> **Workspace**: Pak-All-Tests (Laravel 13 • Inertia 3 • Vue 3.5 • PostgreSQL 16+ Supabase)
 
 ---
 
-## 1. The Standardized Laravel Feature Lifecycle
+# 🏛️ Tier 1: MANDATES (Non-Negotiable Laws)
 
-> Cross-cutting principles: Thin Controllers, Dedicated FormRequests, Atomic Transactions — see [`.agent/SYSTEM_RULES.md § 4`](file:///.agent/SYSTEM_RULES.md).
+## 1. The Legacy Baseline Rule
+- **Scope Discipline**: Do **NOT** attempt to fix pre-existing lint errors, formatting warnings, or architectural flaws in files you did not touch in your current session.
+- **Zero Scope Creep**: Keep diffs surgically focused on the task at hand. Modifying untouched files to "clean them up" introduces unnecessary blast radius and risks CI breakage.
+- **Test Integrity**: If an existing legacy test fails, determine whether your changes broke the contract. **NEVER modify or weaken an existing test to cheat or force a green build.** Fix the regression in your implementation code.
 
-Every new feature, mutation, or API endpoint must strictly traverse the following 5-phase lifecycle:
+---
 
+## 2. Chaos Testing Protocol & Pest Testing Standards
+- **Adversarial Assertion Mandate**: Do **NOT** write simple, superficial "happy path" tests. Unit tests that only test idealized mocks conceal catastrophic production bugs.
+- **Simulate Real-World Chaos**: Tests must actively probe:
+  - Malformed and edge-case inputs (empty arrays, boundary numbers, negative integers, script tags).
+  - Race conditions and duplicate triggers (replay attacks on webhooks, concurrent exam submissions, double-clicks).
+  - Unauthorized traversal (BOLA/IDOR attacks where User A attempts to access User B's domain or team).
+  - State machine boundary violations (submitting answers after test expiry, re-activating expired passes).
+- **DatabaseTransactions Mandate**: All tests interacting with the database must use `Illuminate\Foundation\Testing\DatabaseTransactions`. Never use `RefreshDatabase` or `migrate:fresh` (which resets the remote Supabase database and drops extensions).
+- **Zero Dynamic Properties in Tests**: In Pest tests, never assign dynamic `$this->variable` properties that trigger PHP 8.2+ deprecation notices. Use typed helper functions, closures, or class properties.
+
+---
+
+## 3. Staff Engineer PR Review & Forensic QA Protocol (The 6 Defect Hunting Categories)
+Before marking any task complete or returning output to the user, conduct a strict, line-by-line **Staff Engineer PR Review** auditing every change against the **6 Defect Hunting Categories**:
+
+### A. Logical Bugs & Edge-Case Traps
+- **Falsy Zero Traps (`0 == false`)**: In JavaScript, `0`, `""`, and `null` are falsy. A check like `if (!module?.id)` silently aborts virtual test sessions where `module.id === 0` (e.g. Weak MCQs practice sets). A check like `if (!selectedOption)` treats option index `0` (Option A) as unselected. Always use explicit checks: `if (module?.id === undefined || module?.id === null)` and `if (selectedIndex !== null && selectedIndex !== undefined)`.
+- **Off-By-One & Slice Boundaries**: Verify 0-indexed array vs 1-indexed UI conversions (`idx + 1` vs `currentQuestionIndex`). Check slice limits in pagination: `questions.slice(start, start + pageSize)`.
+- **Inverted Precedence & Complex Ternary Operators**: Never chain more than 2 ternary operators in template expressions. Extract into computed properties or deterministic helper functions. Verify precedence between `??` (null/undefined only) and `||` (any falsy value).
+
+### B. Silent Bugs (The Stealth Killers)
+- **Silent Abortions & Unhandled Early Returns**: Never execute an early `return;` without resetting loading states (`isSubmitting = false`) or notifying the candidate.
+- **Swallowed Exceptions**: Never write empty `catch (err) {}` blocks that swallow network or parsing failures. Every `catch` must display a user-facing error toast/banner and log structured context.
+- **Loose PHP Type Juggling**: In PHP, string comparisons can juggle types: `(int) "malicious_string" === 0`. If option `0` is the correct answer, malicious strings score as correct. Always enforce strict typing: `if ($choice !== null && is_numeric($choice) && (int) $choice === (int) $correctIndex)`.
+- **Answer-Key Scrubbing Assurance**: Anti-cheat question banks scrub `correct_option_index` from client payloads. Client scoring must never assume the answer key exists in client state prior to server grading.
+
+### C. Loud Bugs (Runtime Crashes & HTTP 500s)
+- **Unchecked Null Dereferencing**: Always use nullsafe operators (`$module->domain?->id`, `props.module?.content_meta?.duration_minutes`) or explicit `instanceof` checks.
+- **Undefined Keys & Offsets**: Access array indices with `isset()` or null-coalescing (`??`).
+- **Malformed External API Handling**: External endpoints (OpenAI, Gemini, EasyPaisa, JazzCash) can return HTML error pages (Azure 502, Cloudflare 504). Always verify `$response->successful()` before calling `$response->json()`.
+
+### D. Incomplete Logic & Half-Baked Features
+- **Missing Endpoints for Frontend Actions**: Never leave a frontend button dispatching to an unimplemented route.
+- **Desynchronized Query Filters**: Ensure retrieval queries and grading queries share identical scopes (`where('is_active', true)`).
+- **Missing State Resets**: Switching test modes (Page View vs Focus Mode) must reset `selectedAnswers`, `showExplanations`, `forfeitedQuestions`, and timers.
+- **Dead Clicks**: Every interactive element must have `cursor-pointer`, distinct hover states, and active feedback (`active:scale-95`).
+
+### E. Security, Authorization & Privacy Leaks
+- **BOLA/IDOR Checks**: Verify server-side ownership of `domain_id`, `module_id`, and `user_id`.
+- **Log Hygiene**: Never log passwords, tokens, CNICs, mobile numbers, transaction IDs, or MCQ correct answers.
+
+### F. Scalability & Database Performance
+- **Zero N+1 Queries**: Eager-load relations (`with([...])`) on collections.
+- **Sub-200ms Transaction Law**: Database locks must complete in $<200\text{ms}$.
+
+---
+
+## 4. The 11 Historical Architectural Scars & RCA Preventions
+
+These 11 real-world engineering mistakes are preserved as permanent scar tissue to ensure they are never repeated:
+
+1. **Static Infinite Recursion in Form Schemas (PHP Memory Exhaustion)**:
+   - *Cause*: Calling a form schema method recursively inside a static array definition (`Repeater::make()->schema([...static::contentNodeFields()])`).
+   - *Fix*: Define explicit, non-recursive schemas for each hierarchy level (`phaseFields`, `tabFields`, `contentItemFields`).
+2. **Incorrect Filament Package Namespace Imports**:
+   - *Cause*: Importing from `Filament\Forms\Components` instead of modern modular namespaces.
+   - *Fix*: Use `Filament\Schemas\Components\Utilities\Get`, `Filament\Schemas\Components\Section`, and `Filament\Schemas\Components\Grid`.
+3. **Livewire Modal Payload Bloat (`CorruptComponentPayloadException`)**:
+   - *Cause*: Hydrating collections with $>20$ models into Livewire modal properties.
+   - *Fix*: Cache-Pointer Pattern: Write bulk dataset to Redis under UUID key (`import_batch_{uuid}`). Store **only** the 36-byte UUID in Livewire state.
+4. **Remote PostgreSQL WAN Latency & Single-Row Transaction Loops**:
+   - *Cause*: Sequential single-row queries inside `DB::transaction` across remote Supabase connections.
+   - *Fix*: Sub-200ms Transaction Law: Execute multi-row bulk `insert`, `insertOrIgnore`, and `upsert` operations.
+5. **Answer-Key Leakage on Egress**:
+   - *Cause*: Serializing Eloquent models directly to Inertia props without hiding `correct_option_index`.
+   - *Fix*: Always scrub answer keys on egress. Reveal correct answers only through server-side grading or explicit forfeiture endpoints (`/api/questions/{id}/reveal`).
+6. **Loose Equality in State Machines**:
+   - *Cause*: Using `==` on subscription statuses or payment TRX IDs, causing type coercion bugs.
+   - *Fix*: Strictly enforce `===` and typed Enums across all state transitions.
+7. **Premature Spaced Learning Graduation**:
+   - *Cause*: Marking a weak question as "mastered" after a single lucky guess.
+   - *Fix*: Two-Strike Mastery Protocol: Require two consecutive correct answers across distinct sessions before graduating from `user_weak_questions`.
+8. **Uncaught SSE Mobile Carrier Drops**:
+   - *Cause*: Cellular carriers silently closing idle TCP connections after 30–60s during AI tutoring.
+   - *Fix*: Emit server-side `: heartbeat\n\n` comments every 15s; implement client-side reconnect with `Last-Event-ID`.
+9. **Multibyte Urdu String Truncation**:
+   - *Cause*: Using single-byte string methods (`substr`, `strlen`) on Nastaliq/Urdu text.
+   - *Fix*: Strictly use `mb_substr`, `mb_strlen`, `mb_strtolower`, and Unicode `/u` regex flags.
+10. **Unsafe Column Drops in Same Release**:
+    - *Cause*: Dropping a column while running container instances still execute code reading that column.
+    - *Fix*: 3-Step Release Lifecycle: Add new column $\rightarrow$ Deploy sync/backfill $\rightarrow$ Drop old column in next sprint.
+11. **Bypassing Model Events with Query Builder Writes**:
+    - *Cause*: Using raw `DB::table('...')->insert()` bypasses Eloquent model events and table caching.
+    - *Fix*: Explicitly invalidate related table cache tags after direct query-builder bulk mutations.
+
+---
+
+## 5. Standardized 5-Phase Feature Lifecycle
+Every backend endpoint or feature mutation must strictly follow this structure:
 ```
 [ Incoming Request ]
         │
@@ -30,407 +122,119 @@ Every new feature, mutation, or API endpoint must strictly traverse the followin
         ▼ (Phase 5: Automated Verification)
   [ Pest Feature Test ]  tests/Feature/...
 ```
+- **Thin Controllers**: Controllers validate via FormRequest, delegate to a Service/Action, and return a response. Zero business logic or raw SQL inside controllers.
+- **Atomic Transactions**: Any multi-step mutation must execute inside `DB::transaction(...)`.
+- **Sub-200ms Transaction Law**: Database locks must complete in $<200\text{ms}$. Use multi-row bulk queries.
+- **Zero N+1 Queries**: Always eager-load relations (`with([...])`) on collections.
 
-### Phase 1: Dedicated FormRequest
-* **Rule**: Never call `$request->validate()` inside a controller. Always create a dedicated `FormRequest` class under `app/Http/Requests`.
-* **Standard**:
-  ```php
-  namespace App\Http\Requests;
+---
 
-  use Illuminate\Foundation\Http\FormRequest;
+# 📐 Tier 2: CONVENTIONS (Quality & Consistency Standards)
 
-  class SubmitAnswerRequest extends FormRequest
-  {
-      public function authorize(): bool
-      {
-          return $this->user() !== null;
-      }
+## 1. 🎨 Anti-AI Visual Laws & Mathematical Design System (SenseLab Aesthetic)
 
-      public function rules(): array
-      {
-          return [
-              'question_id' => ['required', 'integer', 'exists:question_bank,id'],
-              'selected_option_index' => ['required', 'integer', 'min:0', 'max:5'],
-              'time_spent_seconds' => ['nullable', 'integer', 'min:0'],
-          ];
-      }
-  }
+### A. The 4 Anti-AI Visual Laws
+1. **No Generic Violet Gradients**: Ban saturated violet-to-cyan mesh gradients (`bg-gradient-to-r from-purple-600 to-indigo-600`). Use deliberate, high-contrast, purpose-built palettes (emerald, deep zinc, slate, amber, military olive).
+2. **No Cardification of Plain Text**: Do NOT wrap every isolated paragraph or sentence in an elevated white card with heavy drop shadows. Group related functional items into disciplined semantic containers with subtle border strokes (`border border-border/60`).
+3. **Exactly One Solid Action CTA per View**: Every screen, section, or modal must have exactly **ONE** primary solid button. Secondary actions must be ghost, outline, or text links. Prevent visual decision paralysis.
+4. **Zero Dead Clicks**: Every interactive element (button, tab, link, icon) must be backed by a functional implementation. Banned: `href="#"`, `@click=""`, `@click="alert('Coming soon')"`.
+
+### B. The 8 AI Visual Symptoms vs Senior Designer Standards
+| AI Symptom | What AI Generates (BANNED ❌) | Senior Designer Standard (ENFORCED ✅) |
+|---|---|---|
+| **The "Eyebrow Pill"** | Generic capsule with 10% opacity tint and 100% saturated text. | Semantic typography hierarchy, crisp micro-labels (`text-xs font-mono uppercase tracking-wider text-muted-foreground`). |
+| **The Violet/Blue Gradient** | Low-opacity violet-to-blue background halos and hero gradient blobs. | Crisp background tones, clean slate surfaces, subtle grid meshes, high-contrast card boundaries. |
+| **"Cardification" of Everything** | Every paragraph, stat, and text block wrapped in floating cards. | Negative space, horizontal rule dividers (`border-b border-border/40`), cards reserved for discrete interactive entities. |
+| **Indecisive CTAs** | Equal-weight side-by-side buttons. | Strict hierarchy: **One primary solid CTA per viewport**. Secondary actions use ghost buttons or text links. |
+| **The 3-Card Lucide Grid** | Exactly 3 feature boxes with 2px Lucide icons in pastel squares. | Organic, data-dense layouts. Icons integrated directly alongside text without childish colored background squares. |
+| **Uniform Border Radius** | Blindly applying `rounded-xl` to outer cards, inner buttons, and badges alike. | **Mathematical Nested Radius Rule**: $R_{\text{inner}} = \max(0, R_{\text{outer}} - \text{Padding})$. |
+| **"Dead" Dark Mode** | Pure `#000000` pitch black with harsh 10% white borders. | **Rich Atmospheric Dark Mode**: Deep slate/navy undertones (`hsl(222, 47%, 7%)`), layered elevation surfaces, subtle borders. |
+| **Generic Sparkles / Badges** | Floating stars, sparkle emoji, vague "AI Powered" marketing badges. | Concrete capability metrics ("84% Accuracy", "Timed: 20 Mins", "Sub-second verification"). |
+
+### C. Mathematical Nested Border Radius Formula
+When placing elements inside containers, follow the concentric curvature formula:
+$$R_{\text{inner}} = \max(0, R_{\text{outer}} - \text{Padding})$$
+- Container with `rounded-2xl` (16px) and `p-4` (16px padding) $\rightarrow$ Inner element must have `rounded-none` (0px) or `rounded-sm` (2px–4px).
+- Container with `rounded-xl` (12px) and `p-2` (8px padding) $\rightarrow$ Inner button must have `rounded-sm` (4px).
+
+---
+
+## 2. 🤖 Socratic AI Tutor Architecture & Pedagogy
+
+### A. Non-Negotiable Rules
+1. **Zero-Knowledge standard**: NEVER reveal the correct option letter or text of an active MCQ.
+2. **Frontend language contract**: Pure JavaScript in Vue `<script setup>`. No TypeScript.
+3. **Tool Calling**: Maximum 2 tool-calling rounds per request. Tool available: `search_domain_knowledge` (cosine similarity search in pgvector).
+4. **Honesty over Hallucination**: If knowledge search returns empty, admit it honestly. Never fabricate military dates, age limits, or medical criteria.
+
+### B. Deterministic Intent Routing
+Evaluate in this exact order:
+1. **GREETING / SMALL TALK** (“hi”, “salam”, “aoa”) $\rightarrow$ Warm reply as domain mentor. **No tools**.
+2. **PROBLEM SOLVING / SOCRATIC** (“why wrong”, “hint”, “explain active question”) $\rightarrow$ Socratic pedagogy only. **No tools**.
+3. **EXAM STRUCTURE & ADVISING** (“what is ISSB?”, “what are WAT/SRT?”, “how to prepare?”) $\rightarrow$ Domain knowledge + `search_domain_knowledge` if needed.
+4. **KNOWLEDGE LOOKUP / SYLLABUS FACT** (“registration dates”, “medical standards”, “age limit”) $\rightarrow$ Call `search_domain_knowledge`.
+*Fallback*: If ambiguous and `active_mcq` is present $\rightarrow$ treat as Socratic.
+
+### C. 3-Level Pedagogical Ladder
+- **Level 1 (Nudge)**: Point out a subtle detail or pattern in the question stem without referencing options.
+- **Level 2 (Elimination)**: Guide candidate to eliminate one clearly incorrect distractor by explaining why its underlying logic fails.
+- **Level 3 (Conceptual Breakdown)**: Explain the core governing rule (grammar rule, physics formula, number series pattern) and ask candidate to apply it.
+
+---
+
+## 3. 📦 Subsystem Domain Contracts
+
+### A. `content_modules` (Polymorphic Modalities)
+- `module_type`: `mcq_test` (timed test engine), `pdf_resource` (past papers), `subjective_prompt` (study accordion).
+- `dashboard_section`: `academic`, `intelligence`, `physical`, `medical`, `interview`.
+- `display_mode`: `grid`, `stepper`, `list`.
+
+### B. `question_bank` (Schema & Scrubbing)
+- `payload` (`jsonb`): contains `options` (array of strings), `explanation`, `tags`.
+- **Egress Scrubbing**: The column or attribute `correct_option_index` must NEVER be serialized in public payloads.
+
+### C. `user_subscriptions` (Payment State Machine)
+- States: `pending` $\rightarrow$ `active` / `rejected` / `expired`.
+- Bypasses: Governed by `PlatformSetting::isPaymentBypassEnabled()`.
+- Idempotency: Webhook IPN notifications must check unique `transaction_id` before mutations.
+
+### D. `domains` & `domain_flows`
+- Hierarchy: Implemented via PostgreSQL `ltree` extension for sub-millisecond tree traversals.
+- Workflows: Multi-phase screening flows specify `prerequisites` (`jsonb`) governing node unlocking.
+
+---
+
+## 4. Code Style & Tooling Commands
+- **Formatting**: Laravel Pint (`preset: "laravel"`):
+  ```bash
+  ./vendor/bin/pint --dirty
+  # Verification:
+  ./vendor/bin/pint --dirty --test
   ```
-
-### Phase 2: Thin Controller
-* **Rule**: Controllers must contain **zero business logic, zero raw SQL, and zero complex transformations**.
-* Controllers only:
-  1. Receive the validated `FormRequest`.
-  2. Invoke the corresponding `Service` or `Action`.
-  3. Return an Inertia page render, redirect, or typed `JsonResponse`.
-* **Standard**:
-  ```php
-  namespace App\Http\Controllers;
-
-  use App\Http\Requests\SubmitAnswerRequest;
-  use App\Models\ContentModule;
-  use App\Services\ExamGradingService;
-  use Illuminate\Http\JsonResponse;
-
-  class McqExecutionController extends Controller
-  {
-      public function __invoke(
-          SubmitAnswerRequest $request,
-          ContentModule $module,
-          ExamGradingService $gradingService
-      ): JsonResponse {
-          $result = $gradingService->gradeSubmission(
-              user: $request->user(),
-              module: $module,
-              data: $request->validated()
-          );
-
-          return response()->json([
-              'status' => 'success',
-              'result' => $result,
-          ]);
-      }
-  }
+- **Static Analysis**: Larastan / PHPStan Level 6:
+  ```bash
+  ./vendor/bin/phpstan analyse <modified-files>
   ```
-
-### Phase 3: Service Layer & Atomic Transactions
-* **Rule**: All mutations spanning multiple tables, status updates, or third-party interactions must be encapsulated in a dedicated service method wrapped inside `DB::transaction(...)`.
-* **Standard**:
-  ```php
-  namespace App\Services;
-
-  use App\Models\ContentModule;
-  use App\Models\User;
-  use Illuminate\Support\Facades\DB;
-
-  class ExamGradingService
-  {
-      public function gradeSubmission(User $user, ContentModule $module, array $data): array
-      {
-          return DB::transaction(function () use ($user, $module, $data) {
-              // 1. Calculate score & evaluation
-              // 2. Persist exam attempt record
-              // 3. Update candidate domain progress
-              // 4. Return clean result array
-              return [
-                  'score' => 100,
-                  'is_correct' => true,
-              ];
-          });
-      }
-  }
+- **Test Suite**: Pest test suite:
+  ```bash
+  ./vendor/bin/pest <path/to/Test.php>
   ```
-
-### Phase 4: Clean Inertia / SDUI / Resource Response
-* **Rule**: Data passed to the frontend must be strictly shaped into clean DTOs, resources, or valid SDUI schemas. Never expose raw password hashes, secret keys, or unneeded database columns to the client.
-
-### Phase 5: Pest Automated Feature Test
-* **Rule**: A feature is NOT done until a Pest test covers:
-  1. Happy path (200 OK / redirect).
-  2. Unauthorized / unauthenticated path (401 / 403 Forbidden).
-  3. Validation error path (422 Unprocessable Entity).
-  4. Accurate database state assertions (`assertDatabaseHas`).
+- **Control Flow**: Early returns and guard clauses (max 2 indentation levels).
+- **Strict Typing**: Head every new PHP file with `declare(strict_types=1);`.
+- **Pure JavaScript in Vue**: All components in `resources/js/` must use standard JavaScript `<script setup>`. Never introduce TypeScript syntax.
+- **Financial Precision**: Store PKR amounts as integer paisa (never float). Store timestamps in UTC, format for PKT at presentation layer.
 
 ---
 
-## 2. Interactive UI Affordances & Anti-Patterns
-
-> Canonical rule: No dead clicks — see [`.agent/rules/ui_design.md § 1`](file:///.agent/rules/ui_design.md).
-
-### Production Anti-Pattern Catalog (10 Cardinal Sins)
-1. **Unread Source Additions**: Adding or altering rules in any governance file without reading the entire file first.
-2. **Silent Catch-and-Log**: Catching an exception and logging it without re-throwing, degrading gracefully, or presenting explicit feedback.
-3. **`env()` Outside `config/`**: Calling `env()` in controllers, models, or services; breaks silently whenever `config:cache` is compiled.
-4. **DDL Drops in Tests**: Running `migrate:fresh` or DDL drops against remote database connections; strictly enforce `DatabaseTransactions` (see `.agent/rules/testing_validation.md § 1`).
-5. **Database Queries in Presentation**: Querying models or relations inside a Blade directive or Vue computed property.
-6. **Filament N+1 Lazy Loading**: Defining table columns that traverse relations without `$table->modifyQueryUsing(fn ($q) => $q->with([...]))`.
-7. **Unparameterized `DB::raw()`**: Concatenating variables into raw SQL strings instead of using parameter bindings (`?` or `:binding`).
-8. **Livewire Mass Hydration**: Passing collections or arrays with $>20$ items directly to Livewire component state; use the Cache-Pointer pattern (see `.agent/rules/database_performance.md § 4`).
-9. **Client-Trusted Time**: Trusting client timestamps for exam timers or session expiry; server UTC is the sole clock.
-10. **File Extension Naivety**: Validating uploaded documents solely by client extension (`$file->getClientOriginalExtension()`) without verifying MIME magic bytes (`finfo`).
-
----
-
-## 3. Computational Limits & Loop Architecture
-
-> Canonical rule: Zero N+1 / eager-loading discipline — see [`.agent/rules/database_performance.md § 1`](file:///.agent/rules/database_performance.md).
-
-To guarantee sub-millisecond execution and memory-light operation across thousands of concurrent test takers:
-
-### A. Maximum 2 Indentation Levels
-Nested code creates cognitive overload and hides performance bugs. Refactor using early returns (guard clauses), helper methods, or collection pipelines:
-
-```php
-// ❌ REJECTED: 4 levels of indentation
-foreach ($domains as $domain) {
-    if ($domain->is_active) {
-        foreach ($domain->modules as $module) {
-            if ($module->module_type === 'mock_test') {
-                $results[] = $module;
-            }
-        }
-    }
-}
-
-// ✅ ACCEPTED: Clean pipeline / max 2 levels
-return $domains
-    ->where('is_active', true)
-    ->flatMap->modules
-    ->where('module_type', 'mock_test');
-```
-
-### B. Ban Inner $O(N^2)$ Scans
-* Never execute database queries inside a loop.
-* Never execute in-memory collection searches inside a loop (e.g. `$items->firstWhere('id', $id)` inside a `foreach`).
-* **The Associative Map Lookup Standard ($O(1)$)**: Always index collections by key before looping:
-  ```php
-  // ❌ BANNED: O(N * M) quadratic scan
-  foreach ($questions as $question) {
-      $userAnswer = $answers->firstWhere('question_id', $question->id);
-  }
-
-  // ✅ ENFORCED: O(N + M) linear execution via hash-map
-  $answersByQuestionId = $answers->keyBy('question_id'); // O(M)
-  foreach ($questions as $question) {
-      $userAnswer = $answersByQuestionId[$question->id] ?? null; // O(1)
-  }
-  ```
-
----
-
-## 4. Remote Database & Connection Pooling Transaction Laws
-
-> Canonical rule: Sub-200ms transaction law — see [`.agent/rules/database_performance.md § 2`](file:///.agent/rules/database_performance.md).
-
-All multi-record insertions and pivot attachments must use bulk `insert()` or `insertOrIgnore()` to guarantee all transaction locks complete in under 200ms across remote Supabase connections.
-
----
-
-## 5. Filament & Livewire State Hydration Protection
-
-> Canonical pattern: Cache-Pointer pattern — see [`.agent/rules/database_performance.md § 4`](file:///.agent/rules/database_performance.md).
-
-Always store heavy datasets in Redis under a UUID key and pass only the 36-byte UUID `$batchId` into Livewire form state.
-
----
-
-## 6. PostgreSQL Constraint Integrity & Nullable Column Safety
-
-PostgreSQL enforces strict standard SQL constraint evaluations:
-
-1. **The Empty String vs NULL Law**:
-   - In PostgreSQL, multiple `NULL` values in a `UNIQUE` column are allowed.
-   - Empty string `""` is a distinct character value. Passing `""` to two rows violates the unique constraint!
-   - **Rule**: Any nullable unique column (`code`, `slug`, `sku`, `phone`) must strictly sanitize empty strings to `null`:
-     ```php
-     $data['code'] = filled($input) ? trim($input) : null;
-     ```
-2. **Pivot Primary Key Safety**:
-   - Composite keys (e.g. `module_questions: [module_id, question_id]`) must be guarded using `ON CONFLICT DO NOTHING` via `DB::table(...)->insertOrIgnore(...)` or Eloquent `syncWithoutDetaching()`.
-
----
-
-## 7. Resilient Text Ingestion, Deduplication & Tokenization
-
-When accepting user-pasted text, past papers, or documents:
-
-1. **Ban Rigid Single Regexes**:
-   - Real-world text formats vary widely (inline options `a) b) c) d)` on one line, bracketed `(A)` / `[A]`, uppercase/lowercase, trailing answer keys).
-   - Use multi-pattern tokenizers that normalize inline options and brackets into standard tokens before extraction.
-2. **Unparsed Line Diagnostics**:
-   - Ingestion parsers must NEVER silently discard unrecognized lines.
-   - Always return an `unparsed_lines` diagnostic collection to surface yellow alerts in the UI so the user can review skipped content.
-3. **Idempotency & Normalized Deduplication (SHA-256)**:
-   - Calculate normalized content hashes:
-     ```php
-     $hash = hash('sha256', Str::lower(preg_replace('/[^a-z0-9]/', '', $questionText)));
-     ```
-   - If an identical question already exists in `question_bank`, reuse the existing record ID and link it to the newly requested domain/module without duplicating database rows or polluting vector search.
-
----
-
-## 8. Zero-Token Architecture (Pure Code vs AI Cost Separation)
-
-Never spend AI tokens on tasks that pure deterministic code can solve in milliseconds for $0.
-
-| Scenario | Input Data | Architecture Strategy | Token Cost |
-| :--- | :--- | :--- | :--- |
-| **Complete Questions** | Question text + Options A–D + Answer key | **Pure PHP Tokenizer** (0.01s regex parsing) | **0 Tokens ($0.00)** |
-| **Missing Options** | Question text + Correct Answer only | **AI Distractor Engine** (LLM generates 3 wrong choices + rationale) | **Minimal (~75 tokens/Q)** |
-| **Topic / Notes** | Chapter text, syllabus, or raw notes | **Full AI Generator** (LLM drafts questions, choices, and explanations) | **Standard (~150 tokens/Q)** |
-
-* **The 10-Question Chunking Rule**: When invoking LLMs, strictly chunk requests into micro-batches of $\le$ 10 questions. Never ask for 50+ questions in a single prompt to eliminate output token truncation and JSON parse failures.
-
----
-
-## 9. Correctness & Concurrency Patterns
-
-### A. Optimistic vs Pessimistic Locking
-1. **Optimistic Locking (`lock_version`)**:
-   - Mandatory for candidate exam session state and subscription records.
-   - Models maintain an integer `lock_version` column:
-     ```php
-     $affected = UserSubscription::where('id', $sub->id)
-         ->where('lock_version', $sub->lock_version)
-         ->update([
-             'status' => 'active',
-             'lock_version' => $sub->lock_version + 1,
-         ]);
-     if ($affected === 0) {
-         throw new ConcurrencyException("Subscription was modified concurrently.");
-     }
-     ```
-2. **Pessimistic Locking (`lockForUpdate`) & PgBouncer Caveat**:
-   - Use `lockForUpdate()` ONLY for high-contention financial balance or coupon allocations.
-   - **PgBouncer Law**: When running in transaction-pooling mode (Supabase port 6543), row locks MUST be released in $<200\text{ms}$. Never execute third-party HTTP calls (WhatsApp, EasyPaisa) while holding a `lockForUpdate()`.
-
-### B. Race Condition Prevention Catalog
-- **Double-Submit Answers**: Guarded by a unique composite index on `(exam_attempt_id, question_id)` in the grading database.
-- **Double-Webhook Delivery**: Guaranteed idempotent by writing `(provider, trx_id)` to `webhook_events` with an immediate `insertOrIgnore` before executing transitions.
-- **Duplicate WhatsApp Notification**: Check Redis key `lock:notification:{type}:{user_id}:{entity_id}` before queue dispatch.
-- **Double Subscription Activation**: Guarded by atomic database state machine transitions (`WHERE status = 'pending'`).
-
-### C. Time-Zone Contract
-- **Storage**: All database timestamps (`created_at`, `starts_at`, `expires_at`) MUST be stored in UTC (`timestamp with time zone` or standard UTC).
-- **Presentation**: All candidate-facing dates, countdowns, and exam schedules are converted to Pakistan Standard Time (PKT, UTC+5) strictly at the presentation layer.
-- **Server-Authoritative Clock**: Exam timers calculate remaining duration as:
-  $$\text{Remaining} = \text{session\_started\_at} + \text{duration\_seconds} - \text{NOW()}_{\text{UTC}}$$
-  Client time is an untrusted hint used only for visual CSS animations.
-
----
-
-## 10. Security Patterns (OWASP Top 10 for Pak-All-Tests)
-
-### A. IDOR Defense & Server-Side Re-Resolution
-- **Never trust client-supplied entity IDs**: A candidate passing `/api/modules/{module}/questions` must have their active domain access verified against `SubscriptionManager::hasActiveAccess($user, $module->domain)`.
-- If a candidate accesses a module or question outside their active subscription, return HTTP 404 (never 403) to prevent resource ID enumeration.
-
-### B. Mass Assignment & Property Whitelisting
-- **Ban `$guarded = []`**: Every model MUST explicitly declare `$fillable = [...]`.
-- Form requests must validate every incoming property with strict types (`'integer'`, `'string'`, `'boolean'`).
-
-### C. Output Escaping, `v-html` Ban & AI Markdown Sanitization
-- **Strict Ban on Raw `v-html`**: In Vue components, rendering user input via `v-html` is strictly prohibited.
-- **AI Markdown Rendering**: Responses from `AiTutorService` must be parsed through a strict Markdown sanitizer (stripping `<script>`, `<iframe>`, `javascript:` URIs) before DOM injection.
-
-### D. File Upload Validation & Storage Isolation
-- When handling past-paper PDFs or payment receipts:
-  ```php
-  $request->validate([
-      'receipt' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'],
-  ]);
-  ```
-- Verify MIME magic bytes via `finfo_file()` on the temporary file before moving to permanent disk.
-- Store uploaded receipts in an unindexed, non-executable storage bucket with randomized UUID filenames (`Str::uuid() . '.' . $ext`).
-
-### E. Rate Limiting Hierarchy
-Every public and candidate endpoint must enforce rate limiting at 3 distinct boundaries:
-1. **Per-User**: `throttle:60,1` (keyed by `$request->user()->id`).
-2. **Per-IP**: `throttle:120,1` (for public endpoints).
-3. **Per-Domain / Resource**: `throttle:15,1` for resource-intensive AI tutoring SSE requests (`/api/domains/{domainSlug}/ai-tutor/ask`).
-
-### F. HMAC Verification & Timing-Safe Comparison
-All incoming webhooks (EasyPaisa, JazzCash) must verify signatures using `hash_equals`:
-```php
-$expected = hash_hmac('sha256', $request->getContent(), config('services.easypaisa.secret'));
-if (! hash_equals($expected, $request->header('X-Signature', ''))) {
-    abort(401, 'Invalid webhook signature.');
-}
-```
-
-### G. SSRF Defense & Secrets Hygiene
-- External fetch operations (e.g. PDF previews from Google Drive) must validate target URLs against an explicit domain whitelist. Never fetch arbitrary user-supplied URLs.
-- **Secrets Hygiene**: Never call `env()` outside `config/` files. Never pass `config('services.openai.api_key')` to Inertia frontend properties.
-
----
-
-## 11. Performance & Scalability Patterns
-
-### A. Indexing Discipline
-1. **Composite Index Left-Column Rule**: Place the highest cardinality or equality-filtered column first (`domain_id, is_active, created_at`).
-2. **Partial Indexes for Active Records**:
-   ```sql
-   CREATE INDEX idx_active_modules ON content_modules (domain_id, sort_order) WHERE is_active = true;
-   ```
-3. **PostgreSQL Extensions**:
-   - `ltree`: Indexed using GiST (`USING gist (path)`).
-   - `pgvector`: Indexed using HNSW cosine distance (`USING hnsw (embedding vector_cosine_ops)`).
-
-### B. Pagination & Mutation Memory Limits
-- Candidate-visible lists exceeding 100 rows must use `cursorPaginate()` to prevent PostgreSQL offset scanning degradation.
-- When mutating bulk datasets, always use `chunkById(100)` instead of `chunk(100)` to prevent duplicate or skipped records during primary key re-indexing.
-
-### C. Redis Namespacing & Thundering Herd Defense
-- All Redis cache keys must follow the structured namespace:
-  `pak:{domainSlug}:{entity}:{id}`
-- Set randomized jittered TTLs (e.g. `3600 + rand(0, 300)`) on high-traffic keys to prevent simultaneous cache expiry.
-- Use `Cache::lock("lock:pak:sdui:{$domain}", 10)->get(...)` when re-compiling heavy SDUI page trees.
-
-### D. Preloading Filament Relationships
-In Filament table resources, never let repeaters or columns execute lazy-loaded queries. Always eager-load:
-```php
-public static function table(Table $table): Table
-{
-    return $table->modifyQueryUsing(fn ($query) => $query->with(['domain', 'questions']));
-}
-```
-
----
-
-## 12. Reliability Patterns
-
-### A. Outbound HTTP Retries & Exponential Backoff
-All outbound HTTP client requests to AI providers or payment gateways must specify retry logic with jitter:
-```php
-Http::timeout(5)
-    ->retry(3, 100, throw: false)
-    ->post($endpoint, $payload);
-```
-
-### B. Dead-Letter Queue & Mandatory `failed()` Hook
-Every queued Job in `app/Jobs` MUST implement the `failed()` callback to record telemetry and avoid silent data loss:
-```php
-public function failed(?Throwable $exception): void
-{
-    Log::error('Queue job failed permanently', [
-        'job' => static::class,
-        'user_id' => $this->userId,
-        'error' => $exception?->getMessage(),
-    ]);
-}
-```
-
-### C. Outbox Pattern for Transactional Notifications
-Never invoke external notification APIs directly inside database transactions. Write a record to a `notification_outbox` table within the transaction, and let an asynchronous queue worker read and dispatch notifications.
-
----
-
-## 13. Testing Rigor & Verification Standards
-
-> Canonical rule: Pest test transaction rule — see [`.agent/rules/testing_validation.md § 1`](file:///.agent/rules/testing_validation.md).
-
-### A. Boundary Condition Testing
-Every feature test for timed tests or grading must test 3 critical points:
-1. **0 Seconds**: Immediately after start.
-2. **Exactly $N$ Seconds**: The exact deadline boundary.
-3. **$N + 1$ Seconds**: 1 second past deadline (must be rejected or auto-submitted).
-
-### B. Concurrency & Security Testing
-- Write tests simulating concurrent double-submissions to verify transaction locks and idempotency.
-- Write tests verifying cross-domain access attempts return 404/403.
-- Use `Carbon::setTestNow()` or Pest `travel()` to verify subscription expiration and exam timeout edge cases.
-
-### C. Faked Externals
-- In test environments, never make real network calls. All tests must verify `Http::fake()` setups and assert mock payloads:
-  ```php
-  Http::fake([
-      'api.openai.com/*' => Http::response(['choices' => [...]], 200),
-  ]);
-  ```
-
----
-
-## 14. Code Hygiene, Maintainability & Craftsmanship
-
-> Canonical principles: Clean Code, Strict Equality, and Zero Dynamic Properties — see [`.agent/SYSTEM_RULES.md § 4`](file:///.agent/SYSTEM_RULES.md).  
-> Canonical principle: Frontend language contract (Pure JavaScript in Vue) — see [`.agent/SYSTEM_RULES.md § 6`](file:///.agent/SYSTEM_RULES.md).
+# 🔍 Tier 3: OBSERVATIONS (Domain Intelligence)
+
+### 1. Pakistani Competitive Examination Curricula
+- **PMA Long Course**: Verbal Intelligence, Non-Verbal Intelligence (Matrix, Series, Odd-One-Out), Academic (English, Math, Pak Studies, Islamiat, General Knowledge).
+- **ISSB (Inter Services Selection Board)**: Word Association Tests (WAT - 10s per word), Sentence Completion (Urdu & English), Situation Reaction Tests (SRT), Group Discussions, Outdoor Tasks (PGT/HGT), and Psychological Interviews.
+- **CSS / PMS Competitive Exams**: Compulsory subjects (Essay, Précis, General Science & Ability, Current Affairs, Pakistan Affairs, Islamic Studies).
+- **MDCAT / Medical Entry**: Biology, Chemistry, Physics, English, Logical Reasoning.
+
+### 2. Socratic Roman Urdu Communication Guidelines
+- When candidates communicate in Roman Urdu, respond naturally in respectful, encouraging Roman Urdu (“Bohat acha sawal hai,” “Zara is option par ghor karein,” “Sawal mein pattern dekhein”).
+- Keep tone authoritative yet mentor-like. Avoid overly complex English jargon when explaining foundational concepts.
+- Never use markdown hashtags (`#`) inside chat bubbles; use bold text for key terms.
