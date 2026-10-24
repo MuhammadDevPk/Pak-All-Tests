@@ -28,7 +28,7 @@ class GuestLoginController extends Controller
         $domainSlug = $request->input('domain_slug');
 
         if ($domainSlug) {
-            $domain = Domain::query()->where('slug', $domainSlug)->where('is_active', true)->first();
+            $domain = Domain::query()->eligibleForSubscription()->where('slug', $domainSlug)->first();
             if ($domain) {
                 // Grant initial domain access
                 $this->subscriptionManager->grantFreeTrial($guest, $domain, 1);

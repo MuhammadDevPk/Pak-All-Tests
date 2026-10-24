@@ -42,9 +42,9 @@ class ConvertGuestAccountController extends Controller
 
         $this->guestAuthService->convertGuestToPermanent($user, $validated);
 
-        // Grant standard 7-day free trial on active domains
-        $activeDomains = Domain::query()->where('is_active', true)->get();
-        foreach ($activeDomains as $domain) {
+        // Grant standard 7-day free trial on interactive domain flows
+        $eligibleDomains = Domain::query()->eligibleForSubscription()->get();
+        foreach ($eligibleDomains as $domain) {
             $this->subscriptionManager->grantFreeTrial($user, $domain, 7);
         }
 
@@ -54,10 +54,11 @@ class ConvertGuestAccountController extends Controller
 
         if ($refCode) {
             $targetDomain = $refDomainSlug
-                ? Domain::query()->where('slug', $refDomainSlug)->first()
-                : $activeDomains->first();
+                ? Domain::query()->has('flow')->where('slug', $refDomainSlug)->where('is_active', true)->first()
+                : Domain::query()->has('flow')->where('is_active', true)->first();
 
             if ($targetDomain) {
+                $this->subscriptionManager->grantFreeTrial($user, $targetDomain, 7);
                 $result = $this->referralService->processReferral(
                     childUser: $user,
                     referralCode: (string) $refCode,

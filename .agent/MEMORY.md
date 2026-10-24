@@ -2,19 +2,19 @@
 
 > **Status**: ACTIVE ROLLING RECORD (Strict Max 10 Entries Law)  
 > **Repository**: Pak-All-Tests (Laravel 13 • Vue 3 / Inertia 3 • PostgreSQL 16+ Supabase)  
-> **Archive**: Older entries (01–20) archived to [`.agent/MEMORY_ARCHIVE.md`](file:///MEMORY_ARCHIVE.md)
+> **Archive**: Older entries (01–21) archived to [`.agent/MEMORY_ARCHIVE.md`](file:///MEMORY_ARCHIVE.md)
 
 ---
 
-## 📜 Active Rolling Memory Log (Entries 21–30)
+## 📜 Active Rolling Memory Log (Entries 22–31)
 
-### Entry 30 — 2026-10-24: Filament Admin Panel Guard Isolation & 403 Guest Trap Remediation
-- **Action**: Configured an isolated `'admin'` authentication guard in `config/auth.php` and bound it to Filament via `->authGuard('admin')` in `AdminPanelProvider.php`; replaced Filament's default base `Authenticate` middleware with custom `App\Http\Middleware\Filament\Authenticate` that detects guest accounts (`$user->is_guest`), terminates the invalid panel session, and redirects cleanly to `/admin/login` (with a seamless Single Sign-On bridge for verified `web` administrators); changed `GuestAuthService` to use session-only authentication (`remember: false`) instead of dropping persistent 5-year cookies; and added defensive route-bypass in `AutoAuthenticateGuest` for all `/admin*` paths.
-- **Impact**: Completely eliminates the 403 Forbidden dead-end and login redirect loop when administrators or students with lingering guest sessions access `/admin`, presenting the admin login form immediately while preserving strict 403 gating for suspended accounts and keeping ephemeral student sessions completely isolated from administrative surfaces.
-- **Files Changed**: `config/auth.php`, `app/Providers/Filament/AdminPanelProvider.php`, `app/Http/Middleware/Filament/Authenticate.php`, `app/Services/GuestAuthService.php`, `app/Http/Middleware/AutoAuthenticateGuest.php`, `tests/Feature/FilamentAdminAccessTest.php`, `.agent/ARCHITECTURE.md`, `.agent/MEMORY.md`.
-- **Blast Radius**: Filament administrative authentication pipeline, `AdminPanelProvider`, `AutoAuthenticateGuest`, `GuestAuthService`.
-- **Rollback Path**: `git checkout main -- config/auth.php app/Providers/Filament/AdminPanelProvider.php app/Services/GuestAuthService.php app/Http/Middleware/AutoAuthenticateGuest.php && rm -rf app/Http/Middleware/Filament tests/Feature/FilamentAdminAccessTest.php`.
-- **Lessons**: Administrative backends and ephemeral public guest sessions must never share the same default session authentication guard; any custom auto-login middleware must explicitly exempt administrative URI patterns, and guest authentication must remain strictly ephemeral (`remember: false`).
+### Entry 31 — 2026-10-25: On-Demand Flow-Scoped Subscriptions & Filament Candidate Tabs
+- **Action**: (1) Added `scopeEligibleForSubscription` to `Domain` model filtering out non-flow parent categories (`Pakistan Army`, `Civil Services`, `Armed Forces`, `Pakistan Air Force`); (2) scoped user registration (`CreateNewUser`), account conversion (`ConvertGuestAccountController`), and guest authentication (`GuestLoginController`, `AutoAuthenticateGuest`) so domain trials attach strictly to leaf interactive flows (`PMA Long Course Initial`, `GD Pilot`, `CSS Competitive Exam 2027`); (3) implemented on-demand 1-day pass provisioning in `DomainDashboardController` when guests visit interactive domain flows; (4) added `registered` and `guests` filter tabs with dynamic counts and rich candidate metrics (Candidate Type badge, Referrals count badge, Account Age) to Filament `UserSubscriptionsTable`; (5) migrated database to safely delete 11 orphan parent-category subscriptions.
+- **Impact**: Eliminates over-provisioning of redundant category subscriptions, guarantees guests receive trials purely on-demand when accessing interactive domains, and gives administrators clear visibility and segregation between paying registered candidates and ephemeral guest users.
+- **Files Changed**: `app/Models/Domain.php`, `app/Actions/Fortify/CreateNewUser.php`, `app/Http/Controllers/Auth/ConvertGuestAccountController.php`, `app/Http/Controllers/Auth/GuestLoginController.php`, `app/Http/Middleware/AutoAuthenticateGuest.php`, `app/Http/Controllers/DomainDashboardController.php`, `app/Filament/Resources/UserSubscriptions/Pages/ListUserSubscriptions.php`, `app/Filament/Resources/UserSubscriptions/Tables/UserSubscriptionsTable.php`, `database/migrations/2026_10_25_000001_cleanup_parent_category_subscriptions.php`, `tests/Feature/OnDemandSubscriptionProvisioningTest.php`, `.agent/MEMORY.md`.
+- **Blast Radius**: Registration and guest authentication pipeline, `DomainDashboardController`, Filament `UserSubscriptions` resource.
+- **Rollback Path**: `git checkout HEAD~1 -- app/ database/migrations/ tests/`.
+- **Lessons**: Organizational domain hierarchy nodes (parent categories) must never receive subscription attachments; trials for ephemeral guests must be provisioned lazily on-demand upon flow engagement.
 
 ### Entry 30 — 2026-10-24: Filament Admin Panel Guard Isolation & 403 Guest Trap Remediation
 - **Action**: Configured an isolated `'admin'` authentication guard in `config/auth.php` and bound it to Filament via `->authGuard('admin')` in `AdminPanelProvider.php`; replaced Filament's default base `Authenticate` middleware with custom `App\Http\Middleware\Filament\Authenticate` that detects guest accounts (`$user->is_guest`), terminates the invalid panel session, and redirects cleanly to `/admin/login` (with a seamless Single Sign-On bridge for verified `web` administrators); changed `GuestAuthService` to use session-only authentication (`remember: false`) instead of dropping persistent 5-year cookies; and added defensive route-bypass in `AutoAuthenticateGuest` for all `/admin*` paths.
@@ -87,11 +87,3 @@
 - **Blast Radius**: `user_subscriptions` approval workflow.
 - **Rollback Path**: Deactivate resource.
 - **Lessons**: Manual financial verification requires immutable audit logs tracking which admin approved or rejected each receipt.
-
-### Entry 21 — 2026-09-23: Spaced Learning Weak Question Bank & Two-Strike Mastery Protocol
-- **Action**: Engineered `UserWeakQuestion` tracking system capturing missed MCQs, prioritizing them in revision playlists, and requiring candidates to answer correctly twice across distinct sessions to achieve mastery status.
-- **Impact**: Boosts candidate retention on critical screening questions by automating targeted retrieval practice.
-- **Files Changed**: `app/Models/UserWeakQuestion.php`, `app/Http/Controllers/WeakQuestionsController.php`, `resources/js/pages/WeakQuestions/Index.vue`, `tests/Feature/WeakQuestionsTest.php`.
-- **Blast Radius**: MCQ grading pipeline and candidate revision dashboard.
-- **Rollback Path**: `git revert` weak questions migration and controller.
-- **Lessons**: Single correct answers on previously failed questions are often lucky guesses; mastery confirmation requires two consecutive successes across distinct attempts.
