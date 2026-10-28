@@ -35,6 +35,8 @@ use Laravel\Fortify\PasskeyAuthenticatable;
  * @property Carbon|null $updated_at
  * @property bool $is_guest
  * @property Carbon|null $guest_expires_at
+ * @property string|null $guest_token_hash
+ * @property Carbon|null $last_active_at
  * @property bool $is_suspended
  * @property string|null $suspension_reason
  * @property string|null $referral_code
@@ -45,8 +47,8 @@ use Laravel\Fortify\PasskeyAuthenticatable;
  * @property-read Collection<int, Membership> $teamMemberships
  * @property-read Collection<int, Team> $teams
  */
-#[Fillable(['name', 'email', 'password', 'current_team_id', 'is_guest', 'guest_expires_at', 'is_suspended', 'suspension_reason', 'referral_code', 'referred_by_id', 'registration_ip'])]
-#[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
+#[Fillable(['name', 'email', 'password', 'current_team_id', 'is_guest', 'guest_expires_at', 'guest_token_hash', 'last_active_at', 'is_suspended', 'suspension_reason', 'referral_code', 'referred_by_id', 'registration_ip'])]
+#[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token', 'guest_token_hash'])]
 class User extends Authenticatable implements FilamentUser, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
@@ -75,6 +77,7 @@ class User extends Authenticatable implements FilamentUser, PasskeyUser
             'password' => 'hashed',
             'is_guest' => 'boolean',
             'guest_expires_at' => 'datetime',
+            'last_active_at' => 'datetime',
             'is_suspended' => 'boolean',
         ];
     }

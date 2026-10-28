@@ -2,11 +2,19 @@
 
 > **Status**: ACTIVE ROLLING RECORD (Strict Max 10 Entries Law)  
 > **Repository**: Pak-All-Tests (Laravel 13 • Vue 3 / Inertia 3 • PostgreSQL 16+ Supabase)  
-> **Archive**: Older entries (01–25) archived to [`.agent/MEMORY_ARCHIVE.md`](file:///MEMORY_ARCHIVE.md)
+> **Archive**: Older entries (01–26) archived to [`.agent/MEMORY_ARCHIVE.md`](file:///MEMORY_ARCHIVE.md)
 
 ---
 
-## 📜 Active Rolling Memory Log (Entries 26–35)
+## 📜 Active Rolling Memory Log (Entries 27–36)
+
+### Entry 36 — 2026-10-29: Dual-Anchor Guest Device & System IP Identity Deduplication
+- **Action**: (1) Created migration `2026_10_29_000001_add_guest_device_token_to_users_table` adding indexed `guest_token_hash` (string 64 unique) and `last_active_at` timestamp; (2) upgraded `GuestAuthService` with dual-anchor identity: primary deterministic 30-day HttpOnly cookie (`pak_guest_token`) and secondary system IP lookup (`registration_ip = $request->ip()`) so multiple browsers (Chrome, Safari, Edge, Firefox) on the same machine/IP reuse the exact same guest account; (3) updated `AutoAuthenticateGuest` and `GuestLoginController` to resolve via `getOrCreateGuestUser($request)`; (4) enforced 24-hour expiration policy: after 24h, returning guests re-authenticate into their original account and see "24-Hour Guest Window Completed" warning with conversion modal, preventing new trials or subscription duplication; (5) added `is_expired` computation and styling to `GuestBanner.vue` and embedded it in `PendingOrInactive.vue`; (6) added full test suite in `GuestDeviceIdentityTest.php` with 100% passing assertions.
+- **Impact**: Completely eliminates guest duplication when students close browsers or switch browsers on the same machine/IP; candidate test progress, weak questions, and AI chat turns are preserved across visits; and the Filament Admin Panel `Guest Sign-ins` tab displays authentic unique candidate numbers instead of 10–20 redundant rows per person.
+- **Files Changed**: `app/Services/GuestAuthService.php`, `app/Http/Middleware/AutoAuthenticateGuest.php`, `app/Http/Controllers/Auth/GuestLoginController.php`, `app/Http/Controllers/DomainDashboardController.php`, `app/Http/Controllers/DashboardController.php`, `app/Models/User.php`, `database/migrations/2026_10_29_000001_add_guest_device_token_to_users_table.php`, `resources/js/components/auth/GuestBanner.vue`, `resources/js/pages/Subscription/PendingOrInactive.vue`, `tests/Feature/GuestDeviceIdentityTest.php`, `.agent/MEMORY.md`, `.agent/MEMORY_ARCHIVE.md`.
+- **Blast Radius**: Ephemeral guest authentication pipeline, `AutoAuthenticateGuest`, `GuestBanner.vue`, `PendingOrInactive.vue`.
+- **Rollback Path**: `php artisan migrate:rollback --step=1 && git checkout HEAD~1`.
+- **Lessons**: Stateless browser restarts and multi-browser testing on the same system require a multi-tier identity anchor combining long-lived HttpOnly device cookies with local/system IP resolution so that uncookie-backed secondary browsers seamlessly re-link to the primary active guest account.
 
 ### Entry 35 — 2026-10-25: Welcome Landing Mobile Header Auth Synchronization & Button Parity
 - **Action**: (1) Fixed mobile menu drawer in `Welcome.vue` to respect `isAuthenticated`, displaying the full-width black pill button `Exam Dashboard →` when logged in instead of unconditionally rendering `Sign In` and `Get Started Free`; (2) unified logged-out button layout, styling, and text between desktop header and mobile menu drawer to both display `Login 🔒` (black pill) and `⚡ Instant 1-Day Guest Pass (No Registration) →` (amber border pill); (3) synchronized breakpoint gating to `md:flex` / `md:hidden` across desktop navigation and hamburger button; (4) verified complete CI pre-flight gate passing via `composer ci:check`.
@@ -79,11 +87,3 @@
 - **Blast Radius**: `CreateNewUser.php`, `FortifyServiceProvider.php`, `Register.vue`, `ReferralCard.vue`, `ReferralService.php`, `DashboardController.php`, `Dashboard.vue`.
 - **Rollback Path**: `git checkout HEAD~1 -- app/ bootstrap/ resources/ tests/`.
 - **Lessons**: Referral stats must aggregate across all domains when platform-wide access is rewarded, and candidate dashboards must display the names and times of referred friends so students receive immediate social confirmation that their referral succeeded.
-
-### Entry 26 — 2026-10-04: One-Click Payment Bypass, 1-Day Guest Access, 7-Day Trial & Domain-Specific Viral Referral Ladder
-- **Action**: Engineered viral candidate growth and payment onboarding architecture: (1) Added global 1-click admin toggles (`payment_bypass_enabled`, `free_trial_days`, `guest_mode_enabled`) via `PlatformSetting` and Filament resource; (2) Created `GuestAuthService` for 24h disposable accounts with conversion to permanent credentials; (3) Engineered `ReferralService` with domain-specific referral codes, tiered rewards (+7 days for referrer and referee, 30 days bonus at 5 referrals), and anti-fraud fraud detection; (4) Integrated `SubscriptionManager` with bypass evaluations; (5) Added `ReferralCard.vue` and `GuestBanner.vue` to candidate interface.
-- **Impact**: Enables friction-free candidate trial onboarding, gives admin instant switches to open/close paywalls, and deploys viral referral loops tailored for Pakistani competitive exam cohorts.
-- **Files Changed**: `app/Models/PlatformSetting.php`, `app/Services/GuestAuthService.php`, `app/Services/ReferralService.php`, `app/Services/SubscriptionManager.php`, `app/Models/Referral.php`, `app/Filament/Resources/PlatformSettings/PlatformSettingResource.php`, `resources/js/components/auth/GuestBanner.vue`, `resources/js/components/referral/ReferralCard.vue`, `tests/Feature/PaymentBypassTest.php`, `tests/Feature/GuestAccessTest.php`, `tests/Feature/ReferralSystemTest.php`.
-- **Blast Radius**: `SubscriptionManager`, `PlatformSetting`, `UserSubscription`, `User`, registration pipeline.
-- **Rollback Path**: `php artisan db:seed --class=PmaLongCourseSeeder`.
-- **Lessons**: Abuse prevention must balance security with student UX: strict IP checks falsely flag students on shared university Wi-Fi, necessitating composite device fingerprints and administrative review queues.

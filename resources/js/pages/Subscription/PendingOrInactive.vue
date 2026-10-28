@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import GuestBanner from '@/components/auth/GuestBanner.vue';
 import ReferralCard from '@/components/referral/ReferralCard.vue';
 
 const page = usePage();
@@ -28,6 +29,10 @@ const props = defineProps({
         default: null,
     },
     referral: {
+        type: Object,
+        default: null,
+    },
+    guest: {
         type: Object,
         default: null,
     },
@@ -166,6 +171,9 @@ const submitReceipt = () => {
 
         <!-- Main Enrollment Card Layout -->
         <main class="mx-auto my-8 w-full max-w-4xl">
+            <!-- Guest Expiration or Conversion Banner -->
+            <GuestBanner v-if="guest?.is_guest" :guest="guest" class="mb-6" />
+
             <!-- STATE 0: Suspended Account -->
             <div
                 v-if="isSuspended"

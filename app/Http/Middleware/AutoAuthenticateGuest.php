@@ -25,8 +25,8 @@ class AutoAuthenticateGuest
     /**
      * Handle an incoming request.
      *
-     * Seamlessly provisions and authenticates an ephemeral guest user on direct URL visits,
-     * granting 24-hour domain access without redirection or login barriers.
+     * Seamlessly provisions or re-authenticates an ephemeral guest user on direct URL visits,
+     * maintaining 24-hour domain access across browser restarts without duplicating guest accounts.
      *
      * @param  Closure(Request): (Response)  $next
      */
@@ -47,8 +47,8 @@ class AutoAuthenticateGuest
             throw new AuthenticationException('Unauthenticated.');
         }
 
-        // Create ephemeral guest user and authenticate in session
-        $guest = $this->guestAuthService->createGuestUser($request->ip());
+        // Resolve existing guest via persistent device token or provision a fresh guest
+        $guest = $this->guestAuthService->getOrCreateGuestUser($request);
         $request->setUserResolver(fn () => $guest);
 
         // Resolve requested domain if accessing a domain-scoped route
@@ -58,15 +58,21 @@ class AutoAuthenticateGuest
 
         if ($domainSlug) {
             $domain = Domain::query()->eligibleForSubscription()->where('slug', (string) $domainSlug)->first();
-            if ($domain) {
+            // Only provision initial trial if guest pass is active AND subscription does not yet exist
+            if ($domain && $guest->guest_expires_at?->isFuture() && ! $guest->subscriptions()->where('domain_id', $domain->id)->exists()) {
                 $this->subscriptionManager->grantFreeTrial($guest, $domain, 1);
             }
         }
 
-        session()->flash('status', 'Your 24-Hour Guest Pass is active! Enjoy full access to all practice questions and AI mentorship.');
+        if ($guest->guest_expires_at?->isPast()) {
+            session()->flash('warning', 'Your 24-hour guest window has completed. Please register to keep access to your exam dashboard.');
+        } else {
+            session()->flash('status', 'Your 24-Hour Guest Pass is active! Enjoy full access to all practice questions and AI mentorship.');
+        }
 
         Log::info('guest.auto_authenticated', [
             'user_id' => $guest->id,
+            'is_expired' => $guest->guest_expires_at?->isPast(),
             'domain_slug' => $domainSlug,
             'ip' => $request->ip(),
         ]);

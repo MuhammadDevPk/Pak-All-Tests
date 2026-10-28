@@ -46,6 +46,7 @@ class DashboardController extends Controller
                 'is_guest' => true,
                 'expires_at' => $expiresAt?->toIso8601String(),
                 'expires_in_hours' => $hoursLeft,
+                'is_expired' => $expiresAt ? $expiresAt->isPast() : false,
             ];
         }
 
