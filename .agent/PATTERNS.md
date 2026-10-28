@@ -142,6 +142,15 @@ Before completing any task, recommending a commit, or pushing code to any branch
 
 ---
 
+## 7. Branch, Pull Request & Merge Permission Protocol (Explicit User Approval Gate)
+Every feature modification and deployment must adhere to this explicit human-in-the-loop permission sequence:
+1. **Separate Feature Branch**: Always create and commit changes to a dedicated feature branch (`feat/...`).
+2. **PR Creation Gate**: **NEVER** create a GitHub Pull Request automatically. You **MUST** ask the user for permission, present the proposed PR title/summary, and create it only after explicit user approval.
+3. **PR Merge Gate**: **NEVER** merge a Pull Request or merge the feature branch into `main` automatically. You **MUST** ask the user for permission to merge, and execute the merge only when the user explicitly grants approval.
+4. **Post-Merge Branch Deletion Gate**: After merging into `main`, if the feature branch is no longer needed, you **MUST** ask the user for explicit permission before deleting the branch locally or remotely. Never delete branches autonomously.
+
+---
+
 # 📐 Tier 2: CONVENTIONS (Quality & Consistency Standards)
 
 ## 1. 🎨 Anti-AI Visual Laws & Mathematical Design System (SenseLab Aesthetic)

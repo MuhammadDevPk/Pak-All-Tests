@@ -40,6 +40,11 @@ Before planning, editing files, running terminal commands, or generating solutio
 6. **Mandatory CI Pre-Flight Gate (`composer ci:check`)**:
    - Before completing any task, recommending a commit, or pushing code, you **MUST** run the full CI suite via `composer ci:check`.
    - This validates ESLint (`lint:check`), Prettier (`format:check`), Vue/TS types (`types:check`), Pint (`lint:check`), PHPStan Level 7 (`types:check`), and the Pest test suite (`@test`). Never push unverified code.
+7. **Branch, PR & Merge Permission Protocol (Explicit User Approval Gate)**:
+   - Always create and work in a separate feature branch (`feat/...`).
+   - **PR Creation**: You **MUST** request and receive explicit user permission before creating a Pull Request on GitHub.
+   - **PR Merging**: You **MUST** request and receive explicit user permission before merging any Pull Request or merging the branch into `main`.
+   - **Branch Deletion**: After merging, if the branch is no longer needed, you **MUST** request and receive explicit user permission before deleting the branch (locally or remotely).
 
 ---
 

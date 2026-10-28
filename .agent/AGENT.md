@@ -72,6 +72,9 @@ To protect repository stability, the following actions are **strictly prohibited
    - `php artisan migrate:fresh` or `migrate:reset` (destroys database schema and extensions).
    - `git push --force` on main or shared branches.
    - Arbitrary `cache:clear` on production without a cache warm-up strategy.
+   - Autonomous Pull Request creation without explicit user permission.
+   - Autonomous Pull Request merging or `main` branch merging without explicit user permission.
+   - Autonomous branch deletion (local or remote) without explicit user permission.
 2. **Anti-Speculation (No Phantom Bugs)**:
    - Never speculate on root causes without verifying logs, active code, and reproduction steps.
    - Never generate code fixes based on guesswork. Validate every line against the real codebase.
