@@ -5,6 +5,14 @@
 
 ---
 
+### Entry 26 — 2026-10-04: One-Click Payment Bypass, 1-Day Guest Access, 7-Day Trial & Domain-Specific Viral Referral Ladder
+- **Action**: Engineered viral candidate growth and payment onboarding architecture: (1) Added global 1-click admin toggles (`payment_bypass_enabled`, `free_trial_days`, `guest_mode_enabled`) via `PlatformSetting` and Filament resource; (2) Created `GuestAuthService` for 24h disposable accounts with conversion to permanent credentials; (3) Engineered `ReferralService` with domain-specific referral codes, tiered rewards (+7 days for referrer and referee, 30 days bonus at 5 referrals), and anti-fraud fraud detection; (4) Integrated `SubscriptionManager` with bypass evaluations; (5) Added `ReferralCard.vue` and `GuestBanner.vue` to candidate interface.
+- **Impact**: Enables friction-free candidate trial onboarding, gives admin instant switches to open/close paywalls, and deploys viral referral loops tailored for Pakistani competitive exam cohorts.
+- **Files Changed**: `app/Models/PlatformSetting.php`, `app/Services/GuestAuthService.php`, `app/Services/ReferralService.php`, `app/Services/SubscriptionManager.php`, `app/Models/Referral.php`, `app/Filament/Resources/PlatformSettings/PlatformSettingResource.php`, `resources/js/components/auth/GuestBanner.vue`, `resources/js/components/referral/ReferralCard.vue`, `tests/Feature/PaymentBypassTest.php`, `tests/Feature/GuestAccessTest.php`, `tests/Feature/ReferralSystemTest.php`.
+- **Blast Radius**: `SubscriptionManager`, `PlatformSetting`, `UserSubscription`, `User`, registration pipeline.
+- **Rollback Path**: `php artisan db:seed --class=PmaLongCourseSeeder`.
+- **Lessons**: Abuse prevention must balance security with student UX: strict IP checks falsely flag students on shared university Wi-Fi, necessitating composite device fingerprints and administrative review queues.
+
 ### Entry 25 — 2026-10-04: Automated PMA Long Course Subject Module Linking & Question Bank Repair
 - **Action**: Engineered background linking job `LinkPmaSubjectModulesJob` resolving PMA Academic questions to dedicated subject modules via `module_questions` pivot table, backed by `database/data/pma_academic_subject_map.json`.
 - **Impact**: Guaranteed 100% PMA Long Course questions are discoverable under respective subjects without requiring full database wipe or destructive re-imports.

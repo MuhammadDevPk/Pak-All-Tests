@@ -46,8 +46,8 @@ class DomainDashboardController extends Controller
             ])
             ->firstOrFail();
 
-        // On-Demand: Grant initial pass for guests opening an interactive domain flow
-        if ($user && $user->is_guest && ($domain->flow || $domain->children()->doesntExist()) && ! $user->subscriptions()->where('domain_id', $domain->id)->exists()) {
+        // On-Demand: Grant initial pass for active guests opening an interactive domain flow
+        if ($user && $user->is_guest && $user->guest_expires_at?->isFuture() && ($domain->flow || $domain->children()->doesntExist()) && ! $user->subscriptions()->where('domain_id', $domain->id)->exists()) {
             $guestDomainPassDays = (int) config('platform.trials.guest_domain_pass_days', 1);
             $this->subscriptionManager->grantFreeTrial($user, $domain, $guestDomainPassDays);
         }
@@ -78,6 +78,12 @@ class DomainDashboardController extends Controller
                 'isSuspended' => (bool) $user?->is_suspended,
                 'suspensionReason' => $user?->suspension_reason,
                 'referral' => $referralStats,
+                'guest' => $user && $user->is_guest ? [
+                    'is_guest' => true,
+                    'expires_at' => $user->guest_expires_at?->toIso8601String(),
+                    'expires_in_hours' => $user->guest_expires_at ? max(0, (int) now()->diffInHours($user->guest_expires_at, false)) : 0,
+                    'is_expired' => $user->guest_expires_at ? $user->guest_expires_at->isPast() : false,
+                ] : null,
             ]);
         }
 
@@ -90,7 +96,8 @@ class DomainDashboardController extends Controller
             'guest' => [
                 'is_guest' => (bool) $user->is_guest,
                 'expires_at' => $user->guest_expires_at?->toIso8601String(),
-                'expires_in_hours' => $user->guest_expires_at ? max(0, now()->diffInHours($user->guest_expires_at, false)) : null,
+                'expires_in_hours' => $user->guest_expires_at ? max(0, (int) now()->diffInHours($user->guest_expires_at, false)) : null,
+                'is_expired' => $user->guest_expires_at ? $user->guest_expires_at->isPast() : false,
             ],
         ]);
     }
