@@ -31,3 +31,15 @@ yarn-error.log
 /public/css
 /public/js
 /public/fonts
+
+# AI Agent Workspaces
+/.agents/
+.agents/
+
+# Generated Test Suites
+/tests/Feature/ReviewMediaStorageTest.php
+/tests/Feature/StudentReviewSubmissionTest.php
+/tests/Feature/StudentReviewModelTest.php
+/tests/Feature/ReviewNotificationPromptTest.php
+/tests/Feature/FilamentStudentReviewModerationTest.php
+/tests/Feature/AdversarialStudentReviewEmpiricalTest.php
