@@ -274,7 +274,7 @@ class UiSchemaCompiler
                     'title' => $item['title'] ?: null,
                     'fileSize' => $item['file_size'] ?: null,
                     'fileType' => $item['file_type'] ?: null,
-                    'actionLabel' => $item['action_label'] ?: 'Download',
+                    'actionLabel' => $item['action_label'] ?: 'View Document',
                 ]),
                 $node['manual_items'] ?? []
             ));
@@ -312,7 +312,7 @@ class UiSchemaCompiler
                     'title' => $item['title'] ?? '',
                     'file_size' => $item['fileSize'] ?? '',
                     'file_type' => $item['fileType'] ?? '',
-                    'action_label' => $item['actionLabel'] ?? 'Download',
+                    'action_label' => $item['actionLabel'] ?? 'View Document',
                 ],
                 $props['items'] ?? []
             )),

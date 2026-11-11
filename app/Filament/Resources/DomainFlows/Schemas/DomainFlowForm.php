@@ -206,7 +206,7 @@ class DomainFlowForm
             TextInput::make('resource_title')
                 ->label('Section Title')
                 ->placeholder('e.g. PMA Handouts & Notes')
-                ->helperText('Shown above the list of downloadable files.')
+                ->helperText('Shown above the list of document resources.')
                 ->hidden(fn (Get $get) => $get('content_type') !== 'ResourceList'),
 
             // ── Shared source mode (SubjectGrid + ResourceList) ───────────
