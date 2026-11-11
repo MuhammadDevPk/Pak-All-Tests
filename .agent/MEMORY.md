@@ -2,11 +2,19 @@
 
 > **Status**: ACTIVE ROLLING RECORD (Strict Max 10 Entries Law)  
 > **Repository**: Pak-All-Tests (Laravel 13 • Vue 3 / Inertia 3 • PostgreSQL 16+ Supabase)  
-> **Archive**: Older entries (01–28) archived to [`.agent/MEMORY_ARCHIVE.md`](file:///MEMORY_ARCHIVE.md)
+> **Archive**: Older entries (01–29) archived to [`.agent/MEMORY_ARCHIVE.md`](file:///MEMORY_ARCHIVE.md)
 
 ---
 
-## 📜 Active Rolling Memory Log (Entries 29–38)
+## 📜 Active Rolling Memory Log (Entries 30–39)
+
+### Entry 39 — 2026-11-11: Inline Expandable Phase Card UX & Content Stepper Master-Detail Accordion
+- **Action**: Refactored `PhaseStepperLayout.vue` from a disconnected top-grid + bottom-renderer layout to an integrated master-detail accordion structure where each phase card encapsulates its child content directly underneath: (1) Replaced the multi-column card grid that detached content far below the fold with full-width interactive phase cards (`flex flex-col gap-4`); (2) rendered active phase content (`SduiRenderer :node="phase.content"`) directly inside the clicked card's bottom container (`border-t border-zinc-100 bg-zinc-50/40 p-4 sm:p-6`); (3) implemented `togglePhase` with smooth auto-scroll (`nextTick` + `scrollIntoView({ behavior: 'smooth', block: 'nearest' })`) and rotating chevron indicator (`▼` to `▲`) so candidates on mobile and desktop instantly see the opened curriculum content right where they tapped; (4) verified 100% CI compliance via `composer ci:check`.
+- **Impact**: Completely eliminates candidate confusion on mobile and desktop viewports where tapping a phase card previously seemed to do nothing because content rendered below off-screen cards; curriculum modules (PDF lists, subject grids) now open smoothly as direct child accordions under the selected phase card.
+- **Files Changed**: `resources/js/components/sdui/PhaseStepperLayout.vue`, `.agent/MEMORY.md`, `.agent/MEMORY_ARCHIVE.md`.
+- **Blast Radius**: `PhaseStepperLayout.vue`, domain dashboard multi-phase rendering.
+- **Rollback Path**: `git checkout HEAD~1 -- resources/js/components/sdui/PhaseStepperLayout.vue`.
+- **Lessons**: On mobile viewports, multi-item phase selectors must never render detail content below the entire list of selectors; inlining the detail pane directly beneath the active selector card (master-detail accordion) provides unambiguous visual continuity and eliminates off-screen disorientation.
 
 ### Entry 38 — 2026-11-11: Expired Guest Content Locking, Non-Clickable Curriculum & Registration Conversion Prompting
 - **Action**: (1) Upgraded `SubscriptionManager::hasActiveAccess` to strictly bind ephemeral guest access to `$user->guest_expires_at?->isFuture() ?? false`, preventing expired guests from bypassing gates via lingering `user_subscriptions` rows; (2) updated `DomainDashboardController` to keep expired guests on `Domain/Dashboard.vue` with `'hasAccess' => false` and `'guest.is_expired' => true` rather than redirecting to bank transfer screen, allowing candidates to view the curriculum syllabus, test list, and referral program; (3) fortified `ContentModuleController` and `McqExecutionController` with strict 403 Forbidden gating against expired guests; (4) added reactive `isLocked` computed state and high-visibility locked notice banner with direct conversion CTAs in `Dashboard.vue`; (5) updated `SubjectGrid.vue` and `ResourceList.vue` to show `🔒 Locked` on action buttons and made both the full card/row and button intercept clicks when locked; (6) wired locked clicks to trigger `open-guest-modal` (launching `GuestBanner.vue` registration modal for 7-Day Free Trial) or smooth-scroll to `#referral-section` for registered candidates; (7) added test suite in `GuestAccessTest.php` validating expired guest access prevention and dashboard prop contracts.
@@ -79,11 +87,3 @@
 - **Blast Radius**: Filament administrative authentication pipeline, `AdminPanelProvider`, `AutoAuthenticateGuest`, `GuestAuthService`.
 - **Rollback Path**: `git checkout main -- config/auth.php app/Providers/Filament/AdminPanelProvider.php app/Services/GuestAuthService.php app/Http/Middleware/AutoAuthenticateGuest.php && rm -rf app/Http/Middleware/Filament tests/Feature/FilamentAdminAccessTest.php`.
 - **Lessons**: Administrative backends and ephemeral public guest sessions must never share the same default session authentication guard; any custom auto-login middleware must explicitly exempt administrative URI patterns, and guest authentication must remain strictly ephemeral (`remember: false`).
-
-### Entry 29 — 2026-10-18: Frictionless Auto-Guest Authentication Middleware & Instant URL Onboarding
-- **Action**: Engineered `AutoAuthenticateGuest` middleware registered as `auto.guest` on student candidate routes (`/d/{domainSlug}`, `/dashboard`, `/revision-weak-questions`) which automatically creates an ephemeral guest account with 24 hours of trial access on direct URL visits without login barriers or redirects, added `PlatformSetting::isAutoGuestLoginEnabled()` with a 1-click administrative bypass toggle (defaulting to enabled in production/local and disabled in unit testing), explicitly denied guest access to Filament panel in `User::canAccessPanel`, and preserved referral registration redirection when incoming requests contain `?ref=...`.
-- **Impact**: Removes all onboarding barriers for new and returning students opening shared test/dashboard URLs directly, auto-logging them in and granting instant 1-day platform access on the initial HTTP request, while allowing returning students to access `/login` manually and preventing guest escalation into administrative panels.
-- **Files Changed**: `app/Http/Middleware/AutoAuthenticateGuest.php`, `app/Models/PlatformSetting.php`, `app/Models/User.php`, `bootstrap/app.php`, `routes/web.php`, `tests/Feature/AutoGuestLoginTest.php`, `tests/Feature/SubscriptionStateMachineTest.php`, `.agent/ARCHITECTURE.md`, `.agent/MEMORY.md`.
-- **Blast Radius**: Student web route middleware stack, `AutoAuthenticateGuest`, `PlatformSetting`, `User`.
-- **Rollback Path**: `git checkout HEAD~1 -- app/Http/Middleware/AutoAuthenticateGuest.php app/Models/PlatformSetting.php app/Models/User.php bootstrap/app.php routes/web.php tests/`.
-- **Lessons**: Route middleware that performs lazy inline authentication must throw standard `AuthenticationException` when fallback gating occurs so that Laravel's pipeline cleanly handles `expectsJson()` (401) and custom `redirectGuestsTo` targets without manual redirect hardcoding.
