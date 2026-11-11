@@ -77,6 +77,7 @@ const shareWhatsApp = () => {
 
 <template>
     <div
+        id="referral-section"
         class="shadow-senselab-card relative overflow-hidden rounded-3xl border border-sky-200/80 bg-gradient-to-br from-white via-sky-50/30 to-white p-6 backdrop-blur-md sm:p-8 dark:border-sky-950/60 dark:from-zinc-950/90 dark:via-sky-950/20 dark:to-zinc-950/90"
     >
         <!-- Header -->

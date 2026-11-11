@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Head, router } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import InputError from '@/components/InputError.vue';
 import PasskeyVerify from '@/components/PasskeyVerify.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
@@ -22,11 +23,32 @@ defineOptions({
     },
 });
 
-defineProps<{
+const props = defineProps<{
     status?: string;
     canResetPassword: boolean;
     teamInvitation?: TeamInvitationContext | null;
 }>();
+
+const redirectUrl =
+    typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('redirect')
+        : null;
+
+const registerUrl = computed(() => {
+    if (props.teamInvitation) {
+        return register({
+            query: {
+                invitation: props.teamInvitation.code,
+            },
+        });
+    }
+
+    if (redirectUrl) {
+        return `/register?redirect=${encodeURIComponent(redirectUrl)}`;
+    }
+
+    return register();
+});
 
 const startGuestSession = () => {
     router.post('/guest-login');
@@ -57,6 +79,13 @@ const startGuestSession = () => {
         v-slot="{ errors, processing }"
         class="flex flex-col gap-6"
     >
+        <input
+            v-if="redirectUrl"
+            type="hidden"
+            name="redirect"
+            :value="redirectUrl"
+        />
+
         <div class="grid gap-6">
             <div class="grid gap-2">
                 <Label for="email">Email address</Label>
@@ -142,13 +171,7 @@ const startGuestSession = () => {
         <div class="text-center text-sm text-muted-foreground">
             Don't have an account?
             <TextLink
-                :href="
-                    register({
-                        query: {
-                            invitation: teamInvitation?.code,
-                        },
-                    })
-                "
+                :href="registerUrl"
                 :tabindex="5"
                 data-test="register-link"
             >

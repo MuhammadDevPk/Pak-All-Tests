@@ -1,6 +1,6 @@
 <script setup>
-import { useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const page = usePage();
 const platform = computed(() => page.props.platform || {});
@@ -39,33 +39,15 @@ const isExpired = computed(() => {
     return false;
 });
 
-const isModalOpen = ref(false);
+const registerUrl = computed(() => {
+    if (typeof window === 'undefined') {
+        return '/register';
+    }
 
-const form = useForm({
-    name: '',
-    email: '',
-    password: '',
-    password_confirmation: '',
+    const currentPath = window.location.pathname + window.location.search;
+
+    return `/register?redirect=${encodeURIComponent(currentPath)}`;
 });
-
-const openModal = () => {
-    isModalOpen.value = true;
-};
-
-const closeModal = () => {
-    isModalOpen.value = false;
-    form.reset();
-    form.clearErrors();
-};
-
-const submitConversion = () => {
-    form.post('/convert-guest', {
-        preserveScroll: true,
-        onSuccess: () => {
-            closeModal();
-        },
-    });
-};
 </script>
 
 <template>
@@ -103,14 +85,13 @@ const submitConversion = () => {
                 </div>
             </div>
 
-            <button
-                type="button"
+            <Link
+                :href="registerUrl"
                 class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-rose-500 focus:ring-2 focus:ring-rose-500/40 focus:outline-hidden dark:bg-rose-600 dark:hover:bg-rose-500"
-                @click="openModal"
             >
                 <span>Register to Keep Access ({{ trialDays }} Days Free)</span>
                 <span>→</span>
-            </button>
+            </Link>
         </div>
 
         <div
@@ -145,149 +126,13 @@ const submitConversion = () => {
                 </div>
             </div>
 
-            <button
-                type="button"
+            <Link
+                :href="registerUrl"
                 class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-amber-600 focus:ring-2 focus:ring-amber-500/40 focus:outline-hidden dark:bg-amber-600 dark:hover:bg-amber-500"
-                @click="openModal"
             >
                 <span>Save Progress & Unlock {{ trialDays }} Days</span>
                 <span>→</span>
-            </button>
-        </div>
-
-        <!-- Conversion Modal -->
-        <div
-            v-if="isModalOpen"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 p-4 backdrop-blur-sm"
-            @click.self="closeModal"
-        >
-            <div
-                class="relative w-full max-w-md overflow-hidden rounded-3xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900"
-            >
-                <div
-                    class="flex items-center justify-between border-b border-zinc-100 pb-3 dark:border-zinc-800"
-                >
-                    <div>
-                        <h3
-                            class="text-lg font-bold text-zinc-900 dark:text-white"
-                        >
-                            Keep Your Test Progress
-                        </h3>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                            Create your free account to unlock your
-                            {{ trialDays }}-Day Free Trial.
-                        </p>
-                    </div>
-                    <button
-                        type="button"
-                        class="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
-                        @click="closeModal"
-                    >
-                        ✕
-                    </button>
-                </div>
-
-                <form class="mt-4 space-y-4" @submit.prevent="submitConversion">
-                    <div>
-                        <label
-                            class="block text-xs font-medium text-zinc-700 dark:text-zinc-300"
-                        >
-                            Full Name
-                        </label>
-                        <input
-                            v-model="form.name"
-                            type="text"
-                            required
-                            placeholder="e.g. Ali Ahmed"
-                            class="mt-1 block w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2 text-sm text-zinc-900 focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-500/20 focus:outline-hidden dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
-                        />
-                        <p
-                            v-if="form.errors.name"
-                            class="mt-1 text-xs text-red-500"
-                        >
-                            {{ form.errors.name }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <label
-                            class="block text-xs font-medium text-zinc-700 dark:text-zinc-300"
-                        >
-                            Email Address
-                        </label>
-                        <input
-                            v-model="form.email"
-                            type="email"
-                            required
-                            placeholder="name@example.com"
-                            class="mt-1 block w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2 text-sm text-zinc-900 focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-500/20 focus:outline-hidden dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
-                        />
-                        <p
-                            v-if="form.errors.email"
-                            class="mt-1 text-xs text-red-500"
-                        >
-                            {{ form.errors.email }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <label
-                            class="block text-xs font-medium text-zinc-700 dark:text-zinc-300"
-                        >
-                            Create Password
-                        </label>
-                        <input
-                            v-model="form.password"
-                            type="password"
-                            required
-                            minlength="8"
-                            placeholder="Minimum 8 characters"
-                            class="mt-1 block w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2 text-sm text-zinc-900 focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-500/20 focus:outline-hidden dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
-                        />
-                        <p
-                            v-if="form.errors.password"
-                            class="mt-1 text-xs text-red-500"
-                        >
-                            {{ form.errors.password }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <label
-                            class="block text-xs font-medium text-zinc-700 dark:text-zinc-300"
-                        >
-                            Confirm Password
-                        </label>
-                        <input
-                            v-model="form.password_confirmation"
-                            type="password"
-                            required
-                            placeholder="Re-enter password"
-                            class="mt-1 block w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2 text-sm text-zinc-900 focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-500/20 focus:outline-hidden dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
-                        />
-                    </div>
-
-                    <div class="flex items-center justify-end gap-2.5 pt-2">
-                        <button
-                            type="button"
-                            class="rounded-xl px-4 py-2 text-xs font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                            @click="closeModal"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            :disabled="form.processing"
-                            class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-sky-500 disabled:opacity-50 dark:bg-sky-500 dark:hover:bg-sky-400"
-                        >
-                            <span v-if="form.processing">Saving...</span>
-                            <span v-else
-                                >Save & Activate {{ trialDays }}-Day Trial</span
-                            >
-                        </button>
-                    </div>
-                </form>
-            </div>
+            </Link>
         </div>
     </div>
 </template>

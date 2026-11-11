@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Head, router } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TeamInvitationAlert from '@/components/TeamInvitationAlert.vue';
@@ -25,6 +26,27 @@ defineOptions({
     },
 });
 
+const redirectUrl =
+    typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('redirect')
+        : null;
+
+const loginUrl = computed(() => {
+    if (props.teamInvitation) {
+        return login.url({
+            query: {
+                invitation: props.teamInvitation.code,
+            },
+        });
+    }
+
+    if (redirectUrl) {
+        return `/login?redirect=${encodeURIComponent(redirectUrl)}`;
+    }
+
+    return login();
+});
+
 const startGuestSession = () => {
     router.post('/guest-login');
 };
@@ -45,6 +67,13 @@ const startGuestSession = () => {
         v-slot="{ errors, processing }"
         class="flex flex-col gap-6"
     >
+        <input
+            v-if="redirectUrl"
+            type="hidden"
+            name="redirect"
+            :value="redirectUrl"
+        />
+
         <div class="grid gap-6">
             <div class="grid gap-2">
                 <Label for="name">Name</Label>
@@ -164,15 +193,7 @@ const startGuestSession = () => {
         <div class="text-center text-sm text-muted-foreground">
             Already have an account?
             <TextLink
-                :href="
-                    teamInvitation
-                        ? login.url({
-                              query: {
-                                  invitation: teamInvitation.code,
-                              },
-                          })
-                        : login()
-                "
+                :href="loginUrl"
                 class="underline underline-offset-4"
                 :tabindex="7"
                 data-test="team-invitation-login-link"

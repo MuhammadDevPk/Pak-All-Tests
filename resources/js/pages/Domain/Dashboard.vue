@@ -1,12 +1,12 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
-import { ref, provide, defineAsyncComponent } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { ref, computed, provide, defineAsyncComponent } from 'vue';
 import AiTutorWidget from '@/components/ai/AiTutorWidget.vue';
 import GuestBanner from '@/components/auth/GuestBanner.vue';
 import ReferralCard from '@/components/referral/ReferralCard.vue';
 import SduiRenderer from '@/components/sdui/SduiRenderer.vue';
 
-defineProps({
+const props = defineProps({
     sdui: {
         type: Object,
         required: true,
@@ -19,7 +19,74 @@ defineProps({
         type: Object,
         default: () => ({ is_guest: false }),
     },
+    hasAccess: {
+        type: Boolean,
+        default: true,
+    },
 });
+
+const isLocked = computed(() => {
+    if (
+        props.guest?.is_guest &&
+        Boolean(
+            props.guest?.is_expired ||
+            (props.guest?.expires_in_hours !== null &&
+                props.guest?.expires_in_hours <= 0),
+        )
+    ) {
+        return true;
+    }
+
+    if (props.hasAccess === false) {
+        return true;
+    }
+
+    return false;
+});
+
+const lockedBannerRef = ref(null);
+
+const registerUrl = computed(() => {
+    if (typeof window === 'undefined') {
+        return '/register';
+    }
+
+    const currentPath = window.location.pathname + window.location.search;
+
+    return `/register?redirect=${encodeURIComponent(currentPath)}`;
+});
+
+const lockedNotice = computed(() => {
+    if (props.guest?.is_guest) {
+        return {
+            title: '24-Hour Guest Window Completed',
+            message:
+                'Your 24-hour guest window has completed. Register your free account now to unlock your 7-Day Free Trial and keep all your test progress!',
+            actionLabel: 'Register to Unlock (7 Days Free) →',
+            actionType: 'register',
+        };
+    }
+
+    return {
+        title: 'Active Subscription Required',
+        message:
+            'Your access to this course has ended. Invite classmates with your referral link to earn +7 days free access for each friend who registers, or activate your subscription.',
+        actionLabel: 'Invite Friends (+7 Days) →',
+        actionType: 'referral',
+    };
+});
+
+const handleLockedContentClick = () => {
+    if (props.guest?.is_guest) {
+        router.visit(registerUrl.value);
+
+        return;
+    }
+
+    document
+        .getElementById('referral-section')
+        ?.scrollIntoView({ behavior: 'smooth' });
+};
 
 const activeModule = ref(null);
 const activeQuestions = ref([]);
@@ -29,6 +96,12 @@ const isLoadingModule = ref(false);
 
 const launchModule = async (moduleId) => {
     if (!moduleId) {
+        return;
+    }
+
+    if (isLocked.value) {
+        handleLockedContentClick();
+
         return;
     }
 
@@ -64,6 +137,12 @@ const viewFile = (file) => {
         return;
     }
 
+    if (isLocked.value) {
+        handleLockedContentClick();
+
+        return;
+    }
+
     const fileUrl = file.fileUrl || file.file_url;
 
     if (!fileUrl) {
@@ -96,6 +175,7 @@ const viewFile = (file) => {
 provide('sduiContext', {
     launchModule,
     viewFile,
+    isLocked,
 });
 
 const McqPlayer = defineAsyncComponent(
@@ -293,8 +373,56 @@ const SubjectiveUpload = defineAsyncComponent(
             />
         </div>
 
+        <!-- Locked Access Alert Banner (Shown above content when guest pass is completed or access is inactive) -->
+        <div
+            v-if="isLocked && !activeModule"
+            ref="lockedBannerRef"
+            class="shadow-senselab-card flex flex-wrap items-center justify-between gap-3.5 rounded-2xl border border-rose-300/80 bg-gradient-to-r from-rose-500/10 via-amber-500/5 to-rose-500/10 p-4 backdrop-blur-md sm:px-6 dark:border-rose-500/40 dark:from-rose-950/40 dark:via-zinc-950/60 dark:to-rose-950/30"
+        >
+            <div class="flex items-center gap-3">
+                <span
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/15 text-xl font-bold text-rose-600 dark:bg-rose-500/20 dark:text-rose-400"
+                >
+                    🔒
+                </span>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h4
+                            class="text-xs font-bold tracking-wide text-rose-800 uppercase dark:text-rose-300"
+                        >
+                            {{ lockedNotice.title }}
+                        </h4>
+                        <span
+                            class="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-800 dark:bg-rose-900/60 dark:text-rose-200"
+                        >
+                            Content Locked
+                        </span>
+                    </div>
+                    <p class="mt-0.5 text-xs text-zinc-700 dark:text-zinc-300">
+                        {{ lockedNotice.message }}
+                    </p>
+                </div>
+            </div>
+
+            <Link
+                v-if="lockedNotice.actionType === 'register'"
+                :href="registerUrl"
+                class="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-rose-500 active:scale-95"
+            >
+                <span>{{ lockedNotice.actionLabel }}</span>
+            </Link>
+            <button
+                v-else
+                type="button"
+                @click="handleLockedContentClick"
+                class="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-rose-500 active:scale-95"
+            >
+                <span>{{ lockedNotice.actionLabel }}</span>
+            </button>
+        </div>
+
         <!-- Layout Rendering (When browsing) -->
-        <div v-else class="flex-1">
+        <div v-if="!activeModule" class="flex-1">
             <div
                 v-if="isLoadingModule"
                 class="shadow-senselab-card flex min-h-90 flex-col items-center justify-center gap-3 rounded-3xl border border-zinc-200/80 bg-white/60 p-8 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/60"

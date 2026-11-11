@@ -197,7 +197,8 @@ const getSubjectMeta = (title) => {
         <div
             v-for="(item, index) in items"
             :key="item.id || index"
-            class="group shadow-senselab-card hover:shadow-senselab-elevated relative flex flex-col justify-between rounded-3xl border border-zinc-200/90 bg-white/95 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-sky-500/40 dark:border-zinc-800 dark:bg-zinc-950/90"
+            @click="startItem(item)"
+            class="group shadow-senselab-card hover:shadow-senselab-elevated relative flex cursor-pointer flex-col justify-between rounded-3xl border border-zinc-200/90 bg-white/95 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-sky-500/40 dark:border-zinc-800 dark:bg-zinc-950/90"
         >
             <div>
                 <!-- Top Header: Themed Icon Box + Question Count Pill Badge -->
@@ -275,13 +276,27 @@ const getSubjectMeta = (title) => {
                 </span>
 
                 <button
-                    @click="startItem(item)"
+                    @click.stop="startItem(item)"
                     type="button"
-                    class="inline-flex cursor-pointer items-center gap-2 rounded-full px-5 py-2.5 text-xs font-semibold text-white shadow-xs transition-all duration-200 hover:scale-[1.03] hover:shadow-md active:scale-95"
-                    style="background: var(--brand-gradient)"
+                    :class="[
+                        'inline-flex cursor-pointer items-center gap-2 rounded-full px-5 py-2.5 text-xs font-semibold shadow-xs transition-all duration-200 active:scale-95',
+                        sduiContext?.isLocked?.value
+                            ? 'border border-zinc-300 bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
+                            : 'text-white hover:scale-[1.03] hover:shadow-md',
+                    ]"
+                    :style="
+                        sduiContext?.isLocked?.value
+                            ? {}
+                            : { background: 'var(--brand-gradient)' }
+                    "
                 >
-                    <span>{{ item.actionLabel || 'Start Practice' }}</span>
+                    <span>{{
+                        sduiContext?.isLocked?.value
+                            ? '🔒 Locked'
+                            : item.actionLabel || 'Start Practice'
+                    }}</span>
                     <span
+                        v-if="!sduiContext?.isLocked?.value"
                         class="transition-transform duration-200 group-hover:translate-x-0.5"
                         >➔</span
                     >

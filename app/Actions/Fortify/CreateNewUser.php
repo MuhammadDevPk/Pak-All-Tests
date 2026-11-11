@@ -7,6 +7,7 @@ use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Models\Domain;
 use App\Models\User;
+use App\Services\GuestAuthService;
 use App\Services\ReferralService;
 use App\Services\SubscriptionManager;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +21,8 @@ class CreateNewUser implements CreatesNewUsers
     public function __construct(
         private CreateTeam $createTeam,
         private ReferralService $referralService,
-        private SubscriptionManager $subscriptionManager
+        private SubscriptionManager $subscriptionManager,
+        private GuestAuthService $guestAuthService
     ) {}
 
     /**
@@ -45,14 +47,24 @@ class CreateNewUser implements CreatesNewUsers
         ])->validate();
 
         return DB::transaction(function () use ($input) {
-            $user = User::create([
-                'name' => $input['name'],
-                'email' => $input['email'],
-                'password' => $input['password'],
-                'registration_ip' => request()->ip(),
-            ]);
+            $currentUser = auth()->user();
 
-            $this->createTeam->handle($user, $user->name."'s Workspace", isPersonal: true);
+            if ($currentUser instanceof User && $currentUser->is_guest) {
+                $user = $this->guestAuthService->convertGuestToPermanent($currentUser, [
+                    'name' => $input['name'],
+                    'email' => $input['email'],
+                    'password' => $input['password'],
+                ]);
+            } else {
+                $user = User::create([
+                    'name' => $input['name'],
+                    'email' => $input['email'],
+                    'password' => $input['password'],
+                    'registration_ip' => request()->ip(),
+                ]);
+
+                $this->createTeam->handle($user, $user->name."'s Workspace", isPersonal: true);
+            }
 
             // Provision Free Trial for active domain flows only (not parent category folders)
             $trialDays = (int) config('platform.trials.free_trial_days', 7);

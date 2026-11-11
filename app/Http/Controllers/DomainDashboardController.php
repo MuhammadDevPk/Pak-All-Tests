@@ -52,9 +52,10 @@ class DomainDashboardController extends Controller
             $this->subscriptionManager->grantFreeTrial($user, $domain, $guestDomainPassDays);
         }
 
-        $hasAccess = $this->subscriptionManager->hasActiveAccess($user, $domain);
+        $isGuestExpired = $user && $user->is_guest && ($user->guest_expires_at === null || $user->guest_expires_at->isPast());
+        $hasAccess = ! $isGuestExpired && $this->subscriptionManager->hasActiveAccess($user, $domain);
 
-        if (! $hasAccess) {
+        if (! $hasAccess && ! $isGuestExpired) {
             $latestSubscription = $this->subscriptionManager->getLatestSubscription($user, $domain);
 
             $referralStats = $user ? $this->referralService->getReferralStats($user, $domain) : null;
@@ -78,12 +79,7 @@ class DomainDashboardController extends Controller
                 'isSuspended' => (bool) $user?->is_suspended,
                 'suspensionReason' => $user?->suspension_reason,
                 'referral' => $referralStats,
-                'guest' => $user && $user->is_guest ? [
-                    'is_guest' => true,
-                    'expires_at' => $user->guest_expires_at?->toIso8601String(),
-                    'expires_in_hours' => $user->guest_expires_at ? max(0, (int) now()->diffInHours($user->guest_expires_at, false)) : 0,
-                    'is_expired' => $user->guest_expires_at ? $user->guest_expires_at->isPast() : false,
-                ] : null,
+                'guest' => null,
             ]);
         }
 
@@ -93,11 +89,12 @@ class DomainDashboardController extends Controller
         return Inertia::render('Domain/Dashboard', [
             'sdui' => $sduiPayload,
             'referral' => $referralStats,
+            'hasAccess' => $hasAccess,
             'guest' => [
-                'is_guest' => (bool) $user->is_guest,
-                'expires_at' => $user->guest_expires_at?->toIso8601String(),
-                'expires_in_hours' => $user->guest_expires_at ? max(0, (int) now()->diffInHours($user->guest_expires_at, false)) : null,
-                'is_expired' => $user->guest_expires_at ? $user->guest_expires_at->isPast() : false,
+                'is_guest' => (bool) $user?->is_guest,
+                'expires_at' => $user?->guest_expires_at?->toIso8601String(),
+                'expires_in_hours' => $user?->guest_expires_at ? max(0, (int) now()->diffInHours($user->guest_expires_at, false)) : null,
+                'is_expired' => $isGuestExpired,
             ],
         ]);
     }
