@@ -420,7 +420,7 @@
                         <h4 style="font-weight: 700; font-size: 0.9375rem;">ResourceList</h4>
                         <span style="background-color: #fef3c7; color: #d97706; font-size: 0.6875rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 0.25rem;">Structural</span>
                     </div>
-                    <p style="font-size: 0.78125rem; color: #64748b;">Vertical list of download links or module launchers for candidates.</p>
+                    <p style="font-size: 0.78125rem; color: #64748b;">Vertical list of document resources or module launchers for candidates.</p>
                     <div style="font-size: 0.75rem; line-height: 1.5;">
                         <p style="font-weight: 700; color: #334155;">Props (Provide items OR moduleQuery):</p>
                         <ul style="list-style-type: disc; padding-left: 1rem; font-family: monospace; color: #475569;">

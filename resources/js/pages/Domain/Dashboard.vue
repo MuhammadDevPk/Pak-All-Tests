@@ -59,8 +59,43 @@ const closePlayer = () => {
     pageContext.value = null;
 };
 
+const viewFile = (file) => {
+    if (!file) {
+        return;
+    }
+
+    const fileUrl = file.fileUrl || file.file_url;
+
+    if (!fileUrl) {
+        return;
+    }
+
+    activeModule.value = {
+        id: file.moduleId || 'file-viewer',
+        title: file.title || 'Document Viewer',
+        display_mode: 'pdf_repo',
+        module_type: 'pdf_repo',
+        content_meta: {
+            file_url: fileUrl,
+            description: file.description || '',
+            files: file.files || [
+                {
+                    title: file.title || 'Document',
+                    file_url: fileUrl,
+                    file_type:
+                        file.fileType || file.file_type || 'PDF Document',
+                },
+            ],
+        },
+    };
+    activeQuestions.value = [];
+    activeQuestion.value = null;
+    pageContext.value = null;
+};
+
 provide('sduiContext', {
     launchModule,
+    viewFile,
 });
 
 const McqPlayer = defineAsyncComponent(

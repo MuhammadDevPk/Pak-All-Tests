@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
     title: {
@@ -28,12 +28,34 @@ const normalizePdfUrl = (url) => {
         return '';
     }
 
-    // Auto-convert Google Drive view links to embeddable preview links
-    if (url.includes('drive.google.com') && url.includes('/view')) {
-        return url.replace(/\/view(\?.*)?$/, '/preview');
+    let normalized = url.trim();
+
+    // Auto-convert Google Drive view/edit/open links to embeddable preview links
+    if (normalized.includes('drive.google.com')) {
+        if (normalized.includes('/view')) {
+            normalized = normalized.replace(/\/view(\?.*)?$/, '/preview');
+        } else if (!normalized.includes('/preview')) {
+            const fileIdMatch =
+                normalized.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+                normalized.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+
+            if (fileIdMatch && fileIdMatch[1]) {
+                normalized = `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
+            }
+        }
+
+        return normalized;
     }
 
-    return url;
+    // Direct PDF files (local or remote): append #toolbar=0&navpanes=0 to hide download/print controls
+    if (
+        normalized.toLowerCase().includes('.pdf') &&
+        !normalized.includes('#')
+    ) {
+        normalized = `${normalized}#toolbar=0&navpanes=0`;
+    }
+
+    return normalized;
 };
 
 // Compute effective list of files (supporting both multi-file array and legacy single fileUrl)
@@ -85,6 +107,20 @@ const currentEmbedUrl = computed(() => normalizePdfUrl(currentFileUrl.value));
 const toggleFullscreen = () => {
     isFullscreen.value = !isFullscreen.value;
 };
+
+const handleKeyDown = (event) => {
+    if (event.key === 'Escape' && isFullscreen.value) {
+        isFullscreen.value = false;
+    }
+};
+
+onMounted(() => {
+    window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeyDown);
+});
 </script>
 
 <template>
@@ -127,15 +163,6 @@ const toggleFullscreen = () => {
                         isFullscreen ? 'Exit Fullscreen ↙' : 'Fullscreen Mode ↗'
                     }}
                 </button>
-                <a
-                    v-if="currentFileUrl"
-                    :href="currentFileUrl"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                >
-                    Open in New Tab ↗
-                </a>
             </div>
         </div>
 
@@ -197,19 +224,29 @@ const toggleFullscreen = () => {
             }}</span>
         </div>
 
-        <!-- Embedded Viewer Iframe -->
+        <!-- Embedded Viewer Container -->
         <div
             :class="[
-                'w-full overflow-hidden rounded-lg border border-sidebar-border/50 bg-sidebar/20',
+                'relative w-full overflow-hidden rounded-lg border border-sidebar-border/50 bg-sidebar/20 select-none',
                 isFullscreen ? 'min-h-[500px] flex-1' : 'h-[650px]',
             ]"
+            @contextmenu.prevent
         >
             <iframe
                 v-if="currentEmbedUrl"
                 :src="currentEmbedUrl"
                 class="h-full w-full border-none"
                 title="Document Viewer"
+                sandbox="allow-scripts allow-same-origin allow-forms"
                 allow="autoplay"
+            />
+            <!-- Transparent blocking shield over the top-right pop-out icon zone to prevent direct downloads -->
+            <div
+                v-if="currentEmbedUrl"
+                class="pointer-events-auto absolute top-0 right-0 z-20 h-16 w-28 cursor-default bg-transparent select-none"
+                aria-hidden="true"
+                @contextmenu.prevent
+                @click.stop.prevent
             />
             <div
                 v-else

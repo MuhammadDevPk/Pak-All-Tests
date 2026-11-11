@@ -16,10 +16,10 @@ defineProps({
 const sduiContext = inject('sduiContext', null);
 
 const startResource = (item) => {
-    if (item.moduleId && sduiContext) {
+    if (item.moduleId && sduiContext?.launchModule) {
         sduiContext.launchModule(item.moduleId);
-    } else if (item.fileUrl) {
-        window.open(item.fileUrl, '_blank', 'noopener,noreferrer');
+    } else if (item.fileUrl && sduiContext?.viewFile) {
+        sduiContext.viewFile(item);
     }
 };
 </script>
@@ -72,7 +72,11 @@ const startResource = (item) => {
                     type="button"
                     class="rounded-lg border border-sidebar-border/70 bg-sidebar px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-sidebar-accent"
                 >
-                    {{ item.actionLabel || 'View Document' }}
+                    {{
+                        item.actionLabel && item.actionLabel !== 'Download'
+                            ? item.actionLabel
+                            : 'View Document'
+                    }}
                 </button>
             </div>
         </div>
