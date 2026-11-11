@@ -35,7 +35,8 @@ const startResource = (item) => {
             <div
                 v-for="(item, index) in items"
                 :key="item.id || index"
-                class="flex items-center justify-between py-3 first:pt-0 last:pb-0"
+                @click="startResource(item)"
+                class="flex cursor-pointer items-center justify-between rounded-xl p-2 py-3 transition-colors first:pt-2 last:pb-2 hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
             >
                 <div class="flex items-center gap-3">
                     <div
@@ -68,14 +69,22 @@ const startResource = (item) => {
                     </div>
                 </div>
                 <button
-                    @click="startResource(item)"
+                    @click.stop="startResource(item)"
                     type="button"
-                    class="rounded-lg border border-sidebar-border/70 bg-sidebar px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-sidebar-accent"
+                    :class="[
+                        'cursor-pointer rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors',
+                        sduiContext?.isLocked?.value
+                            ? 'border-zinc-300 bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400'
+                            : 'border-sidebar-border/70 bg-sidebar text-foreground hover:bg-sidebar-accent',
+                    ]"
                 >
                     {{
-                        item.actionLabel && item.actionLabel !== 'Download'
-                            ? item.actionLabel
-                            : 'View Document'
+                        sduiContext?.isLocked?.value
+                            ? '🔒 Locked'
+                            : item.actionLabel &&
+                                item.actionLabel !== 'Download'
+                              ? item.actionLabel
+                              : 'View Document'
                     }}
                 </button>
             </div>

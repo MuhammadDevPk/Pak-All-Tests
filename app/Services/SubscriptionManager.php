@@ -21,22 +21,22 @@ class SubscriptionManager
             return false;
         }
 
-        // 1. Global Platform Override (1-click Admin master switch)
+        // 1. Guest Candidate Check: Access is strictly bounded by guest_expires_at window
+        if ($user->is_guest) {
+            return $user->guest_expires_at?->isFuture() ?? false;
+        }
+
+        // 2. Global Platform Override (1-click Admin master switch)
         if (PlatformSetting::isAllDomainsFree()) {
             return true;
         }
 
-        // 2. Per-Domain Free Toggle
+        // 3. Per-Domain Free Toggle
         if ($domain->requires_subscription === false) {
             return true;
         }
 
-        // 3. Active 24-Hour Guest Access
-        if ($user->is_guest && $user->guest_expires_at?->isFuture()) {
-            return true;
-        }
-
-        // 4. Standard Active Subscription / Free Trial
+        // 4. Standard Active Subscription / Free Trial for registered users
         return $this->getActiveSubscription($user, $domain) !== null;
     }
 

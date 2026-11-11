@@ -4,6 +4,7 @@ use App\Http\Middleware\AutoAuthenticateGuest;
 use App\Http\Middleware\CaptureReferralCode;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\SetTeamUrlDefaults;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'auto.guest' => AutoAuthenticateGuest::class,
+            'guest' => RedirectIfAuthenticated::class,
         ]);
 
         $middleware->trustProxies(at: '*');
